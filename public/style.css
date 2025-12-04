@@ -1,0 +1,85 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f3f3f3;
+    margin: 0;
+    padding: 0;
+}
+
+#container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    background: white;
+}
+
+#header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+#logo {
+    height: 70px;
+}
+
+.box {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 15px;
+    background: #fafafa;
+}
+
+.box h2 {
+    margin-top: 0;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+}
+
+input[type="text"],
+input[type="number"] {
+    width: 100%;
+    padding: 6px;
+    margin-top: 5px;
+}
+
+.produit {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 0;
+}
+
+.produit span {
+    flex: 1;
+}
+
+.produit input {
+    width: 80px;
+}
+
+.totals .line {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+}
+
+.totalTTC {
+    font-weight: bold;
+    font-size: 18px;
+    border-top: 2px solid black;
+    margin-top: 5px;
+    padding-top: 10px;
+}
+
+button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background: #0078D7;
+    border: none;
+    color: white;
+    font-size: 18px;
+}

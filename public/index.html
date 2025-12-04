@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Commande consommables</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="container">
+
+    <!-- LOGO -->
+    <div id="header">
+        <img src="logo_pdf.png" id="logo" alt="Logo Digi">
+        <h1>Commande Consommables</h1>
+    </div>
+
+    <!-- INFOS CLIENT -->
+    <div class="box">
+        <h2>Informations client</h2>
+
+        <label>Identifiant client</label>
+        <input type="text" id="clientId" readonly>
+
+        <label>Enseigne</label>
+        <input type="text" id="enseigne">
+
+        <label>Magasin</label>
+        <input type="text" id="magasin">
+
+        <label>Contact</label>
+        <input type="text" id="contact">
+		
+		<label>Email compta</label>
+		<input type="email" id="emailCompta">
+	
+    </div>
+
+    <!-- PRODUITS -->
+    <div class="box">
+        <h2>Consommables</h2>
+
+        <div id="produits"></div>
+    </div>
+
+    <!-- TOTaux -->
+    <div class="box totals">
+        <div class="line"><span>Sous-total HT :</span><span id="sousTotal">0,00 €</span></div>
+        <div class="line"><span>Frais de port :</span><span id="fraisPort">0,00 €</span></div>
+        <div class="line"><span>Total HT :</span><span id="totalHT">0,00 €</span></div>
+        <div class="line"><span>TVA :</span><span id="tva">0,00 €</span></div>
+        <div class="line totalTTC"><span>Total TTC :</span><span id="totalTTC">0,00 €</span></div>
+    </div>
+
+    <!-- BOUTON ENVOI -->
+
+    <button id="btnSend">Envoyer la commande</button>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
+
