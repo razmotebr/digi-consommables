@@ -23,20 +23,17 @@ async function init() {
     }
 
     try {
-        // Infos client depuis clients.json
-        const responseClients = await fetch("clients.json");
-        if (!responseClients.ok) throw new Error(`Failed to fetch clients: ${responseClients.status}`);
-        const prodData = await responseClients.json();
+        // Infos client depuis D1
+        const resClient = await fetch("/client_info", { headers: { Authorization: `Bearer ${token}` } });
+        if (!resClient.ok) throw new Error(`Failed to load client: ${resClient.status}`);
+        const clientData = await resClient.json();
+        const cl = clientData.client || {};
+        document.getElementById("enseigne").value = cl.enseigne || "";
+        document.getElementById("magasin").value = cl.magasin || "";
+        document.getElementById("contact").value = cl.contact || "";
+        if (cl.email_compta) document.getElementById("emailCompta").value = cl.email_compta;
 
-        if (prodData.clients && prodData.clients[clientId]) {
-            const cl = prodData.clients[clientId];
-            document.getElementById("enseigne").value = cl.enseigne || "";
-            document.getElementById("magasin").value = cl.magasin || "";
-            document.getElementById("contact").value = cl.contact || "";
-            if (cl.emailCompta) document.getElementById("emailCompta").value = cl.emailCompta;
-        }
-
-        // Liste de prix depuis l'API (protégée par token)
+        // Liste de prix depuis l'API (protegee par token)
         const resPrices = await fetch("/prices", {
             headers: { Authorization: `Bearer ${token}` },
         });

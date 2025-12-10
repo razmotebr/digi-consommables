@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS prix_par_client (
   prix REAL,
   PRIMARY KEY (client_id, produit_id),
   FOREIGN KEY (client_id) REFERENCES clients(id),
-  FOREIGN KEY (produit_id) REFERENCES produits(id)
+  FOREIGN KEY (client_id, produit_id) REFERENCES produits(client_id, id)
 );
 
 CREATE TABLE IF NOT EXISTS commandes (
