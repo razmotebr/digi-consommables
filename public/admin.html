@@ -17,6 +17,7 @@
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
         button { background: #4a6cf7; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
         button.secondary { background: #e0e7ff; color: #1e3a8a; }
+        button.danger { background: #ffe0e0; color: #b30000; }
         table { width: 100%; border-collapse: collapse; margin-top: 12px; }
         th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
         th { background: #f8fafc; }
@@ -42,7 +43,7 @@
             <div class="flex">
                 <div class="col">
                     <label>Nom de l'enseigne</label>
-                    <input type="text" id="ensName" placeholder="Ex: Intermarché">
+                    <input type="text" id="ensName" placeholder="Ex: Intermarche">
                     <label>Code</label>
                     <input type="text" id="ensCode" placeholder="Ex: C001">
                     <label>Email compta par défaut</label>
@@ -89,8 +90,12 @@
             <h2>Paramétrage des prix par enseigne</h2>
             <div class="flex">
                 <div class="col">
-                    <label>Enseigne (code)</label>
-                    <input type="text" id="prixEnseigne" placeholder="Ex: Intermarche">
+                    <label>Client / Enseigne</label>
+                    <select id="prixClientSelect"></select>
+                    <label>Produit existant</label>
+                    <select id="prixProduitSelect">
+                        <option value="">-- Nouveau produit --</option>
+                    </select>
                     <label>ID Produit</label>
                     <input type="number" id="prixId" placeholder="Ex: 1">
                     <label>Nom</label>

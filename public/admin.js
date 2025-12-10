@@ -1,10 +1,9 @@
-// Admin UI: charge les données existantes via /admin/data et permet d'ajouter/éditer/supprimer en mémoire.
+// Admin UI : données via /admin_data (D1) + CRUD via /admin_clients et /admin_prices
 const state = {
   admin: sessionStorage.getItem("adminUser") || "admin",
   enseignes: {}, // {code: {nom,emailCompta}}
   clients: {}, // {id: {enseigne,magasin,contact,email}}
   prix: {}, // {clientId: [{id,nom,prix}]}
-  produits: [], // catalogue global
 };
 
 function showSection(id) {
@@ -70,7 +69,7 @@ function renderClients() {
 }
 
 function renderPrix() {
-  const clientKey = document.getElementById("prixEnseigne").value.trim();
+  const clientKey = document.getElementById("prixClientSelect").value.trim();
   const tbody = document.querySelector("#tablePrix tbody");
   tbody.innerHTML = "";
   const list = (state.prix[clientKey] || []).sort((a, b) => a.id - b.id);
@@ -89,6 +88,7 @@ function renderPrix() {
       document.getElementById("prixId").value = prod.id;
       document.getElementById("prixNom").value = prod.nom;
       document.getElementById("prixValeur").value = prod.prix;
+      document.getElementById("prixProduitSelect").value = prod.id;
     });
   });
   tbody.querySelectorAll("button[data-del]").forEach((btn) => {
@@ -97,6 +97,34 @@ function renderPrix() {
       deletePrice(clientKey, id);
     });
   });
+}
+
+function populateClientSelect() {
+  const sel = document.getElementById("prixClientSelect");
+  sel.innerHTML = "";
+  Object.entries(state.clients).forEach(([id, c]) => {
+    const opt = document.createElement("option");
+    opt.value = id;
+    opt.textContent = `${id} - ${c.enseigne || ""}`.trim();
+    sel.appendChild(opt);
+  });
+}
+
+function populateProduitSelect() {
+  const clientId = document.getElementById("prixClientSelect").value.trim();
+  const sel = document.getElementById("prixProduitSelect");
+  sel.innerHTML = '<option value="">-- Nouveau produit --</option>';
+  (state.prix[clientId] || [])
+    .sort((a, b) => a.id - b.id)
+    .forEach((p) => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = `${p.id} - ${p.nom}`;
+      sel.appendChild(opt);
+    });
+  document.getElementById("prixId").value = "";
+  document.getElementById("prixNom").value = "";
+  document.getElementById("prixValeur").value = "";
 }
 
 document.getElementById("adminUserTag").textContent = state.admin;
@@ -143,7 +171,7 @@ document.getElementById("btnAddClient").addEventListener("click", () => {
 });
 
 document.getElementById("btnAddPrix").addEventListener("click", () => {
-  const clientId = document.getElementById("prixEnseigne").value.trim();
+  const clientId = document.getElementById("prixClientSelect").value.trim();
   if (!clientId) return alert("Client/enseigne requis");
   const id = Number(document.getElementById("prixId").value);
   const nom = document.getElementById("prixNom").value.trim();
@@ -152,7 +180,27 @@ document.getElementById("btnAddPrix").addEventListener("click", () => {
   savePrice({ clientId, id, nom, prix });
 });
 
-document.getElementById("prixEnseigne").addEventListener("input", renderPrix);
+document.getElementById("prixClientSelect").addEventListener("change", () => {
+  populateProduitSelect();
+  renderPrix();
+});
+
+document.getElementById("prixProduitSelect").addEventListener("change", () => {
+  const clientId = document.getElementById("prixClientSelect").value.trim();
+  const prodId = Number(document.getElementById("prixProduitSelect").value);
+  if (!clientId || !prodId) {
+    document.getElementById("prixId").value = "";
+    document.getElementById("prixNom").value = "";
+    document.getElementById("prixValeur").value = "";
+    return;
+  }
+  const prod = (state.prix[clientId] || []).find((p) => p.id === prodId);
+  if (prod) {
+    document.getElementById("prixId").value = prod.id;
+    document.getElementById("prixNom").value = prod.nom;
+    document.getElementById("prixValeur").value = prod.prix;
+  }
+});
 
 async function loadInitialData() {
   try {
@@ -163,7 +211,7 @@ async function loadInitialData() {
     state.clients = data.clients || {};
     state.prix = data.prixByClient || {};
 
-    // Enseignes : dériver des clients existants
+    // Enseignes derivees des clients existants
     state.enseignes = {};
     Object.values(state.clients).forEach((c) => {
       if (c.enseigne && !state.enseignes[c.enseigne]) {
@@ -174,12 +222,14 @@ async function loadInitialData() {
     renderEnseignes();
     renderClients();
 
-    const keys = Object.keys(state.prix);
-    if (keys.length > 0) document.getElementById("prixEnseigne").value = keys[0];
+    populateClientSelect();
+    const keys = Object.keys(state.clients);
+    if (keys.length > 0) document.getElementById("prixClientSelect").value = keys[0];
+    populateProduitSelect();
     renderPrix();
   } catch (e) {
     console.error("loadInitialData error", e);
-    alert("Impossible de charger les données admin");
+    alert("Impossible de charger les donnees admin");
   }
 }
 
@@ -191,7 +241,6 @@ async function saveClient(payload) {
       body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error(await res.text());
-    // refresh list
     state.clients[payload.id] = {
       enseigne: payload.enseigne,
       magasin: payload.magasin,
@@ -234,6 +283,7 @@ async function deletePrice(clientId, produitId) {
     });
     if (!res.ok) throw new Error(await res.text());
     state.prix[clientId] = (state.prix[clientId] || []).filter((p) => p.id !== produitId);
+    populateProduitSelect();
     renderPrix();
   } catch (e) {
     console.error("deletePrice error", e);
@@ -257,6 +307,7 @@ async function savePrice({ clientId, id, nom, prix }) {
     } else {
       state.prix[clientId].push({ id, nom, prix });
     }
+    populateProduitSelect();
     renderPrix();
   } catch (e) {
     console.error("savePrice error", e);
