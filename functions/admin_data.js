@@ -3,8 +3,13 @@ export async function onRequestGet(context) {
     const db = context.env.DB;
 
     const clientsRes = await db.prepare("SELECT id, enseigne, magasin, contact, email_compta, frais_port, tva FROM clients ORDER BY id").all();
-    const produitsRes = await db.prepare("SELECT id, nom, description FROM produits ORDER BY id").all();
-    const prixRes = await db.prepare("SELECT client_id, produit_id, prix FROM prix_par_client").all();
+    const prixRes = await db
+      .prepare(
+        `SELECT pc.client_id, pc.produit_id AS id, pc.prix, p.nom
+         FROM prix_par_client pc
+         LEFT JOIN produits p ON p.client_id = pc.client_id AND p.id = pc.produit_id`
+      )
+      .all();
 
     const clients = {};
     (clientsRes.results || []).forEach((c) => {
@@ -21,13 +26,12 @@ export async function onRequestGet(context) {
     const prixByClient = {};
     (prixRes.results || []).forEach((r) => {
       if (!prixByClient[r.client_id]) prixByClient[r.client_id] = [];
-      prixByClient[r.client_id].push({ id: r.produit_id, prix: r.prix });
+      prixByClient[r.client_id].push({ id: r.id, prix: r.prix, nom: r.nom || `Produit ${r.id}` });
     });
 
     return new Response(
       JSON.stringify({
         clients,
-        produits: produitsRes.results || [],
         prixByClient,
       }),
       { status: 200, headers: { "content-type": "application/json" } }

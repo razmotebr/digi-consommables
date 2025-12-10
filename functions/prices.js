@@ -16,12 +16,16 @@ export async function onRequestGet(context) {
     });
   }
 
-  const stmt = db.prepare(
-    `SELECT p.id, p.nom, COALESCE(pc.prix, 0) AS prix
-     FROM produits p
-     LEFT JOIN prix_par_client pc ON pc.produit_id = p.id AND pc.client_id = ?
-     ORDER BY p.id`
-  ).bind(clientId);
+  // Ne renvoie que les produits qui ont un prix defini pour ce client
+  const stmt = db
+    .prepare(
+      `SELECT p.id, p.nom, pc.prix
+       FROM prix_par_client pc
+       JOIN produits p ON p.client_id = pc.client_id AND p.id = pc.produit_id
+       WHERE pc.client_id = ?
+       ORDER BY p.id`
+    )
+    .bind(clientId);
 
   const { results } = await stmt.all();
 

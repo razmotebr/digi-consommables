@@ -161,21 +161,7 @@ async function loadInitialData() {
     const data = await res.json();
 
     state.clients = data.clients || {};
-    state.produits = data.produits || [];
-    state.prix = {};
-
-    // Construire prix par client avec noms de produit
-    const nameById = {};
-    state.produits.forEach((p) => (nameById[p.id] = p.nom));
-    if (data.prixByClient) {
-      Object.entries(data.prixByClient).forEach(([cid, list]) => {
-        state.prix[cid] = list.map((p) => ({
-          id: p.id,
-          nom: nameById[p.id] || `Produit ${p.id}`,
-          prix: p.prix,
-        }));
-      });
-    }
+    state.prix = data.prixByClient || {};
 
     // Enseignes : dériver des clients existants
     state.enseignes = {};
