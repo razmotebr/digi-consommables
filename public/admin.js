@@ -2,8 +2,9 @@
 const state = {
   admin: sessionStorage.getItem("adminUser") || "admin",
   enseignes: {}, // {code: {nom,emailCompta}}
-  clients: {}, // {id: {enseigne,magasin,contact,email}}
-  prix: {}, // {clientId: [{id,nom,prix}]}
+  clients: {},   // {id: {enseigne,magasin,contact,email}}
+  prix: {},      // {clientId: [{id,nom,prix}]}
+  catalog: {}    // {id: nom} catalogue unique
 };
 
 function showSection(id) {
@@ -88,7 +89,7 @@ function renderPrix() {
       document.getElementById("prixId").value = prod.id;
       document.getElementById("prixNom").value = prod.nom;
       document.getElementById("prixValeur").value = prod.prix;
-      document.getElementById("prixProduitSelect").value = prod.id;
+      document.getElementById("prixProduitGlobalSelect").value = prod.id;
     });
   });
   tbody.querySelectorAll("button[data-del]").forEach((btn) => {
@@ -110,21 +111,36 @@ function populateClientSelect() {
   });
 }
 
-function populateProduitSelect() {
-  const clientId = document.getElementById("prixClientSelect").value.trim();
-  const sel = document.getElementById("prixProduitSelect");
+function populateProduitGlobalSelect() {
+  const sel = document.getElementById("prixProduitGlobalSelect");
   sel.innerHTML = '<option value="">-- Nouveau produit --</option>';
-  (state.prix[clientId] || [])
-    .sort((a, b) => a.id - b.id)
-    .forEach((p) => {
+  Object.keys(state.catalog)
+    .map((k) => Number(k))
+    .sort((a, b) => a - b)
+    .forEach((id) => {
       const opt = document.createElement("option");
-      opt.value = p.id;
-      opt.textContent = `${p.id} - ${p.nom}`;
+      opt.value = id;
+      opt.textContent = `${id} - ${state.catalog[id]}`;
       sel.appendChild(opt);
     });
   document.getElementById("prixId").value = "";
   document.getElementById("prixNom").value = "";
   document.getElementById("prixValeur").value = "";
+}
+
+function applySelectedProduct() {
+  const clientId = document.getElementById("prixClientSelect").value.trim();
+  const prodId = Number(document.getElementById("prixProduitGlobalSelect").value);
+  if (!prodId) {
+    document.getElementById("prixId").value = "";
+    document.getElementById("prixNom").value = "";
+    document.getElementById("prixValeur").value = "";
+    return;
+  }
+  document.getElementById("prixId").value = prodId;
+  document.getElementById("prixNom").value = state.catalog[prodId] || "";
+  const prod = (state.prix[clientId] || []).find((p) => p.id === prodId);
+  document.getElementById("prixValeur").value = prod ? prod.prix : "";
 }
 
 document.getElementById("adminUserTag").textContent = state.admin;
@@ -181,25 +197,12 @@ document.getElementById("btnAddPrix").addEventListener("click", () => {
 });
 
 document.getElementById("prixClientSelect").addEventListener("change", () => {
-  populateProduitSelect();
+  applySelectedProduct();
   renderPrix();
 });
 
-document.getElementById("prixProduitSelect").addEventListener("change", () => {
-  const clientId = document.getElementById("prixClientSelect").value.trim();
-  const prodId = Number(document.getElementById("prixProduitSelect").value);
-  if (!clientId || !prodId) {
-    document.getElementById("prixId").value = "";
-    document.getElementById("prixNom").value = "";
-    document.getElementById("prixValeur").value = "";
-    return;
-  }
-  const prod = (state.prix[clientId] || []).find((p) => p.id === prodId);
-  if (prod) {
-    document.getElementById("prixId").value = prod.id;
-    document.getElementById("prixNom").value = prod.nom;
-    document.getElementById("prixValeur").value = prod.prix;
-  }
+document.getElementById("prixProduitGlobalSelect").addEventListener("change", () => {
+  applySelectedProduct();
 });
 
 async function loadInitialData() {
@@ -210,6 +213,7 @@ async function loadInitialData() {
 
     state.clients = data.clients || {};
     state.prix = data.prixByClient || {};
+    state.catalog = data.catalog || {};
 
     // Enseignes derivees des clients existants
     state.enseignes = {};
@@ -223,9 +227,10 @@ async function loadInitialData() {
     renderClients();
 
     populateClientSelect();
+    populateProduitGlobalSelect();
     const keys = Object.keys(state.clients);
     if (keys.length > 0) document.getElementById("prixClientSelect").value = keys[0];
-    populateProduitSelect();
+    applySelectedProduct();
     renderPrix();
   } catch (e) {
     console.error("loadInitialData error", e);
@@ -252,6 +257,7 @@ async function saveClient(payload) {
       state.enseignes[payload.enseigne] = { nom: payload.enseigne, emailCompta: payload.email || "" };
       renderEnseignes();
     }
+    populateClientSelect();
   } catch (e) {
     console.error("saveClient error", e);
     alert("Erreur sauvegarde client");
@@ -268,6 +274,8 @@ async function deleteClient(id) {
     if (!res.ok) throw new Error(await res.text());
     delete state.clients[id];
     renderClients();
+    populateClientSelect();
+    renderPrix();
   } catch (e) {
     console.error("deleteClient error", e);
     alert("Erreur suppression client");
@@ -283,7 +291,6 @@ async function deletePrice(clientId, produitId) {
     });
     if (!res.ok) throw new Error(await res.text());
     state.prix[clientId] = (state.prix[clientId] || []).filter((p) => p.id !== produitId);
-    populateProduitSelect();
     renderPrix();
   } catch (e) {
     console.error("deletePrice error", e);
@@ -299,15 +306,19 @@ async function savePrice({ clientId, id, nom, prix }) {
       body: JSON.stringify({ clientId, produitId: id, nom, prix }),
     });
     if (!res.ok) throw new Error(await res.text());
+
+    // Maj catalog local
+    state.catalog[id] = nom || state.catalog[id] || `Produit ${id}`;
+    populateProduitGlobalSelect();
+
     if (!state.prix[clientId]) state.prix[clientId] = [];
     const existing = state.prix[clientId].find((p) => p.id === id);
     if (existing) {
-      existing.nom = nom;
+      existing.nom = state.catalog[id];
       existing.prix = prix;
     } else {
-      state.prix[clientId].push({ id, nom, prix });
+      state.prix[clientId].push({ id, nom: state.catalog[id], prix });
     }
-    populateProduitSelect();
     renderPrix();
   } catch (e) {
     console.error("savePrice error", e);

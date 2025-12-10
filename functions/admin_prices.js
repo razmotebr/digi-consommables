@@ -13,10 +13,10 @@ export async function onRequestPost(context) {
     if (nom) {
       await db
         .prepare(
-          `INSERT INTO produits (client_id, id, nom) VALUES (?, ?, ?)
-           ON CONFLICT(client_id, id) DO UPDATE SET nom=excluded.nom`
+          `INSERT INTO catalog_produits (id, nom) VALUES (?, ?)
+           ON CONFLICT(id) DO UPDATE SET nom=excluded.nom`
         )
-        .bind(clientId, produitId, nom)
+        .bind(produitId, nom)
         .run();
     }
 

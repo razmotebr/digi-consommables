@@ -1,5 +1,10 @@
 -- D1 schema initialisation script (SQLite/SQL compatible)
--- Adjust types and AUTOINCREMENT for your D1 dialect if needed
+
+DROP TABLE IF EXISTS prix_par_client;
+DROP TABLE IF EXISTS catalog_produits;
+DROP TABLE IF EXISTS commandes;
+DROP TABLE IF EXISTS clients;
+DROP TABLE IF EXISTS users;
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -17,23 +22,21 @@ CREATE TABLE IF NOT EXISTS clients (
   tva REAL DEFAULT 0.2
 );
 
--- Produits possiblement differents par client
-CREATE TABLE IF NOT EXISTS produits (
-  client_id TEXT,
-  id INTEGER,
+-- Catalogue produit unique
+CREATE TABLE IF NOT EXISTS catalog_produits (
+  id INTEGER PRIMARY KEY,
   nom TEXT NOT NULL,
-  description TEXT,
-  PRIMARY KEY (client_id, id),
-  FOREIGN KEY (client_id) REFERENCES clients(id)
+  description TEXT
 );
 
+-- Prix par client pour un produit du catalogue
 CREATE TABLE IF NOT EXISTS prix_par_client (
   client_id TEXT,
   produit_id INTEGER,
   prix REAL,
   PRIMARY KEY (client_id, produit_id),
   FOREIGN KEY (client_id) REFERENCES clients(id),
-  FOREIGN KEY (client_id, produit_id) REFERENCES produits(client_id, id)
+  FOREIGN KEY (produit_id) REFERENCES catalog_produits(id)
 );
 
 CREATE TABLE IF NOT EXISTS commandes (
@@ -48,18 +51,17 @@ CREATE TABLE IF NOT EXISTS commandes (
   payload JSON
 );
 
--- Sample data insertion (dev)
+-- Données de test
 INSERT OR IGNORE INTO clients (id, enseigne, magasin, contact, email_compta) VALUES
 ('C001','Intermarche','Paris 15','Jean Dupont','razmotebr@hotmail.fr'),
 ('C002','Carrefour','Nice Gambetta','Sophie Martin','razmotebr@hotmail.fr');
 
-INSERT OR IGNORE INTO produits (client_id, id, nom) VALUES
-('C001',1,'Film alimentaire 450 mm'),
-('C001',2,'Film alimentaire 300 mm'),
-('C001',3,'Ticket Linerless 58mm x 65M 40mm BL'),
-('C001',4,'Ticket Linerless 58mm x 65M 40mm BL x30'),
-('C001',5,'Etiquettes thermo 58x43');
+INSERT OR IGNORE INTO catalog_produits (id, nom) VALUES
+(1,'Film alimentaire 450 mm'),
+(2,'Film alimentaire 300 mm'),
+(3,'Ticket Linerless 58mm x 65M 40mm BL'),
+(4,'Ticket Linerless 58mm x 65M 40mm BL x30'),
+(5,'Etiquettes thermo 58x43');
 
--- Default prices (C001)
 INSERT OR IGNORE INTO prix_par_client (client_id, produit_id, prix) VALUES
 ('C001',1,12.50),('C001',2,9.90),('C001',3,4.50),('C001',4,101.30),('C001',5,3.90);

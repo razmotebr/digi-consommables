@@ -16,14 +16,14 @@ export async function onRequestGet(context) {
     });
   }
 
-  // Ne renvoie que les produits qui ont un prix defini pour ce client
+  // Ne renvoie que les produits qui ont un prix defini pour ce client (catalogue unique)
   const stmt = db
     .prepare(
-      `SELECT p.id, p.nom, pc.prix
+      `SELECT cp.id, cp.nom, pc.prix
        FROM prix_par_client pc
-       JOIN produits p ON p.client_id = pc.client_id AND p.id = pc.produit_id
+       JOIN catalog_produits cp ON cp.id = pc.produit_id
        WHERE pc.client_id = ?
-       ORDER BY p.id`
+       ORDER BY cp.id`
     )
     .bind(clientId);
 

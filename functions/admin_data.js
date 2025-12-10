@@ -5,11 +5,12 @@ export async function onRequestGet(context) {
     const clientsRes = await db.prepare("SELECT id, enseigne, magasin, contact, email_compta, frais_port, tva FROM clients ORDER BY id").all();
     const prixRes = await db
       .prepare(
-        `SELECT pc.client_id, pc.produit_id AS id, pc.prix, p.nom
+        `SELECT pc.client_id, pc.produit_id AS id, pc.prix, cp.nom
          FROM prix_par_client pc
-         LEFT JOIN produits p ON p.client_id = pc.client_id AND p.id = pc.produit_id`
+         LEFT JOIN catalog_produits cp ON cp.id = pc.produit_id`
       )
       .all();
+    const catalogRes = await db.prepare("SELECT id, nom, description FROM catalog_produits ORDER BY id").all();
 
     const clients = {};
     (clientsRes.results || []).forEach((c) => {
@@ -28,11 +29,16 @@ export async function onRequestGet(context) {
       if (!prixByClient[r.client_id]) prixByClient[r.client_id] = [];
       prixByClient[r.client_id].push({ id: r.id, prix: r.prix, nom: r.nom || `Produit ${r.id}` });
     });
+    const catalog = {};
+    (catalogRes.results || []).forEach((p) => {
+      catalog[p.id] = p.nom || `Produit ${p.id}`;
+    });
 
     return new Response(
       JSON.stringify({
         clients,
         prixByClient,
+        catalog,
       }),
       { status: 200, headers: { "content-type": "application/json" } }
     );
