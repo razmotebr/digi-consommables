@@ -1,8 +1,5 @@
 let produits = [];
-const config = {
-    fraisPort: 12.0,
-    tva: 0.2
-};
+const config = { fraisPort: 12.0, tva: 0.2 };
 
 console.log("app.js charge");
 
@@ -26,11 +23,10 @@ async function init() {
     }
 
     try {
-        const response = await fetch("clients.json");
-        if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
-        const prodData = await response.json();
-
-        produits = prodData.conso || [];
+        // Infos client depuis clients.json
+        const responseClients = await fetch("clients.json");
+        if (!responseClients.ok) throw new Error(`Failed to fetch clients: ${responseClients.status}`);
+        const prodData = await responseClients.json();
 
         if (prodData.clients && prodData.clients[clientId]) {
             const cl = prodData.clients[clientId];
@@ -39,6 +35,14 @@ async function init() {
             document.getElementById("contact").value = cl.contact || "";
             if (cl.emailCompta) document.getElementById("emailCompta").value = cl.emailCompta;
         }
+
+        // Liste de prix depuis l'API (protégée par token)
+        const resPrices = await fetch("/prices", {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!resPrices.ok) throw new Error(`Failed to load prices: ${resPrices.status}`);
+        const priceData = await resPrices.json();
+        produits = priceData.produits || [];
 
         renderProduits();
         updateTotals();

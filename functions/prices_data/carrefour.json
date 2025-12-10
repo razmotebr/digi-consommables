@@ -1,0 +1,6 @@
+[
+  { "id": 1, "nom": "Film alimentaire 450 mm", "prix": 13.0 },
+  { "id": 2, "nom": "Film alimentaire 300 mm", "prix": 10.2 },
+  { "id": 3, "nom": "Ticket Linerless 58mm x 65M 40mm BL", "prix": 4.8 },
+  { "id": 4, "nom": "Ticket Linerless 58mm x 65M 40mm BL x30", "prix": 104.5 }
+]
