@@ -30,7 +30,9 @@ Tarif : ${data.tarifMois}
 
     console.log("MAIL À ENVOYER :\n", texte);
 
-    return new Response(JSON.stringify({ ok: true }), {
+    return new Response(JSON.stringify({ 
+      message: "Commande envoyée avec succès !" 
+    }), {
       status: 200,
       headers: { "content-type": "application/json" }
     });

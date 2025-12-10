@@ -91,13 +91,25 @@ document.getElementById("btnSend").addEventListener("click", async () => {
         }))
     };
 
-    const res = await fetch("/sendorder", {
-        method: "POST",
-        body: JSON.stringify(payload)
-    });
+    try {
+        const res = await fetch("/sendorder", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
-    const result = await res.json();
-    alert(result.message);
+        if (!res.ok) {
+            throw new Error(`Erreur serveur: ${res.status}`);
+        }
+
+        const result = await res.json();
+        alert(result.message || "Commande envoyée avec succès !");
+    } catch (error) {
+        console.error("Erreur lors de l'envoi:", error);
+        alert("Erreur: " + error.message);
+    }
 });
 
 init();

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion - Commande consommables</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-container h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 24px;
+        }
+        .login-container p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.1);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+        .error {
+            color: #d32f2f;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .demo-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .demo-info strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h1>Commande Consommables</h1>
+    <p>Connexion sécurisée</p>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="clientId">Identifiant client</label>
+            <input type="text" id="clientId" name="clientId" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <button type="submit" id="btnLogin">Connexion</button>
+
+        <div id="errorMsg" class="error"></div>
+    </form>
+
+    <div class="demo-info">
+        <strong>🧪 Mode test :</strong><br>
+        ID : C001 ou C002<br>
+        Mot de passe : password
+    </div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const clientId = document.getElementById('clientId').value.trim();
+    const password = document.getElementById('password').value;
+    const errorMsg = document.getElementById('errorMsg');
+    const btnLogin = document.getElementById('btnLogin');
+
+    errorMsg.textContent = '';
+    btnLogin.disabled = true;
+    btnLogin.textContent = 'Connexion en cours...';
+
+    try {
+        // Call /api/login endpoint (or /login for local testing)
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: clientId, password })
+        });
+
+        if (!res.ok) {
+            throw new Error('Identifiant ou mot de passe incorrect');
+        }
+
+        const data = await res.json();
+
+        // Save token to sessionStorage
+        sessionStorage.setItem('token', data.token);
+        sessionStorage.setItem('clientId', clientId);
+
+        // Redirect to index.html (page de commande)
+        window.location.href = '/index.html';
+
+    } catch (error) {
+        errorMsg.textContent = error.message;
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Connexion';
+    }
+});
+</script>
+
+</body>
+</html>

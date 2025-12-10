@@ -21,7 +21,6 @@
     { "id": 1, "nom": "Film alimentaire 450 mm", "prix": 12.50 },
     { "id": 2, "nom": "Film alimentaire 300 mm", "prix": 9.90 },
     { "id": 3, "nom": "Ticket Linerless 58mm x 65M ø40mm BL", "prix": 4.50 },
-    { "id": 4, "nom": "Ticket Linerless 58mm x 65M ø40mm BL x30", "prix": 101.30 },
-    { "id": 5, "nom": "Étiquettes thermo 58×43", "prix": 3.90 }
+    { "id": 4, "nom": "Ticket Linerless 58mm x 65M ø40mm BL x30", "prix": 101.30 }
   ]
 }
