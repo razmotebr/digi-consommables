@@ -164,6 +164,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         btnLogin.textContent = 'Connexion';
     }
 });
+
+// Pré-remplit l'ID depuis l'URL (QR code) si présent : ?client=C001
+(function presetClientFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const cid = params.get('client');
+    if (cid) {
+        const input = document.getElementById('clientId');
+        input.value = cid;
+    }
+})();
 </script>
 
 </body>
