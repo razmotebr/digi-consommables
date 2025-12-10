@@ -4,24 +4,72 @@
     <meta charset="UTF-8">
     <title>Admin - Commande Consommables</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
-        header { background: #4a6cf7; color: white; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+        :root {
+            --digi-green: #009c84;
+            --digi-dark: #0f1f2a;
+            --card-bg: #ffffff;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            margin: 0;
+            padding: 0;
+            color: #0f172a;
+        }
+        header {
+            background: var(--digi-green);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
         header h1 { margin: 0; font-size: 20px; }
-        nav { background: #fff; padding: 12px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; gap: 12px; }
-        nav a { text-decoration: none; color: #4a6cf7; font-weight: bold; }
+        nav {
+            background: #f8fafc;
+            padding: 12px 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 12px;
+        }
+        nav a { text-decoration: none; color: var(--digi-green); font-weight: bold; }
         .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
-        .card { background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 18px;
+            border: 1px solid var(--border);
+        }
         .flex { display: flex; gap: 16px; flex-wrap: wrap; }
-        .col { flex: 1 1 320px; }
-        label { display: block; font-weight: bold; margin: 8px 0 4px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        button { background: #4a6cf7; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
-        button.secondary { background: #e0e7ff; color: #1e3a8a; }
-        button.danger { background: #ffe0e0; color: #b30000; }
+        .panel { flex: 1 1 360px; background: #fdfefc; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+        .panel h3 { margin-top: 0; color: var(--digi-dark); }
+        label { display: block; font-weight: bold; margin: 8px 0 4px; color: var(--digi-dark); }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+        }
+        button {
+            background: var(--digi-green);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button.secondary { background: #e0f2fe; color: #0f172a; }
+        button.danger { background: #fee2e2; color: #991b1b; }
         table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
-        th { background: #f8fafc; }
-        .tag { display: inline-block; background: #e0e7ff; color: #1e3a8a; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+        th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }
+        th { background: #f8fafc; color: var(--digi-dark); }
+        .tag { display: inline-block; background: #e0f2fe; color: #0f172a; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
         .hidden { display: none; }
     </style>
 </head>
@@ -41,7 +89,7 @@
         <section id="sectionEnseignes" class="card">
             <h2>Paramétrage des enseignes</h2>
             <div class="flex">
-                <div class="col">
+                <div class="panel">
                     <label>Nom de l'enseigne</label>
                     <input type="text" id="ensName" placeholder="Ex: Intermarche">
                     <label>Code</label>
@@ -50,7 +98,7 @@
                     <input type="email" id="ensEmail" placeholder="exemple@domaine.com">
                     <button id="btnAddEnseigne">Ajouter / Mettre à jour</button>
                 </div>
-                <div class="col">
+                <div class="panel">
                     <h3>Enseignes</h3>
                     <table id="tableEnseignes">
                         <thead><tr><th>Code</th><th>Nom</th><th>Email compta</th><th></th></tr></thead>
@@ -63,7 +111,7 @@
         <section id="sectionClients" class="card hidden">
             <h2>Paramétrage des comptes clients</h2>
             <div class="flex">
-                <div class="col">
+                <div class="panel">
                     <label>Identifiant client</label>
                     <input type="text" id="cliId" placeholder="Ex: C001">
                     <label>Enseigne (code)</label>
@@ -76,7 +124,7 @@
                     <input type="email" id="cliEmail">
                     <button id="btnAddClient">Ajouter / Mettre à jour</button>
                 </div>
-                <div class="col">
+                <div class="panel">
                     <h3>Clients</h3>
                     <table id="tableClients">
                         <thead><tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th></th></tr></thead>
@@ -89,7 +137,7 @@
         <section id="sectionPrix" class="card hidden">
             <h2>Paramétrage des prix par enseigne</h2>
             <div class="flex">
-                <div class="col">
+                <div class="panel">
                     <label>Client / Enseigne</label>
                     <select id="prixClientSelect"></select>
                     <label>Produit existant</label>
@@ -104,7 +152,7 @@
                     <input type="number" step="0.01" id="prixValeur" placeholder="Ex: 12.50">
                     <button id="btnAddPrix">Ajouter / Mettre à jour</button>
                 </div>
-                <div class="col">
+                <div class="panel">
                     <h3>Prix (par enseigne)</h3>
                     <table id="tablePrix">
                         <thead><tr><th>ID</th><th>Nom</th><th>Prix (€)</th><th></th></tr></thead>
