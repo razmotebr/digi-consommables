@@ -44,8 +44,11 @@ function renderClients() {
   const tbody = document.querySelector("#tableClients tbody");
   tbody.innerHTML = "";
   Object.entries(state.clients).forEach(([id, c]) => {
+    const qrData = `${window.location.origin}/login.html?client=${encodeURIComponent(id)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${id}</td><td>${c.enseigne || ""}</td><td>${c.magasin || ""}</td><td>${c.contact || ""}</td><td>${c.email || ""}</td>
+      <td><img src="${qrUrl}" alt="QR ${id}" width="70" height="70" loading="lazy"><br><small>URL+ID</small></td>
       <td><button class="secondary" data-id="${id}">Edit</button>
           <button class="secondary danger" data-del="${id}">Suppr</button></td>`;
     tbody.appendChild(tr);
