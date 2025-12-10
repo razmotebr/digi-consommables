@@ -1,13 +1,25 @@
-// Cloudflare Pages Functions ne peut pas ouvrir un socket SMTP direct.
-// On envoie l'email via l'API HTTP MailChannels (supportée nativement par Workers/Pages).
-// À configurer dans Pages > Settings > Environment variables :
-//   EMAIL_FROM : adresse de votre domaine (ex : no-reply@votredomaine.com)
-//   EMAIL_DIGI : destinataire principal (ex : ebrion@fr.digi.eu)
-//   EMAIL_BCC  : destinataire en copie cachée (optionnel)
+// Envoi d'email via l'API HTTP SendGrid (Pages/Workers n'ont pas de SMTP).
+// Configurer dans Pages > Settings > Environment variables (Production) :
+//   SENDGRID_API_KEY : clé SendGrid (bearer)
+//   EMAIL_FROM       : adresse de votre domaine validé SendGrid (obligatoire)
+//   EMAIL_DIGI       : destinataire principal (ex : ebrion@fr.digi.eu)
+//   EMAIL_BCC        : copie cachée (optionnel)
 export async function onRequestPost(context) {
   try {
     const data = await context.request.json();
     const produits = Array.isArray(data.produits) ? data.produits : [];
+
+    const apiKey = context.env.SENDGRID_API_KEY || "";
+    const to = context.env.EMAIL_DIGI || "ebrion@fr.digi.eu";
+    const bcc = context.env.EMAIL_BCC || null;
+    const from = context.env.EMAIL_FROM || "";
+
+    if (!apiKey || !from) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "SENDGRID_API_KEY ou EMAIL_FROM manquant" }),
+        { status: 500, headers: { "content-type": "application/json" } },
+      );
+    }
 
     const lignes = produits
       .filter((p) => Number(p.qty) > 0)
@@ -15,11 +27,6 @@ export async function onRequestPost(context) {
       .join("\n");
 
     const emailCompta = data.emailCompta || "non fourni";
-    const to = context.env.EMAIL_DIGI || "ebrion@fr.digi.eu";
-    const bcc = context.env.EMAIL_BCC || null;
-    const from =
-      context.env.EMAIL_FROM || "razmotebr@hotmail.fr"; // Mettez une adresse de votre domaine
-
     const subject = `Commande consommables - ${(data.enseigne || "").trim()} ${(data.magasin || "").trim()}`.trim();
     const body = [
       "Commande consommables",
@@ -48,15 +55,23 @@ export async function onRequestPost(context) {
       content: [{ type: "text/plain", value: body }],
     };
 
-    const mailResp = await fetch("https://api.mailchannels.net/tx/v1/send", {
+    const mailResp = await fetch("https://api.sendgrid.com/v3/mail/send", {
       method: "POST",
       headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey}`,
+      },
       body: JSON.stringify(mailPayload),
     });
 
     if (!mailResp.ok) {
       const errTxt = await mailResp.text();
-      throw new Error(`MailChannels error ${mailResp.status}: ${errTxt}`);
+      console.error("SendGrid error", mailResp.status, errTxt);
+      return new Response(
+        JSON.stringify({ ok: false, error: `SendGrid ${mailResp.status}`, detail: errTxt.slice(0, 500) }),
+        { status: 500, headers: { "content-type": "application/json" } },
+      );
     }
 
     return new Response(
@@ -64,6 +79,7 @@ export async function onRequestPost(context) {
       { status: 200, headers: { "content-type": "application/json" } },
     );
   } catch (e) {
+    console.error("sendorder error", e);
     return new Response(JSON.stringify({ ok: false, error: e.toString() }), {
       status: 500,
       headers: { "content-type": "application/json" },
