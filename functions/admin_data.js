@@ -1,21 +1,37 @@
-import { CLIENT_ENSEIGNE, ENSEIGNE_PRICES } from "./data";
-
 export async function onRequestGet(context) {
   try {
-    // Charge clients.json depuis le site (même origine)
-    const clientsRes = await fetch(new URL("/clients.json", context.request.url));
-    const clientsJson = clientsRes.ok ? await clientsRes.json() : { clients: {} };
+    const db = context.env.DB;
 
-    const payload = {
-      clients: clientsJson.clients || {},
-      clientEnseigne: CLIENT_ENSEIGNE,
-      enseignePrices: ENSEIGNE_PRICES,
-    };
+    const clientsRes = await db.prepare("SELECT id, enseigne, magasin, contact, email_compta, frais_port, tva FROM clients ORDER BY id").all();
+    const produitsRes = await db.prepare("SELECT id, nom, description FROM produits ORDER BY id").all();
+    const prixRes = await db.prepare("SELECT client_id, produit_id, prix FROM prix_par_client").all();
 
-    return new Response(JSON.stringify(payload), {
-      status: 200,
-      headers: { "content-type": "application/json" },
+    const clients = {};
+    (clientsRes.results || []).forEach((c) => {
+      clients[c.id] = {
+        enseigne: c.enseigne || "",
+        magasin: c.magasin || "",
+        contact: c.contact || "",
+        email: c.email_compta || "",
+        fraisPort: c.frais_port,
+        tva: c.tva,
+      };
     });
+
+    const prixByClient = {};
+    (prixRes.results || []).forEach((r) => {
+      if (!prixByClient[r.client_id]) prixByClient[r.client_id] = [];
+      prixByClient[r.client_id].push({ id: r.produit_id, prix: r.prix });
+    });
+
+    return new Response(
+      JSON.stringify({
+        clients,
+        produits: produitsRes.results || [],
+        prixByClient,
+      }),
+      { status: 200, headers: { "content-type": "application/json" } }
+    );
   } catch (e) {
     return new Response(JSON.stringify({ error: e.toString() }), {
       status: 500,

@@ -1,5 +1,3 @@
-import { CLIENT_ENSEIGNE, ENSEIGNE_PRICES } from "./data";
-
 function parseToken(authHeader) {
   if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
   const token = authHeader.replace("Bearer ", "");
@@ -9,6 +7,7 @@ function parseToken(authHeader) {
 }
 
 export async function onRequestGet(context) {
+  const db = context.env.DB;
   const clientId = parseToken(context.request.headers.get("Authorization") || "");
   if (!clientId) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -17,10 +16,16 @@ export async function onRequestGet(context) {
     });
   }
 
-  const enseigne = CLIENT_ENSEIGNE[clientId];
-  const produits = (enseigne && ENSEIGNE_PRICES[enseigne]) || [];
+  const stmt = db.prepare(
+    `SELECT p.id, p.nom, COALESCE(pc.prix, 0) AS prix
+     FROM produits p
+     LEFT JOIN prix_par_client pc ON pc.produit_id = p.id AND pc.client_id = ?
+     ORDER BY p.id`
+  ).bind(clientId);
 
-  return new Response(JSON.stringify({ enseigne: enseigne || null, produits }), {
+  const { results } = await stmt.all();
+
+  return new Response(JSON.stringify({ produits: results || [] }), {
     status: 200,
     headers: { "content-type": "application/json" },
   });

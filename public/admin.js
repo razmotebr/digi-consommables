@@ -3,7 +3,8 @@ const state = {
   admin: sessionStorage.getItem("adminUser") || "admin",
   enseignes: {}, // {code: {nom,emailCompta}}
   clients: {}, // {id: {enseigne,magasin,contact,email}}
-  prix: {}, // {enseigne: [{id,nom,prix}]}
+  prix: {}, // {clientId: [{id,nom,prix}]}
+  produits: [], // catalogue global
 };
 
 function showSection(id) {
@@ -63,17 +64,16 @@ function renderClients() {
   tbody.querySelectorAll("button[data-del]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.del;
-      delete state.clients[id];
-      renderClients();
+      deleteClient(id);
     });
   });
 }
 
 function renderPrix() {
-  const enseigne = document.getElementById("prixEnseigne").value.trim();
+  const clientKey = document.getElementById("prixEnseigne").value.trim();
   const tbody = document.querySelector("#tablePrix tbody");
   tbody.innerHTML = "";
-  const list = (state.prix[enseigne] || []).sort((a, b) => a.id - b.id);
+  const list = (state.prix[clientKey] || []).sort((a, b) => a.id - b.id);
   list.forEach((p) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${p.id}</td><td>${p.nom}</td><td>${p.prix.toFixed(2)}</td>
@@ -84,7 +84,7 @@ function renderPrix() {
   tbody.querySelectorAll("button[data-id]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = Number(btn.dataset.id);
-      const prod = (state.prix[enseigne] || []).find((p) => p.id === id);
+      const prod = (state.prix[clientKey] || []).find((p) => p.id === id);
       if (!prod) return;
       document.getElementById("prixId").value = prod.id;
       document.getElementById("prixNom").value = prod.nom;
@@ -94,8 +94,7 @@ function renderPrix() {
   tbody.querySelectorAll("button[data-del]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = Number(btn.dataset.del);
-      state.prix[enseigne] = (state.prix[enseigne] || []).filter((p) => p.id !== id);
-      renderPrix();
+      deletePrice(clientKey, id);
     });
   });
 }
@@ -134,31 +133,23 @@ document.getElementById("btnAddEnseigne").addEventListener("click", () => {
 document.getElementById("btnAddClient").addEventListener("click", () => {
   const id = document.getElementById("cliId").value.trim();
   if (!id) return alert("ID requis");
-  state.clients[id] = {
+  saveClient({
+    id,
     enseigne: document.getElementById("cliEnseigne").value.trim(),
     magasin: document.getElementById("cliMagasin").value.trim(),
     contact: document.getElementById("cliContact").value.trim(),
     email: document.getElementById("cliEmail").value.trim(),
-  };
-  renderClients();
+  });
 });
 
 document.getElementById("btnAddPrix").addEventListener("click", () => {
-  const ens = document.getElementById("prixEnseigne").value.trim();
-  if (!ens) return alert("Enseigne requise");
+  const clientId = document.getElementById("prixEnseigne").value.trim();
+  if (!clientId) return alert("Client/enseigne requis");
   const id = Number(document.getElementById("prixId").value);
   const nom = document.getElementById("prixNom").value.trim();
   const prix = Number(document.getElementById("prixValeur").value);
   if (!id || !nom || isNaN(prix)) return alert("Champs prix invalides");
-  if (!state.prix[ens]) state.prix[ens] = [];
-  const existing = state.prix[ens].find((p) => p.id === id);
-  if (existing) {
-    existing.nom = nom;
-    existing.prix = prix;
-  } else {
-    state.prix[ens].push({ id, nom, prix });
-  }
-  renderPrix();
+  savePrice({ clientId, id, nom, prix });
 });
 
 document.getElementById("prixEnseigne").addEventListener("input", renderPrix);
@@ -169,28 +160,121 @@ async function loadInitialData() {
     if (!res.ok) throw new Error(`admin_data ${res.status}`);
     const data = await res.json();
 
-    // Enseignes : dérivé du mapping clientEnseigne et prix dispo
-    state.enseignes = {};
-    if (data.clientEnseigne) {
-      Object.entries(data.clientEnseigne).forEach(([cid, ens]) => {
-        if (!state.enseignes[ens]) state.enseignes[ens] = { nom: ens, emailCompta: "" };
+    state.clients = data.clients || {};
+    state.produits = data.produits || [];
+    state.prix = {};
+
+    // Construire prix par client avec noms de produit
+    const nameById = {};
+    state.produits.forEach((p) => (nameById[p.id] = p.nom));
+    if (data.prixByClient) {
+      Object.entries(data.prixByClient).forEach(([cid, list]) => {
+        state.prix[cid] = list.map((p) => ({
+          id: p.id,
+          nom: nameById[p.id] || `Produit ${p.id}`,
+          prix: p.prix,
+        }));
       });
     }
 
-    state.clients = data.clients || {};
-    state.prix = data.enseignePrices || {};
-
-    // Si une enseigne existe en prix mais pas dans enseignes, on l'ajoute
-    Object.keys(state.prix).forEach((ens) => {
-      if (!state.enseignes[ens]) state.enseignes[ens] = { nom: ens, emailCompta: "" };
+    // Enseignes : dériver des clients existants
+    state.enseignes = {};
+    Object.values(state.clients).forEach((c) => {
+      if (c.enseigne && !state.enseignes[c.enseigne]) {
+        state.enseignes[c.enseigne] = { nom: c.enseigne, emailCompta: c.email || "" };
+      }
     });
 
     renderEnseignes();
     renderClients();
+
+    const keys = Object.keys(state.prix);
+    if (keys.length > 0) document.getElementById("prixEnseigne").value = keys[0];
     renderPrix();
   } catch (e) {
     console.error("loadInitialData error", e);
     alert("Impossible de charger les données admin");
+  }
+}
+
+async function saveClient(payload) {
+  try {
+    const res = await fetch("/admin_clients", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    // refresh list
+    state.clients[payload.id] = {
+      enseigne: payload.enseigne,
+      magasin: payload.magasin,
+      contact: payload.contact,
+      email: payload.email,
+    };
+    renderClients();
+    if (payload.enseigne && !state.enseignes[payload.enseigne]) {
+      state.enseignes[payload.enseigne] = { nom: payload.enseigne, emailCompta: payload.email || "" };
+      renderEnseignes();
+    }
+  } catch (e) {
+    console.error("saveClient error", e);
+    alert("Erreur sauvegarde client");
+  }
+}
+
+async function deleteClient(id) {
+  try {
+    const res = await fetch("/admin_clients", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    delete state.clients[id];
+    renderClients();
+  } catch (e) {
+    console.error("deleteClient error", e);
+    alert("Erreur suppression client");
+  }
+}
+
+async function deletePrice(clientId, produitId) {
+  try {
+    const res = await fetch("/admin_prices", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId, produitId }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    state.prix[clientId] = (state.prix[clientId] || []).filter((p) => p.id !== produitId);
+    renderPrix();
+  } catch (e) {
+    console.error("deletePrice error", e);
+    alert("Erreur suppression prix");
+  }
+}
+
+async function savePrice({ clientId, id, nom, prix }) {
+  try {
+    const res = await fetch("/admin_prices", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId, produitId: id, nom, prix }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    if (!state.prix[clientId]) state.prix[clientId] = [];
+    const existing = state.prix[clientId].find((p) => p.id === id);
+    if (existing) {
+      existing.nom = nom;
+      existing.prix = prix;
+    } else {
+      state.prix[clientId].push({ id, nom, prix });
+    }
+    renderPrix();
+  } catch (e) {
+    console.error("savePrice error", e);
+    alert("Erreur sauvegarde prix");
   }
 }
 
