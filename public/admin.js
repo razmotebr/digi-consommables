@@ -163,6 +163,17 @@ function renderClients() {
 
     const tdQr = document.createElement("td");
     tdQr.innerHTML = `<img src="${qrUrl}" alt="QR ${id}" width="70" height="70" loading="lazy"><br><small>URL+ID</small>`;
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "secondary";
+    copyBtn.style.marginTop = "6px";
+    copyBtn.textContent = "Copier QR";
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard
+        .writeText(qrData)
+        .then(() => alert("Lien du QR copié dans le presse-papiers"))
+        .catch(() => alert("Impossible de copier le QR"));
+    });
+    tdQr.appendChild(copyBtn);
 
     const actionsTd = document.createElement("td");
     const editBtn = document.createElement("button");
@@ -520,5 +531,4 @@ async function savePrice({ clientId, id, nom, prix }) {
 }
 
 loadInitialData();
-
 
