@@ -62,9 +62,6 @@ function renderEnseignes() {
     const tdEmail = document.createElement("td");
     tdEmail.appendChild(emailInput);
 
-    const actionsTd = document.createElement("td");
-    actionsTd.className = "table-actions";
-    actionsTd.className = "table-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
@@ -100,6 +97,8 @@ function renderEnseignes() {
       renderEnseignes();
     });
 
+    const actionsTd = document.createElement("td");
+    actionsTd.className = "table-actions";
     actionsTd.appendChild(editBtn);
     actionsTd.appendChild(delBtn);
 
@@ -190,6 +189,8 @@ function renderClients() {
     });
     tdQr.appendChild(qrImg);
     tdQr.appendChild(copyBtn);
+    tdQr.style.flexWrap = "nowrap";
+    tdQr.style.gap = "10px";
 
     const actionsTd = document.createElement("td");
     actionsTd.className = "table-actions";
