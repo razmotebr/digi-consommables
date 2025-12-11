@@ -652,45 +652,22 @@ async function savePrice({ clientId, id, nom, prix }) {
 }
 
 async function saveCatalogue({ id, nom }) {
-  try {
-    const res = await fetch("/admin_catalog", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id, nom }),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    state.catalog[id] = nom;
-    renderCatalogue();
-    populateProduitGlobalSelect();
-    applySelectedProduct();
-    renderPrix();
-  } catch (e) {
-    console.error("saveCatalogue error", e);
-    alert("Erreur sauvegarde catalogue");
-  }
+  state.catalog[id] = nom;
+  renderCatalogue();
+  populateProduitGlobalSelect();
+  applySelectedProduct();
+  renderPrix();
 }
 
 async function deleteCatalogue(id) {
-  try {
-    const res = await fetch("/admin_catalog", {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    delete state.catalog[id];
-    // Nettoyage des prix liés
-    Object.keys(state.prix).forEach((clientId) => {
-      state.prix[clientId] = (state.prix[clientId] || []).filter((p) => p.id !== id);
-    });
-    renderCatalogue();
-    populateProduitGlobalSelect();
-    applySelectedProduct();
-    renderPrix();
-  } catch (e) {
-    console.error("deleteCatalogue error", e);
-    alert("Erreur suppression catalogue");
-  }
+  delete state.catalog[id];
+  Object.keys(state.prix).forEach((clientId) => {
+    state.prix[clientId] = (state.prix[clientId] || []).filter((p) => p.id !== id);
+  });
+  renderCatalogue();
+  populateProduitGlobalSelect();
+  applySelectedProduct();
+  renderPrix();
 }
 
 loadInitialData();
