@@ -437,7 +437,41 @@ async function loadInitialData() {
     renderPrix();
   } catch (e) {
     console.error("loadInitialData error", e);
-    alert("Impossible de charger les données admin");
+    // Fallback local pour éviter un écran vide
+    try {
+      const fallback = await fetch("/clients.json");
+      if (fallback.ok) {
+        const data = await fallback.json();
+        state.clients = data.clients || {};
+        state.catalog = {};
+        (data.conso || []).forEach((p) => {
+          state.catalog[p.id] = p.nom;
+        });
+        // Prix identiques pour chaque client du fallback
+        state.prix = {};
+        Object.entries(state.clients).forEach(([cid, c]) => {
+          const ens = c.enseigne || cid;
+          state.prix[ens] = (data.conso || []).map((p) => ({ id: p.id, nom: p.nom, prix: p.prix }));
+        });
+        // Enseignes
+        state.enseignes = {};
+        Object.values(state.clients).forEach((c) => {
+          if (c.enseigne) state.enseignes[c.enseigne] = { nom: c.enseigne, emailCompta: c.emailCompta || "" };
+        });
+        renderEnseignes();
+        renderClients();
+        renderCatalogue();
+        populateEnseigneSelect();
+        populateProduitGlobalSelect();
+        applySelectedProduct();
+        renderPrix();
+        alert("Chargement admin_data impossible. Données locales de secours chargées.");
+        return;
+      }
+    } catch (err) {
+      console.error("fallback load error", err);
+    }
+    alert(`Impossible de charger les données admin : ${e.message || e}`);
   }
 }
 
