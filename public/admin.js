@@ -63,6 +63,9 @@ function renderEnseignes() {
     tdEmail.appendChild(emailInput);
 
     const actionsTd = document.createElement("td");
+    actionsTd.style.display = "flex";
+    actionsTd.style.gap = "6px";
+    actionsTd.style.alignItems = "center";
     const editBtn = document.createElement("button");
     editBtn.className = "secondary";
     editBtn.textContent = "Edit";
@@ -70,7 +73,7 @@ function renderEnseignes() {
     const delBtn = document.createElement("button");
     delBtn.className = "secondary danger";
     delBtn.textContent = "Suppr";
-    delBtn.style.marginLeft = "6px";
+    delBtn.style.marginLeft = "0";
 
     editBtn.addEventListener("click", () => {
       const isEditing = tr.dataset.editing === "true";
