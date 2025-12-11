@@ -118,57 +118,56 @@
             </div>
         </section>
 
-        <section id="sectionClients" class="card hidden">
-            <h2>Paramétrage des comptes clients</h2>
-            <div class="flex">
-                <div class="panel">
-                    <label>Identifiant client</label>
-                    <input type="text" id="cliId" placeholder="Ex: C001">
-                    <label>Enseigne (code)</label>
-                    <input type="text" id="cliEnseigne" placeholder="Ex: Intermarche">
-                    <label>Magasin</label>
-                    <input type="text" id="cliMagasin" placeholder="Ex: Paris 15">
-                    <label>Contact</label>
-                    <input type="text" id="cliContact">
-                    <label>Email compta</label>
-                    <input type="email" id="cliEmail">
-                    <button id="btnAddClient">Ajouter / Mettre à jour</button>
-                </div>
-                <div class="panel">
-                    <h3>Clients</h3>
-                    <table id="tableClients">
-                        <thead><tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th>QR</th><th></th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <section id="sectionClients" class="card hidden">
+            <h2>Parametrage des comptes clients</h2>
+            <div class="panel">
+                <table id="tableClients" class="editable-table">
+                    <thead>
+                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th>QR</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="add-row">
+                            <td><input type="text" id="cliId" placeholder="Ex: C001"></td>
+                            <td><input type="text" id="cliEnseigne" placeholder="Ex: Intermarche"></td>
+                            <td><input type="text" id="cliMagasin" placeholder="Ex: Paris 15"></td>
+                            <td><input type="text" id="cliContact"></td>
+                            <td><input type="email" id="cliEmail"></td>
+                            <td></td>
+                            <td><button id="btnAddClient">Ajouter</button></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
-        <section id="sectionPrix" class="card hidden">
-            <h2>Paramétrage des prix par enseigne</h2>
-            <div class="flex">
-                <div class="panel">
-                    <label>Client / Enseigne</label>
-                    <select id="prixClientSelect"></select>
-                    <label>Produit (catalogue unique)</label>
-                    <select id="prixProduitGlobalSelect">
-                        <option value="">-- Nouveau produit --</option>
-                    </select>
-                    <label>ID Produit</label>
-                    <input type="number" id="prixId" placeholder="Ex: 1">
-                    <label>Nom</label>
-                    <input type="text" id="prixNom" placeholder="Ex: Film alimentaire 450 mm">
-                    <label>Prix (€)</label>
-                    <input type="number" step="0.01" id="prixValeur" placeholder="Ex: 12.50">
-                    <button id="btnAddPrix">Ajouter / Mettre à jour</button>
+                <section id="sectionPrix" class="card hidden">
+            <h2>Parametrage des prix par enseigne</h2>
+            <div class="panel">
+                <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
+                    <div style="flex:1 1 260px;">
+                        <label>Client / Enseigne</label>
+                        <select id="prixClientSelect"></select>
+                    </div>
+                    <div style="flex:1 1 260px;">
+                        <label>Produit (catalogue unique)</label>
+                        <select id="prixProduitGlobalSelect">
+                            <option value="">-- Nouveau produit --</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="panel">
-                    <h3>Prix (par enseigne)</h3>
-                    <table id="tablePrix">
-                        <thead><tr><th>ID</th><th>Nom</th><th>Prix (€)</th><th></th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <table id="tablePrix" class="editable-table">
+                    <thead>
+                        <tr><th>ID Produit</th><th>Nom</th><th>Prix (EUR)</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="add-row">
+                            <td><input type="number" id="prixId" placeholder="Ex: 1"></td>
+                            <td><input type="text" id="prixNom" placeholder="Ex: Film alimentaire 450 mm"></td>
+                            <td><input type="number" step="0.01" id="prixValeur" placeholder="Ex: 12.50"></td>
+                            <td><button id="btnAddPrix">Ajouter</button></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
     </div>
@@ -176,4 +175,7 @@
     <script src="admin.js"></script>
 </body>
 </html>
+
+
+
 

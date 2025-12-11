@@ -92,64 +92,181 @@ function renderEnseignes() {
 
 function renderClients() {
   const tbody = document.querySelector("#tableClients tbody");
+  const addRow = tbody.querySelector(".add-row");
   tbody.innerHTML = "";
+  if (addRow) tbody.appendChild(addRow);
+
   Object.entries(state.clients).forEach(([id, c]) => {
+    const tr = document.createElement("tr");
+
+    const idInput = document.createElement("input");
+    idInput.type = "text";
+    idInput.value = id;
+    idInput.disabled = true;
+
+    const ensInput = document.createElement("input");
+    ensInput.type = "text";
+    ensInput.value = c.enseigne || "";
+    ensInput.disabled = true;
+
+    const magInput = document.createElement("input");
+    magInput.type = "text";
+    magInput.value = c.magasin || "";
+    magInput.disabled = true;
+
+    const contactInput = document.createElement("input");
+    contactInput.type = "text";
+    contactInput.value = c.contact || "";
+    contactInput.disabled = true;
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.value = c.email || "";
+    emailInput.disabled = true;
+
     const qrData = `${window.location.origin}/login.html?client=${encodeURIComponent(id)}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${id}</td><td>${c.enseigne || ""}</td><td>${c.magasin || ""}</td><td>${c.contact || ""}</td><td>${c.email || ""}</td>
-      <td><img src="${qrUrl}" alt="QR ${id}" width="70" height="70" loading="lazy"><br><small>URL+ID</small></td>
-      <td><button class="secondary" data-id="${id}">Edit</button>
-          <button class="secondary danger" data-del="${id}">Suppr</button></td>`;
-    tbody.appendChild(tr);
-  });
-  tbody.querySelectorAll("button[data-id]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.id;
-      const c = state.clients[id];
-      document.getElementById("cliId").value = id;
-      document.getElementById("cliEnseigne").value = c.enseigne || "";
-      document.getElementById("cliMagasin").value = c.magasin || "";
-      document.getElementById("cliContact").value = c.contact || "";
-      document.getElementById("cliEmail").value = c.email || "";
+
+    const tdId = document.createElement("td");
+    tdId.appendChild(idInput);
+    const tdEns = document.createElement("td");
+    tdEns.appendChild(ensInput);
+    const tdMag = document.createElement("td");
+    tdMag.appendChild(magInput);
+    const tdContact = document.createElement("td");
+    tdContact.appendChild(contactInput);
+    const tdEmail = document.createElement("td");
+    tdEmail.appendChild(emailInput);
+
+    const tdQr = document.createElement("td");
+    tdQr.innerHTML = `<img src="${qrUrl}" alt="QR ${id}" width="70" height="70" loading="lazy"><br><small>URL+ID</small>`;
+
+    const actionsTd = document.createElement("td");
+    const editBtn = document.createElement("button");
+    editBtn.className = "secondary";
+    editBtn.textContent = "Edit";
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "secondary danger";
+    delBtn.textContent = "Suppr";
+    delBtn.style.marginLeft = "6px";
+
+    editBtn.addEventListener("click", () => {
+      const isEditing = tr.dataset.editing === "true";
+      if (!isEditing) {
+        tr.dataset.editing = "true";
+        editBtn.textContent = "Enregistrer";
+        ensInput.disabled = false;
+        magInput.disabled = false;
+        contactInput.disabled = false;
+        emailInput.disabled = false;
+        return;
+      }
+      saveClient({
+        id,
+        enseigne: ensInput.value.trim(),
+        magasin: magInput.value.trim(),
+        contact: contactInput.value.trim(),
+        email: emailInput.value.trim(),
+      });
     });
-  });
-  tbody.querySelectorAll("button[data-del]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.del;
+
+    delBtn.addEventListener("click", () => {
       deleteClient(id);
     });
+
+    actionsTd.appendChild(editBtn);
+    actionsTd.appendChild(delBtn);
+
+    tr.appendChild(tdId);
+    tr.appendChild(tdEns);
+    tr.appendChild(tdMag);
+    tr.appendChild(tdContact);
+    tr.appendChild(tdEmail);
+    tr.appendChild(tdQr);
+    tr.appendChild(actionsTd);
+
+    tbody.appendChild(tr);
   });
 }
 
 function renderPrix() {
   const clientKey = document.getElementById("prixClientSelect").value.trim();
   const tbody = document.querySelector("#tablePrix tbody");
+  const addRow = tbody.querySelector(".add-row");
   tbody.innerHTML = "";
+  if (addRow) tbody.appendChild(addRow);
+  if (!clientKey) return;
+
   const list = (state.prix[clientKey] || []).sort((a, b) => a.id - b.id);
   list.forEach((p) => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${p.id}</td><td>${p.nom}</td><td>${p.prix.toFixed(2)}</td>
-      <td><button class="secondary" data-id="${p.id}">Edit</button>
-          <button class="secondary danger" data-del="${p.id}">Suppr</button></td>`;
+
+    const idInput = document.createElement("input");
+    idInput.type = "number";
+    idInput.value = p.id;
+    idInput.disabled = true;
+
+    const nomInput = document.createElement("input");
+    nomInput.type = "text";
+    nomInput.value = p.nom || "";
+    nomInput.disabled = true;
+
+    const prixInput = document.createElement("input");
+    prixInput.type = "number";
+    prixInput.step = "0.01";
+    prixInput.value = p.prix.toFixed(2);
+    prixInput.disabled = true;
+
+    const tdId = document.createElement("td");
+    tdId.appendChild(idInput);
+    const tdNom = document.createElement("td");
+    tdNom.appendChild(nomInput);
+    const tdPrix = document.createElement("td");
+    tdPrix.appendChild(prixInput);
+
+    const actionsTd = document.createElement("td");
+    const editBtn = document.createElement("button");
+    editBtn.className = "secondary";
+    editBtn.textContent = "Edit";
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "secondary danger";
+    delBtn.textContent = "Suppr";
+    delBtn.style.marginLeft = "6px";
+
+    editBtn.addEventListener("click", () => {
+      const isEditing = tr.dataset.editing === "true";
+      if (!isEditing) {
+        tr.dataset.editing = "true";
+        editBtn.textContent = "Enregistrer";
+        nomInput.disabled = false;
+        prixInput.disabled = false;
+        return;
+      }
+      const prixVal = Number(prixInput.value);
+      if (isNaN(prixVal)) return alert("Prix invalide");
+      savePrice({
+        clientId: clientKey,
+        id: p.id,
+        nom: nomInput.value.trim(),
+        prix: prixVal,
+      });
+    });
+
+    delBtn.addEventListener("click", () => {
+      deletePrice(clientKey, p.id);
+    });
+
+    actionsTd.appendChild(editBtn);
+    actionsTd.appendChild(delBtn);
+
+    tr.appendChild(tdId);
+    tr.appendChild(tdNom);
+    tr.appendChild(tdPrix);
+    tr.appendChild(actionsTd);
+
     tbody.appendChild(tr);
-  });
-  tbody.querySelectorAll("button[data-id]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = Number(btn.dataset.id);
-      const prod = (state.prix[clientKey] || []).find((p) => p.id === id);
-      if (!prod) return;
-      document.getElementById("prixId").value = prod.id;
-      document.getElementById("prixNom").value = prod.nom;
-      document.getElementById("prixValeur").value = prod.prix;
-      document.getElementById("prixProduitGlobalSelect").value = prod.id;
-    });
-  });
-  tbody.querySelectorAll("button[data-del]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const id = Number(btn.dataset.del);
-      deletePrice(clientKey, id);
-    });
   });
 }
 
