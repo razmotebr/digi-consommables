@@ -71,12 +71,18 @@
             display: flex;
             gap: 6px;
             align-items: center;
+            justify-content: flex-start;
         }
         .action-btn {
-            min-width: 90px;
+            min-width: 100px;
             text-align: center;
             flex: 1 1 0;
             width: 100%;
+        }
+        .qr-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         button {
             background: var(--accent-blue);
@@ -106,6 +112,7 @@
     <nav>
         <a href="#enseignes" id="tabEnseignes">Enseignes</a>
         <a href="#clients" id="tabClients">Comptes clients</a>
+        <a href="#catalogue" id="tabCatalogue">Catalogue</a>
         <a href="#prix" id="tabPrix">Prix par enseigne</a>
     </nav>
 
@@ -148,7 +155,24 @@
                             <td><input type="text" id="cliContact"></td>
                             <td><input type="email" id="cliEmail"></td>
                             <td></td>
-                            <td><button id="btnAddClient" class="action-btn">Ajouter</button></td>
+                            <td class="table-actions"><button id="btnAddClient" class="action-btn">Ajouter</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section id="sectionCatalogue" class="card hidden">
+            <h2>Catalogue produits</h2>
+            <div class="panel">
+                <table id="tableCatalogue" class="editable-table">
+                    <thead>
+                        <tr><th>ID Produit</th><th>Nom</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="add-row">
+                            <td><input type="number" id="catId" placeholder="Ex: 1"></td>
+                            <td><input type="text" id="catNom" placeholder="Ex: Film alimentaire 450 mm"></td>
+                            <td class="table-actions"><button id="btnAddProduitGlobal" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -196,3 +220,4 @@
     <script src="admin.js"></script>
 </body>
 </html>
+

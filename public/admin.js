@@ -162,9 +162,7 @@ function renderClients() {
     tdEmail.appendChild(emailInput);
 
     const tdQr = document.createElement("td");
-    tdQr.style.display = "flex";
-    tdQr.style.alignItems = "center";
-    tdQr.style.gap = "8px";
+    tdQr.className = "qr-cell";
     const qrImg = document.createElement("img");
     qrImg.src = qrUrl;
     qrImg.alt = `QR ${id}`;
@@ -193,14 +191,14 @@ function renderClients() {
     tdQr.appendChild(copyBtn);
 
     const actionsTd = document.createElement("td");
+    actionsTd.className = "table-actions";
     const editBtn = document.createElement("button");
-    editBtn.className = "secondary";
+    editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
 
     const delBtn = document.createElement("button");
-    delBtn.className = "secondary danger";
+    delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
-    delBtn.style.marginLeft = "6px";
 
     editBtn.addEventListener("click", () => {
       const isEditing = tr.dataset.editing === "true";
@@ -320,6 +318,71 @@ function renderPrix() {
   });
 }
 
+function renderCatalogue() {
+  const tbody = document.querySelector("#tableCatalogue tbody");
+  const addRow = tbody.querySelector(".add-row");
+  tbody.innerHTML = "";
+  if (addRow) tbody.appendChild(addRow);
+
+  Object.keys(state.catalog)
+    .map((k) => Number(k))
+    .sort((a, b) => a - b)
+    .forEach((id) => {
+      const nom = state.catalog[id] || "";
+      const tr = document.createElement("tr");
+
+      const idInput = document.createElement("input");
+      idInput.type = "number";
+      idInput.value = id;
+      idInput.disabled = true;
+
+      const nomInput = document.createElement("input");
+      nomInput.type = "text";
+      nomInput.value = nom;
+      nomInput.disabled = true;
+
+      const tdId = document.createElement("td");
+      tdId.appendChild(idInput);
+      const tdNom = document.createElement("td");
+      tdNom.appendChild(nomInput);
+
+      const actionsTd = document.createElement("td");
+      actionsTd.className = "table-actions";
+      const editBtn = document.createElement("button");
+      editBtn.className = "secondary action-btn";
+      editBtn.textContent = "Edit";
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "secondary danger action-btn";
+      delBtn.textContent = "Suppr";
+
+      editBtn.addEventListener("click", () => {
+        const isEditing = tr.dataset.editing === "true";
+        if (!isEditing) {
+          tr.dataset.editing = "true";
+          editBtn.textContent = "Enregistrer";
+          nomInput.disabled = false;
+          return;
+        }
+        const newNom = nomInput.value.trim();
+        if (!newNom) return alert("Nom requis");
+        saveCatalogue({ id, nom: newNom });
+      });
+
+      delBtn.addEventListener("click", () => {
+        deleteCatalogue(id);
+      });
+
+      actionsTd.appendChild(editBtn);
+      actionsTd.appendChild(delBtn);
+
+      tr.appendChild(tdId);
+      tr.appendChild(tdNom);
+      tr.appendChild(actionsTd);
+      tbody.appendChild(tr);
+    });
+}
+
 function populateClientSelect() {
   const sel = document.getElementById("prixClientSelect");
   const ensFilter = document.getElementById("prixEnseigneSelect")?.value?.trim() || "";
@@ -404,6 +467,11 @@ document.getElementById("tabPrix").addEventListener("click", (e) => {
   showSection("sectionPrix");
 });
 
+document.getElementById("tabCatalogue").addEventListener("click", (e) => {
+  e.preventDefault();
+  showSection("sectionCatalogue");
+});
+
 document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
   populateClientSelect();
   applySelectedProduct();
@@ -444,6 +512,13 @@ document.getElementById("btnAddPrix").addEventListener("click", () => {
   savePrice({ clientId, id, nom, prix });
 });
 
+document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
+  const id = Number(document.getElementById("catId").value);
+  const nom = document.getElementById("catNom").value.trim();
+  if (!id || !nom) return alert("ID et nom requis");
+  saveCatalogue({ id, nom });
+});
+
 document.getElementById("prixClientSelect").addEventListener("change", () => {
   applySelectedProduct();
   renderPrix();
@@ -473,6 +548,7 @@ async function loadInitialData() {
 
     renderEnseignes();
     renderClients();
+    renderCatalogue();
 
     populateEnseigneSelect();
     populateClientSelect();
@@ -572,6 +648,48 @@ async function savePrice({ clientId, id, nom, prix }) {
   } catch (e) {
     console.error("savePrice error", e);
     alert("Erreur sauvegarde prix");
+  }
+}
+
+async function saveCatalogue({ id, nom }) {
+  try {
+    const res = await fetch("/admin_catalog", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id, nom }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    state.catalog[id] = nom;
+    renderCatalogue();
+    populateProduitGlobalSelect();
+    applySelectedProduct();
+    renderPrix();
+  } catch (e) {
+    console.error("saveCatalogue error", e);
+    alert("Erreur sauvegarde catalogue");
+  }
+}
+
+async function deleteCatalogue(id) {
+  try {
+    const res = await fetch("/admin_catalog", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    delete state.catalog[id];
+    // Nettoyage des prix liés
+    Object.keys(state.prix).forEach((clientId) => {
+      state.prix[clientId] = (state.prix[clientId] || []).filter((p) => p.id !== id);
+    });
+    renderCatalogue();
+    populateProduitGlobalSelect();
+    applySelectedProduct();
+    renderPrix();
+  } catch (e) {
+    console.error("deleteCatalogue error", e);
+    alert("Erreur suppression catalogue");
   }
 }
 
