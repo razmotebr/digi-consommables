@@ -3,7 +3,7 @@ const state = {
   admin: sessionStorage.getItem("adminUser") || "admin",
   enseignes: {}, // {code: {nom,emailCompta}}
   clients: {},   // {id: {enseigne,magasin,contact,email}}
-  prix: {},      // {clientId: [{id,nom,prix}]}
+  prix: {},      // {enseigne: [{id,nom,prix}]}
   catalog: {}    // {id: nom} catalogue unique
 };
 
@@ -62,6 +62,9 @@ function renderEnseignes() {
     const tdEmail = document.createElement("td");
     tdEmail.appendChild(emailInput);
 
+    const actionsTd = document.createElement("td");
+    actionsTd.className = "table-actions";
+    actionsTd.className = "table-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
@@ -235,14 +238,14 @@ function renderClients() {
   });
 }
 function renderPrix() {
-  const clientKey = document.getElementById("prixClientSelect").value.trim();
+  const ensKey = document.getElementById("prixEnseigneSelect").value.trim();
   const tbody = document.querySelector("#tablePrix tbody");
   const addRow = tbody.querySelector(".add-row");
   tbody.innerHTML = "";
   if (addRow) tbody.appendChild(addRow);
-  if (!clientKey) return;
+  if (!ensKey) return;
 
-  const list = (state.prix[clientKey] || []).sort((a, b) => a.id - b.id);
+  const list = (state.prix[ensKey] || []).sort((a, b) => a.id - b.id);
   list.forEach((p) => {
     const tr = document.createElement("tr");
 
@@ -270,14 +273,14 @@ function renderPrix() {
     tdPrix.appendChild(prixInput);
 
     const actionsTd = document.createElement("td");
+    actionsTd.className = "table-actions";
     const editBtn = document.createElement("button");
-    editBtn.className = "secondary";
+    editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
 
     const delBtn = document.createElement("button");
-    delBtn.className = "secondary danger";
+    delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
-    delBtn.style.marginLeft = "6px";
 
     editBtn.addEventListener("click", () => {
       const isEditing = tr.dataset.editing === "true";
@@ -291,7 +294,7 @@ function renderPrix() {
       const prixVal = Number(prixInput.value);
       if (isNaN(prixVal)) return alert("Prix invalide");
       savePrice({
-        clientId: clientKey,
+        enseigne: ensKey,
         id: p.id,
         nom: nomInput.value.trim(),
         prix: prixVal,
@@ -299,7 +302,7 @@ function renderPrix() {
     });
 
     delBtn.addEventListener("click", () => {
-      deletePrice(clientKey, p.id);
+      deletePrice(ensKey, p.id);
     });
 
     actionsTd.appendChild(editBtn);
@@ -379,20 +382,6 @@ function renderCatalogue() {
     });
 }
 
-function populateClientSelect() {
-  const sel = document.getElementById("prixClientSelect");
-  const ensFilter = document.getElementById("prixEnseigneSelect")?.value?.trim() || "";
-  sel.innerHTML = "";
-  Object.entries(state.clients)
-    .filter(([, c]) => !ensFilter || c.enseigne === ensFilter)
-    .forEach(([id, c]) => {
-      const opt = document.createElement("option");
-      opt.value = id;
-      opt.textContent = `${id}${c.enseigne ? " - " + c.enseigne : ""}`;
-      sel.appendChild(opt);
-    });
-  if (!sel.value && sel.options.length > 0) sel.value = sel.options[0].value;
-}
 
 function populateEnseigneSelect() {
   const sel = document.getElementById("prixEnseigneSelect");
@@ -427,7 +416,7 @@ function populateProduitGlobalSelect() {
 }
 
 function applySelectedProduct() {
-  const clientId = document.getElementById("prixClientSelect").value.trim();
+  const enseigneId = document.getElementById("prixEnseigneSelect").value.trim();
   const prodId = Number(document.getElementById("prixProduitGlobalSelect").value);
   if (!prodId) {
     document.getElementById("prixId").value = "";
@@ -437,7 +426,7 @@ function applySelectedProduct() {
   }
   document.getElementById("prixId").value = prodId;
   document.getElementById("prixNom").value = state.catalog[prodId] || "";
-  const prod = (state.prix[clientId] || []).find((p) => p.id === prodId);
+  const prod = (state.prix[enseigneId] || []).find((p) => p.id === prodId);
   document.getElementById("prixValeur").value = prod ? prod.prix : "";
 }
 
@@ -469,7 +458,6 @@ document.getElementById("tabCatalogue").addEventListener("click", (e) => {
 });
 
 document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
-  populateClientSelect();
   applySelectedProduct();
   renderPrix();
 });
@@ -483,7 +471,6 @@ document.getElementById("btnAddEnseigne").addEventListener("click", () => {
   renderEnseignes();
   renderClients();
   populateEnseigneSelect();
-  populateClientSelect();
 });
 
 document.getElementById("btnAddClient").addEventListener("click", () => {
@@ -499,13 +486,13 @@ document.getElementById("btnAddClient").addEventListener("click", () => {
 });
 
 document.getElementById("btnAddPrix").addEventListener("click", () => {
-  const clientId = document.getElementById("prixClientSelect").value.trim();
-  if (!clientId) return alert("Client/enseigne requis");
+  const enseigne = document.getElementById("prixEnseigneSelect").value.trim();
+  if (!enseigne) return alert("Enseigne requise");
   const id = Number(document.getElementById("prixId").value);
   const nom = document.getElementById("prixNom").value.trim();
   const prix = Number(document.getElementById("prixValeur").value);
   if (!id || !nom || isNaN(prix)) return alert("Champs prix invalides");
-  savePrice({ clientId, id, nom, prix });
+  savePrice({ enseigne, id, nom, prix });
 });
 
 document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
@@ -513,11 +500,6 @@ document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
   if (!nom) return alert("Nom requis");
   const id = getNextCatalogId();
   saveCatalogue({ id, nom });
-});
-
-document.getElementById("prixClientSelect").addEventListener("change", () => {
-  applySelectedProduct();
-  renderPrix();
 });
 
 document.getElementById("prixProduitGlobalSelect").addEventListener("change", () => {
@@ -531,7 +513,8 @@ async function loadInitialData() {
     const data = await res.json();
 
     state.clients = data.clients || {};
-    state.prix = data.prixByClient || {};
+    const prixByClient = data.prixByClient || {};
+    state.prix = {};
     state.catalog = data.catalog || {};
 
     // Enseignes derivees des clients existants
@@ -542,12 +525,26 @@ async function loadInitialData() {
       }
     });
 
+    // Convertir les prix par client en prix par enseigne
+    Object.entries(prixByClient).forEach(([clientId, list]) => {
+      const ens = state.clients[clientId]?.enseigne || clientId;
+      if (!state.prix[ens]) state.prix[ens] = [];
+      list.forEach((p) => {
+        const existing = state.prix[ens].find((x) => x.id === p.id);
+        if (existing) {
+          existing.nom = p.nom;
+          existing.prix = p.prix;
+        } else {
+          state.prix[ens].push({ id: p.id, nom: p.nom, prix: p.prix });
+        }
+      });
+    });
+
     renderEnseignes();
     renderClients();
     renderCatalogue();
 
     populateEnseigneSelect();
-    populateClientSelect();
     populateProduitGlobalSelect();
     applySelectedProduct();
     renderPrix();
@@ -577,7 +574,6 @@ async function saveClient(payload) {
       renderEnseignes();
     }
     populateEnseigneSelect();
-    populateClientSelect();
   } catch (e) {
     console.error("saveClient error", e);
     alert("Erreur sauvegarde client");
@@ -595,7 +591,6 @@ async function deleteClient(id) {
     delete state.clients[id];
     renderClients();
     populateEnseigneSelect();
-    populateClientSelect();
     renderPrix();
   } catch (e) {
     console.error("deleteClient error", e);
@@ -603,48 +598,25 @@ async function deleteClient(id) {
   }
 }
 
-async function deletePrice(clientId, produitId) {
-  try {
-    const res = await fetch("/admin_prices", {
-      method: "DELETE",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ clientId, produitId }),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    state.prix[clientId] = (state.prix[clientId] || []).filter((p) => p.id !== produitId);
-    renderPrix();
-  } catch (e) {
-    console.error("deletePrice error", e);
-    alert("Erreur suppression prix");
-  }
+async function deletePrice(enseigne, produitId) {
+  state.prix[enseigne] = (state.prix[enseigne] || []).filter((p) => p.id !== produitId);
+  renderPrix();
 }
 
-async function savePrice({ clientId, id, nom, prix }) {
-  try {
-    const res = await fetch("/admin_prices", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ clientId, produitId: id, nom, prix }),
-    });
-    if (!res.ok) throw new Error(await res.text());
+async function savePrice({ enseigne, id, nom, prix }) {
+  // Maj catalog local
+  state.catalog[id] = nom || state.catalog[id] || `Produit ${id}`;
+  populateProduitGlobalSelect();
 
-    // Maj catalog local
-    state.catalog[id] = nom || state.catalog[id] || `Produit ${id}`;
-    populateProduitGlobalSelect();
-
-    if (!state.prix[clientId]) state.prix[clientId] = [];
-    const existing = state.prix[clientId].find((p) => p.id === id);
-    if (existing) {
-      existing.nom = state.catalog[id];
-      existing.prix = prix;
-    } else {
-      state.prix[clientId].push({ id, nom: state.catalog[id], prix });
-    }
-    renderPrix();
-  } catch (e) {
-    console.error("savePrice error", e);
-    alert("Erreur sauvegarde prix");
+  if (!state.prix[enseigne]) state.prix[enseigne] = [];
+  const existing = state.prix[enseigne].find((p) => p.id === id);
+  if (existing) {
+    existing.nom = state.catalog[id];
+    existing.prix = prix;
+  } else {
+    state.prix[enseigne].push({ id, nom: state.catalog[id], prix });
   }
+  renderPrix();
 }
 
 async function saveCatalogue({ id, nom }) {
