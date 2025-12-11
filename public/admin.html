@@ -67,6 +67,15 @@
             width: 100%;
             box-sizing: border-box;
         }
+        .table-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .action-btn {
+            min-width: 90px;
+            text-align: center;
+        }
         button {
             background: var(--accent-blue);
             color: white;
@@ -137,7 +146,7 @@
                             <td><input type="text" id="cliContact"></td>
                             <td><input type="email" id="cliEmail"></td>
                             <td></td>
-                            <td><button id="btnAddClient">Ajouter</button></td>
+                            <td><button id="btnAddClient" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -149,9 +158,15 @@
             <div class="panel">
                 <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
                     <div style="flex:1 1 260px;">
-                        <label>Client / Enseigne</label>
+                        <label>Enseigne</label>
+                        <select id="prixEnseigneSelect"></select>
+                    </div>
+                    <div style="flex:1 1 260px;">
+                        <label>Code client</label>
                         <select id="prixClientSelect"></select>
                     </div>
+                </div>
+                <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
                     <div style="flex:1 1 260px;">
                         <label>Produit (catalogue unique)</label>
                         <select id="prixProduitGlobalSelect">
@@ -179,6 +194,3 @@
     <script src="admin.js"></script>
 </body>
 </html>
-
-
-

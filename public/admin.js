@@ -63,17 +63,14 @@ function renderEnseignes() {
     tdEmail.appendChild(emailInput);
 
     const actionsTd = document.createElement("td");
-    actionsTd.style.display = "flex";
-    actionsTd.style.gap = "6px";
-    actionsTd.style.alignItems = "center";
+    actionsTd.className = "table-actions";
     const editBtn = document.createElement("button");
-    editBtn.className = "secondary";
+    editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
 
     const delBtn = document.createElement("button");
-    delBtn.className = "secondary danger";
+    delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
-    delBtn.style.marginLeft = "0";
 
     editBtn.addEventListener("click", () => {
       const isEditing = tr.dataset.editing === "true";
@@ -325,13 +322,32 @@ function renderPrix() {
 
 function populateClientSelect() {
   const sel = document.getElementById("prixClientSelect");
+  const ensFilter = document.getElementById("prixEnseigneSelect")?.value?.trim() || "";
   sel.innerHTML = "";
-  Object.entries(state.clients).forEach(([id, c]) => {
-    const opt = document.createElement("option");
-    opt.value = id;
-    opt.textContent = `${id} - ${c.enseigne || ""}`.trim();
-    sel.appendChild(opt);
-  });
+  Object.entries(state.clients)
+    .filter(([, c]) => !ensFilter || c.enseigne === ensFilter)
+    .forEach(([id, c]) => {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = `${id}${c.enseigne ? " - " + c.enseigne : ""}`;
+      sel.appendChild(opt);
+    });
+  if (!sel.value && sel.options.length > 0) sel.value = sel.options[0].value;
+}
+
+function populateEnseigneSelect() {
+  const sel = document.getElementById("prixEnseigneSelect");
+  if (!sel) return;
+  sel.innerHTML = "";
+  Object.keys(state.enseignes)
+    .sort()
+    .forEach((code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = code;
+      sel.appendChild(opt);
+    });
+  if (!sel.value && sel.options.length > 0) sel.value = sel.options[0].value;
 }
 
 function populateProduitGlobalSelect() {
@@ -388,6 +404,12 @@ document.getElementById("tabPrix").addEventListener("click", (e) => {
   showSection("sectionPrix");
 });
 
+document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
+  populateClientSelect();
+  applySelectedProduct();
+  renderPrix();
+});
+
 document.getElementById("btnAddEnseigne").addEventListener("click", () => {
   const code = document.getElementById("ensCode").value.trim();
   const nom = document.getElementById("ensName").value.trim();
@@ -396,6 +418,8 @@ document.getElementById("btnAddEnseigne").addEventListener("click", () => {
   state.enseignes[code] = { nom, emailCompta: email };
   renderEnseignes();
   renderClients();
+  populateEnseigneSelect();
+  populateClientSelect();
 });
 
 document.getElementById("btnAddClient").addEventListener("click", () => {
@@ -450,10 +474,9 @@ async function loadInitialData() {
     renderEnseignes();
     renderClients();
 
+    populateEnseigneSelect();
     populateClientSelect();
     populateProduitGlobalSelect();
-    const keys = Object.keys(state.clients);
-    if (keys.length > 0) document.getElementById("prixClientSelect").value = keys[0];
     applySelectedProduct();
     renderPrix();
   } catch (e) {
@@ -481,6 +504,7 @@ async function saveClient(payload) {
       state.enseignes[payload.enseigne] = { nom: payload.enseigne, emailCompta: payload.email || "" };
       renderEnseignes();
     }
+    populateEnseigneSelect();
     populateClientSelect();
   } catch (e) {
     console.error("saveClient error", e);
@@ -498,6 +522,7 @@ async function deleteClient(id) {
     if (!res.ok) throw new Error(await res.text());
     delete state.clients[id];
     renderClients();
+    populateEnseigneSelect();
     populateClientSelect();
     renderPrix();
   } catch (e) {
