@@ -430,6 +430,12 @@ function applySelectedProduct() {
   document.getElementById("prixValeur").value = prod ? prod.prix : "";
 }
 
+function getClientsForEnseigne(enseigne) {
+  return Object.entries(state.clients)
+    .filter(([, c]) => c.enseigne === enseigne)
+    .map(([id]) => id);
+}
+
 document.getElementById("adminUserTag").textContent = state.admin;
 
 document.getElementById("btnLogout").addEventListener("click", () => {
@@ -599,6 +605,22 @@ async function deleteClient(id) {
 }
 
 async function deletePrice(enseigne, produitId) {
+  // Supprimer pour tous les clients de l'enseigne côté backend
+  const clientIds = getClientsForEnseigne(enseigne);
+  try {
+    await Promise.all(
+      clientIds.map((cid) =>
+        fetch("/admin_prices", {
+          method: "DELETE",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ clientId: cid, produitId }),
+        })
+      )
+    );
+  } catch (e) {
+    console.error("deletePrice error", e);
+    alert("Erreur suppression prix");
+  }
   state.prix[enseigne] = (state.prix[enseigne] || []).filter((p) => p.id !== produitId);
   renderPrix();
 }
@@ -607,6 +629,23 @@ async function savePrice({ enseigne, id, nom, prix }) {
   // Maj catalog local
   state.catalog[id] = nom || state.catalog[id] || `Produit ${id}`;
   populateProduitGlobalSelect();
+
+  // Propager à tous les clients de l'enseigne côté backend
+  const clientIds = getClientsForEnseigne(enseigne);
+  try {
+    await Promise.all(
+      clientIds.map((cid) =>
+        fetch("/admin_prices", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ clientId: cid, produitId: id, nom, prix }),
+        })
+      )
+    );
+  } catch (e) {
+    console.error("savePrice error", e);
+    alert("Erreur sauvegarde prix");
+  }
 
   if (!state.prix[enseigne]) state.prix[enseigne] = [];
   const existing = state.prix[enseigne].find((p) => p.id === id);
