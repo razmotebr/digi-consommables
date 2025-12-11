@@ -499,6 +499,18 @@ async function saveClient(payload) {
     if (payload.enseigne && !state.enseignes[payload.enseigne]) {
       state.enseignes[payload.enseigne] = { nom: payload.enseigne, emailCompta: payload.email || "" };
     }
+    // Copier les prix de l'enseigne vers ce nouveau client (persistance backend)
+    if (payload.enseigne && state.prix[payload.enseigne]?.length) {
+      await Promise.all(
+        state.prix[payload.enseigne].map((p) =>
+          fetch("/admin_prices", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ clientId: payload.id, produitId: p.id, nom: p.nom, prix: p.prix }),
+          })
+        )
+      ).catch((e) => console.error("copy prices to new client error", e));
+    }
     renderClients();
     renderEnseignes();
     populateEnseigneSelect();
