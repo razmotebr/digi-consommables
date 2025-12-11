@@ -14,29 +14,79 @@ function showSection(id) {
 
 function renderEnseignes() {
   const tbody = document.querySelector("#tableEnseignes tbody");
+  const addRow = tbody.querySelector(".add-row");
   tbody.innerHTML = "";
+  if (addRow) tbody.appendChild(addRow);
+
   Object.entries(state.enseignes).forEach(([code, e]) => {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${code}</td><td>${e.nom || ""}</td><td>${e.emailCompta || ""}</td>
-      <td><button class="secondary" data-code="${code}">Edit</button>
-          <button class="secondary danger" data-del="${code}">Suppr</button></td>`;
-    tbody.appendChild(tr);
-  });
-  tbody.querySelectorAll("button[data-code]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const code = btn.dataset.code;
-      const e = state.enseignes[code];
-      document.getElementById("ensCode").value = code;
-      document.getElementById("ensName").value = e.nom || "";
-      document.getElementById("ensEmail").value = e.emailCompta || "";
+    const codeInput = document.createElement("input");
+    codeInput.type = "text";
+    codeInput.value = code;
+    codeInput.disabled = true;
+
+    const nomInput = document.createElement("input");
+    nomInput.type = "text";
+    nomInput.value = e.nom || "";
+    nomInput.disabled = true;
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.value = e.emailCompta || "";
+    emailInput.disabled = true;
+
+    const tdCode = document.createElement("td");
+    tdCode.appendChild(codeInput);
+    const tdNom = document.createElement("td");
+    tdNom.appendChild(nomInput);
+    const tdEmail = document.createElement("td");
+    tdEmail.appendChild(emailInput);
+
+    const actionsTd = document.createElement("td");
+    const editBtn = document.createElement("button");
+    editBtn.className = "secondary";
+    editBtn.textContent = "Edit";
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "secondary danger";
+    delBtn.textContent = "Suppr";
+    delBtn.style.marginLeft = "6px";
+
+    editBtn.addEventListener("click", () => {
+      const isEditing = tr.dataset.editing === "true";
+      if (!isEditing) {
+        tr.dataset.editing = "true";
+        editBtn.textContent = "Enregistrer";
+        codeInput.disabled = false;
+        nomInput.disabled = false;
+        emailInput.disabled = false;
+        return;
+      }
+      const newCode = codeInput.value.trim();
+      const newNom = nomInput.value.trim();
+      const newEmail = emailInput.value.trim();
+      if (!newCode) return alert("Code requis");
+      if (newCode !== code && state.enseignes[newCode]) {
+        return alert("Ce code existe déjà");
+      }
+      delete state.enseignes[code];
+      state.enseignes[newCode] = { nom: newNom, emailCompta: newEmail };
+      renderEnseignes();
     });
-  });
-  tbody.querySelectorAll("button[data-del]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const code = btn.dataset.del;
+
+    delBtn.addEventListener("click", () => {
       delete state.enseignes[code];
       renderEnseignes();
     });
+
+    actionsTd.appendChild(editBtn);
+    actionsTd.appendChild(delBtn);
+
+    tr.appendChild(tdCode);
+    tr.appendChild(tdNom);
+    tr.appendChild(tdEmail);
+    tr.appendChild(actionsTd);
+    tbody.appendChild(tr);
   });
 }
 

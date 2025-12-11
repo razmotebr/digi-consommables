@@ -63,6 +63,10 @@
             border-radius: 8px;
             background: #fff;
         }
+        .editable-table input {
+            width: 100%;
+            box-sizing: border-box;
+        }
         button {
             background: var(--accent-blue);
             color: white;
@@ -95,25 +99,22 @@
     </nav>
 
     <div class="container">
-        <section id="sectionEnseignes" class="card">
-            <h2>Paramétrage des enseignes</h2>
-            <div class="flex">
-                <div class="panel">
-                    <label>Nom de l'enseigne</label>
-                    <input type="text" id="ensName" placeholder="Ex: Intermarche">
-                    <label>Code</label>
-                    <input type="text" id="ensCode" placeholder="Ex: C001">
-                    <label>Email compta par défaut</label>
-                    <input type="email" id="ensEmail" placeholder="exemple@domaine.com">
-                    <button id="btnAddEnseigne">Ajouter / Mettre à jour</button>
-                </div>
-                <div class="panel">
-                    <h3>Enseignes</h3>
-                    <table id="tableEnseignes">
-                        <thead><tr><th>Code</th><th>Nom</th><th>Email compta</th><th></th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
+                <section id="sectionEnseignes" class="card">
+            <h2>Parametrage des enseignes</h2>
+            <div class="panel">
+                <table id="tableEnseignes" class="editable-table">
+                    <thead>
+                        <tr><th>Code</th><th>Nom</th><th>Email compta</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr class="add-row">
+                            <td><input type="text" id="ensCode" placeholder="Ex: C001"></td>
+                            <td><input type="text" id="ensName" placeholder="Ex: Intermarche"></td>
+                            <td><input type="email" id="ensEmail" placeholder="exemple@domaine.com"></td>
+                            <td><button id="btnAddEnseigne">Ajouter</button></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
 
@@ -175,3 +176,4 @@
     <script src="admin.js"></script>
 </body>
 </html>
+
