@@ -162,17 +162,34 @@ function renderClients() {
     tdEmail.appendChild(emailInput);
 
     const tdQr = document.createElement("td");
-    tdQr.innerHTML = `<img src="${qrUrl}" alt="QR ${id}" width="70" height="70" loading="lazy"><br><small>URL+ID</small>`;
+    tdQr.style.display = "flex";
+    tdQr.style.alignItems = "center";
+    tdQr.style.gap = "8px";
+    const qrImg = document.createElement("img");
+    qrImg.src = qrUrl;
+    qrImg.alt = `QR ${id}`;
+    qrImg.width = 70;
+    qrImg.height = 70;
+    qrImg.loading = "lazy";
     const copyBtn = document.createElement("button");
     copyBtn.className = "secondary";
-    copyBtn.style.marginTop = "6px";
     copyBtn.textContent = "Copier QR";
-    copyBtn.addEventListener("click", () => {
-      navigator.clipboard
-        .writeText(qrData)
-        .then(() => alert("Lien du QR copié dans le presse-papiers"))
-        .catch(() => alert("Impossible de copier le QR"));
+    copyBtn.addEventListener("click", async () => {
+      if (!navigator.clipboard || !window.ClipboardItem) {
+        alert("Copie d'image non supportée par ce navigateur");
+        return;
+      }
+      try {
+        const res = await fetch(qrUrl);
+        const blob = await res.blob();
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        alert("Image QR copiée dans le presse-papiers");
+      } catch (err) {
+        console.error("copy qr error", err);
+        alert("Impossible de copier l'image du QR");
+      }
     });
+    tdQr.appendChild(qrImg);
     tdQr.appendChild(copyBtn);
 
     const actionsTd = document.createElement("td");
@@ -531,4 +548,3 @@ async function savePrice({ clientId, id, nom, prix }) {
 }
 
 loadInitialData();
-
