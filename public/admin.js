@@ -7,6 +7,26 @@ const state = {
   catalog: {}    // {id: nom} catalogue unique
 };
 
+function fillEnseigneOptions(selectEl, selectedValue = "") {
+  selectEl.innerHTML = '<option value="">-- Choisir une enseigne --</option>';
+  Object.keys(state.enseignes)
+    .sort()
+    .forEach((code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = code;
+      if (code === selectedValue) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+  if (selectedValue && !state.enseignes[selectedValue]) {
+    const opt = document.createElement("option");
+    opt.value = selectedValue;
+    opt.textContent = selectedValue;
+    opt.selected = true;
+    selectEl.appendChild(opt);
+  }
+}
+
 function showSection(id) {
   document.querySelectorAll("section").forEach((s) => s.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
@@ -94,7 +114,11 @@ function renderClients() {
   const tbody = document.querySelector("#tableClients tbody");
   const addRow = tbody.querySelector(".add-row");
   tbody.innerHTML = "";
-  if (addRow) tbody.appendChild(addRow);
+  if (addRow) {
+    tbody.appendChild(addRow);
+    const addSelect = addRow.querySelector("#cliEnseigneSelect");
+    if (addSelect) fillEnseigneOptions(addSelect, addSelect.value);
+  }
 
   Object.entries(state.clients).forEach(([id, c]) => {
     const tr = document.createElement("tr");
@@ -104,10 +128,9 @@ function renderClients() {
     idInput.value = id;
     idInput.disabled = true;
 
-    const ensInput = document.createElement("input");
-    ensInput.type = "text";
-    ensInput.value = c.enseigne || "";
-    ensInput.disabled = true;
+    const ensSelect = document.createElement("select");
+    fillEnseigneOptions(ensSelect, c.enseigne || "");
+    ensSelect.disabled = true;
 
     const magInput = document.createElement("input");
     magInput.type = "text";
@@ -130,7 +153,7 @@ function renderClients() {
     const tdId = document.createElement("td");
     tdId.appendChild(idInput);
     const tdEns = document.createElement("td");
-    tdEns.appendChild(ensInput);
+    tdEns.appendChild(ensSelect);
     const tdMag = document.createElement("td");
     tdMag.appendChild(magInput);
     const tdContact = document.createElement("td");
@@ -156,7 +179,7 @@ function renderClients() {
       if (!isEditing) {
         tr.dataset.editing = "true";
         editBtn.textContent = "Enregistrer";
-        ensInput.disabled = false;
+        ensSelect.disabled = false;
         magInput.disabled = false;
         contactInput.disabled = false;
         emailInput.disabled = false;
@@ -164,7 +187,7 @@ function renderClients() {
       }
       saveClient({
         id,
-        enseigne: ensInput.value.trim(),
+        enseigne: ensSelect.value.trim(),
         magasin: magInput.value.trim(),
         contact: contactInput.value.trim(),
         email: emailInput.value.trim(),
@@ -189,7 +212,6 @@ function renderClients() {
     tbody.appendChild(tr);
   });
 }
-
 function renderPrix() {
   const clientKey = document.getElementById("prixClientSelect").value.trim();
   const tbody = document.querySelector("#tablePrix tbody");
@@ -342,6 +364,7 @@ document.getElementById("btnAddEnseigne").addEventListener("click", () => {
   if (!code) return alert("Code requis");
   state.enseignes[code] = { nom, emailCompta: email };
   renderEnseignes();
+  renderClients();
 });
 
 document.getElementById("btnAddClient").addEventListener("click", () => {
@@ -349,7 +372,7 @@ document.getElementById("btnAddClient").addEventListener("click", () => {
   if (!id) return alert("ID requis");
   saveClient({
     id,
-    enseigne: document.getElementById("cliEnseigne").value.trim(),
+    enseigne: document.getElementById("cliEnseigneSelect").value.trim(),
     magasin: document.getElementById("cliMagasin").value.trim(),
     contact: document.getElementById("cliContact").value.trim(),
     email: document.getElementById("cliEmail").value.trim(),
@@ -497,3 +520,5 @@ async function savePrice({ clientId, id, nom, prix }) {
 }
 
 loadInitialData();
+
+
