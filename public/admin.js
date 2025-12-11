@@ -97,16 +97,14 @@ function renderEnseignes() {
       renderEnseignes();
     });
 
-    const actionsTd = document.createElement("td");
-    actionsTd.className = "table-actions";
-    actionsTd.appendChild(editBtn);
-    actionsTd.appendChild(delBtn);
+    
+    
 
     tr.appendChild(tdCode);
     tr.appendChild(tdNom);
     tr.appendChild(tdEmail);
-    tr.appendChild(actionsTd);
-    tbody.appendChild(tr);
+    tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);
+        tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);\n\n    const tdId = document.createElement("td");\n    tdId.appendChild(idInput);\n    const tdEns = document.createElement("td");\n    tdEns.appendChild(ensSelect);\n    const tdMag = document.createElement("td");\n    tdMag.appendChild(magInput);\n    const tdContact = document.createElement("td");\n    tdContact.appendChild(contactInput);\n    const tdEmail = document.createElement("td");\n    tdEmail.appendChild(emailInput);\n\n    tr.appendChild(tdQr);\n    tr.appendChild(tdId);\n    tr.appendChild(tdEns);\n    tr.appendChild(tdMag);\n    tr.appendChild(tdContact);\n    tr.appendChild(tdEmail);\n\n    tbody.appendChild(tr);
   });
 }
 
@@ -150,17 +148,6 @@ function renderClients() {
     const qrData = `${window.location.origin}/login.html?client=${encodeURIComponent(id)}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrData)}`;
 
-    const tdId = document.createElement("td");
-    tdId.appendChild(idInput);
-    const tdEns = document.createElement("td");
-    tdEns.appendChild(ensSelect);
-    const tdMag = document.createElement("td");
-    tdMag.appendChild(magInput);
-    const tdContact = document.createElement("td");
-    tdContact.appendChild(contactInput);
-    const tdEmail = document.createElement("td");
-    tdEmail.appendChild(emailInput);
-
     const tdQr = document.createElement("td");
     tdQr.className = "qr-cell";
     const qrImg = document.createElement("img");
@@ -169,31 +156,9 @@ function renderClients() {
     qrImg.width = 70;
     qrImg.height = 70;
     qrImg.loading = "lazy";
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "secondary";
-    copyBtn.textContent = "Copier QR";
-    copyBtn.addEventListener("click", async () => {
-      if (!navigator.clipboard || !window.ClipboardItem) {
-        alert("Copie d'image non supportée par ce navigateur");
-        return;
-      }
-      try {
-        const res = await fetch(qrUrl);
-        const blob = await res.blob();
-        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-        alert("Image QR copiée dans le presse-papiers");
-      } catch (err) {
-        console.error("copy qr error", err);
-        alert("Impossible de copier l'image du QR");
-      }
-    });
-    tdQr.appendChild(qrImg);
-    tdQr.appendChild(copyBtn);
-    tdQr.style.flexWrap = "nowrap";
-    tdQr.style.gap = "10px";
+    tdQr.appendChild(qrImg);\n    tdQr.style.flexWrap = "nowrap";\n    tdQr.style.gap = "10px";
 
-    const actionsTd = document.createElement("td");
-    actionsTd.className = "table-actions";
+    
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
@@ -226,16 +191,9 @@ function renderClients() {
       deleteClient(id);
     });
 
-    tr.appendChild(tdId);
-    tr.appendChild(tdEns);
-    tr.appendChild(tdMag);
-    tr.appendChild(tdContact);
-    tr.appendChild(tdEmail);
-    tdQr.appendChild(editBtn);
-    tdQr.appendChild(delBtn);
-    tr.appendChild(tdQr);
+    tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);\n\n    const tdId = document.createElement("td");\n    tdId.appendChild(idInput);\n    const tdEns = document.createElement("td");\n    tdEns.appendChild(ensSelect);\n    const tdMag = document.createElement("td");\n    tdMag.appendChild(magInput);\n    const tdContact = document.createElement("td");\n    tdContact.appendChild(contactInput);\n    const tdEmail = document.createElement("td");\n    tdEmail.appendChild(emailInput);\n\n    tr.appendChild(tdQr);\n    tr.appendChild(tdId);\n    tr.appendChild(tdEns);\n    tr.appendChild(tdMag);\n    tr.appendChild(tdContact);\n    tr.appendChild(tdEmail);
 
-    tbody.appendChild(tr);
+        tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);\n\n    const tdId = document.createElement("td");\n    tdId.appendChild(idInput);\n    const tdEns = document.createElement("td");\n    tdEns.appendChild(ensSelect);\n    const tdMag = document.createElement("td");\n    tdMag.appendChild(magInput);\n    const tdContact = document.createElement("td");\n    tdContact.appendChild(contactInput);\n    const tdEmail = document.createElement("td");\n    tdEmail.appendChild(emailInput);\n\n    tr.appendChild(tdQr);\n    tr.appendChild(tdId);\n    tr.appendChild(tdEns);\n    tr.appendChild(tdMag);\n    tr.appendChild(tdContact);\n    tr.appendChild(tdEmail);\n\n    tbody.appendChild(tr);
   });
 }
 function renderPrix() {
@@ -273,8 +231,7 @@ function renderPrix() {
     const tdPrix = document.createElement("td");
     tdPrix.appendChild(prixInput);
 
-    const actionsTd = document.createElement("td");
-    actionsTd.className = "table-actions";
+    
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
@@ -306,15 +263,14 @@ function renderPrix() {
       deletePrice(ensKey, p.id);
     });
 
-    actionsTd.appendChild(editBtn);
-    actionsTd.appendChild(delBtn);
+    
 
     tr.appendChild(tdId);
     tr.appendChild(tdNom);
     tr.appendChild(tdPrix);
-    tr.appendChild(actionsTd);
+    tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);
 
-    tbody.appendChild(tr);
+        tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);\n\n    const tdId = document.createElement("td");\n    tdId.appendChild(idInput);\n    const tdEns = document.createElement("td");\n    tdEns.appendChild(ensSelect);\n    const tdMag = document.createElement("td");\n    tdMag.appendChild(magInput);\n    const tdContact = document.createElement("td");\n    tdContact.appendChild(contactInput);\n    const tdEmail = document.createElement("td");\n    tdEmail.appendChild(emailInput);\n\n    tr.appendChild(tdQr);\n    tr.appendChild(tdId);\n    tr.appendChild(tdEns);\n    tr.appendChild(tdMag);\n    tr.appendChild(tdContact);\n    tr.appendChild(tdEmail);\n\n    tbody.appendChild(tr);
   });
 }
 
@@ -346,8 +302,7 @@ function renderCatalogue() {
       const tdNom = document.createElement("td");
       tdNom.appendChild(nomInput);
 
-      const actionsTd = document.createElement("td");
-      actionsTd.className = "table-actions";
+      
       const editBtn = document.createElement("button");
       editBtn.className = "secondary action-btn";
       editBtn.textContent = "Edit";
@@ -373,13 +328,12 @@ function renderCatalogue() {
         deleteCatalogue(id);
       });
 
-      actionsTd.appendChild(editBtn);
-      actionsTd.appendChild(delBtn);
+      
 
       tr.appendChild(tdId);
       tr.appendChild(tdNom);
-      tr.appendChild(actionsTd);
-      tbody.appendChild(tr);
+      tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);
+          tdQr.appendChild(editBtn);\n    tdQr.appendChild(delBtn);\n\n    const tdId = document.createElement("td");\n    tdId.appendChild(idInput);\n    const tdEns = document.createElement("td");\n    tdEns.appendChild(ensSelect);\n    const tdMag = document.createElement("td");\n    tdMag.appendChild(magInput);\n    const tdContact = document.createElement("td");\n    tdContact.appendChild(contactInput);\n    const tdEmail = document.createElement("td");\n    tdEmail.appendChild(emailInput);\n\n    tr.appendChild(tdQr);\n    tr.appendChild(tdId);\n    tr.appendChild(tdEns);\n    tr.appendChild(tdMag);\n    tr.appendChild(tdContact);\n    tr.appendChild(tdEmail);\n\n    tbody.appendChild(tr);
     });
 }
 
@@ -691,3 +645,7 @@ function getNextCatalogId() {
 }
 
 loadInitialData();
+
+
+
+
