@@ -82,7 +82,8 @@
         .qr-cell {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
         button {
             background: var(--accent-blue);
@@ -141,7 +142,7 @@
             <div class="panel">
                 <table id="tableClients" class="editable-table">
                     <thead>
-                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th>QR</th><th>Actions</th></tr>
+                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th>QR / Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
@@ -154,7 +155,6 @@
                             <td><input type="text" id="cliMagasin" placeholder="Ex: Paris 15"></td>
                             <td><input type="text" id="cliContact"></td>
                             <td><input type="email" id="cliEmail"></td>
-                            <td></td>
                             <td class="table-actions"><button id="btnAddClient" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
@@ -170,7 +170,7 @@
                     </thead>
                     <tbody>
                         <tr class="add-row">
-                            <td><input type="number" id="catId" placeholder="Ex: 1"></td>
+                            <td><input type="number" id="catId" placeholder="Auto" disabled value=""></td>
                             <td><input type="text" id="catNom" placeholder="Ex: Film alimentaire 450 mm"></td>
                             <td class="table-actions"><button id="btnAddProduitGlobal" class="action-btn">Ajouter</button></td>
                         </tr>

@@ -62,8 +62,6 @@ function renderEnseignes() {
     const tdEmail = document.createElement("td");
     tdEmail.appendChild(emailInput);
 
-    const actionsTd = document.createElement("td");
-    actionsTd.className = "table-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = "Edit";
@@ -224,16 +222,14 @@ function renderClients() {
       deleteClient(id);
     });
 
-    actionsTd.appendChild(editBtn);
-    actionsTd.appendChild(delBtn);
-
     tr.appendChild(tdId);
     tr.appendChild(tdEns);
     tr.appendChild(tdMag);
     tr.appendChild(tdContact);
     tr.appendChild(tdEmail);
+    tdQr.appendChild(editBtn);
+    tdQr.appendChild(delBtn);
     tr.appendChild(tdQr);
-    tr.appendChild(actionsTd);
 
     tbody.appendChild(tr);
   });
@@ -513,9 +509,9 @@ document.getElementById("btnAddPrix").addEventListener("click", () => {
 });
 
 document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
-  const id = Number(document.getElementById("catId").value);
   const nom = document.getElementById("catNom").value.trim();
-  if (!id || !nom) return alert("ID et nom requis");
+  if (!nom) return alert("Nom requis");
+  const id = getNextCatalogId();
   saveCatalogue({ id, nom });
 });
 
@@ -653,6 +649,12 @@ async function savePrice({ clientId, id, nom, prix }) {
 
 async function saveCatalogue({ id, nom }) {
   state.catalog[id] = nom;
+  // Propager le libellé catalogue dans tous les prix existants
+  Object.keys(state.prix).forEach((clientId) => {
+    state.prix[clientId] = (state.prix[clientId] || []).map((p) =>
+      p.id === id ? { ...p, nom } : p
+    );
+  });
   renderCatalogue();
   populateProduitGlobalSelect();
   applySelectedProduct();
@@ -668,6 +670,12 @@ async function deleteCatalogue(id) {
   populateProduitGlobalSelect();
   applySelectedProduct();
   renderPrix();
+}
+
+function getNextCatalogId() {
+  const ids = Object.keys(state.catalog).map((k) => Number(k)).filter((n) => !isNaN(n));
+  if (ids.length === 0) return 1;
+  return Math.max(...ids) + 1;
 }
 
 loadInitialData();
