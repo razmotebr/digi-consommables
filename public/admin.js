@@ -138,17 +138,8 @@ function renderClients() {
     img.height = 70;
     img.loading = "lazy";
     tdQr.appendChild(img);
-
-    const editBtn = document.createElement("button");
-    editBtn.className = "secondary action-btn";
-    editBtn.textContent = "Edit";
-    const delBtn = document.createElement("button");
-    delBtn.className = "secondary danger action-btn";
-    delBtn.textContent = "Suppr";
     tdQr.style.flexWrap = "nowrap";
     tdQr.style.gap = "8px";
-    tdQr.appendChild(editBtn);
-    tdQr.appendChild(delBtn);
 
     const tdId = document.createElement("td");
     const inpId = document.createElement("input");
@@ -206,12 +197,18 @@ function renderClients() {
 
     delBtn.addEventListener("click", () => deleteClient(id));
 
+    const actions = document.createElement("td");
+    actions.className = "table-actions";
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+
     tr.appendChild(tdQr);
     tr.appendChild(tdId);
     tr.appendChild(tdEns);
     tr.appendChild(tdMag);
     tr.appendChild(tdContact);
     tr.appendChild(tdEmail);
+    tr.appendChild(actions);
     tbody.appendChild(tr);
   });
 }
