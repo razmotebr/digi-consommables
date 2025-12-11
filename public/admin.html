@@ -67,7 +67,10 @@
             width: 100%;
             box-sizing: border-box;
         }
-        .editable-table td { vertical-align: middle; }
+        .editable-table td,
+        .editable-table th {
+            vertical-align: middle;
+        }
         .table-actions {
             display: flex;
             gap: 6px;
@@ -83,12 +86,16 @@
         .qr-cell {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             flex-wrap: nowrap;
-            min-width: 110px;
+            min-width: 90px;
+            height: 70px;
         }
         .qr-cell img {
             display: block;
+            height: 60px;
+            width: 60px;
         }
         button {
             background: var(--accent-blue);
