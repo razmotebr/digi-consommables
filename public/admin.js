@@ -121,6 +121,9 @@ function renderClients() {
   if (addRow) {
     tbody.appendChild(addRow);
     fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
+    // Normaliser la hauteur de la ligne d'ajout
+    addRow.style.height = "78px";
+    addRow.querySelectorAll("td").forEach((td) => (td.style.verticalAlign = "middle"));
   }
 
   Object.entries(state.clients).forEach(([id, c]) => {
