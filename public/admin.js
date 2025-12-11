@@ -175,6 +175,15 @@ function renderClients() {
     inpEmail.disabled = true;
     tdEmail.appendChild(inpEmail);
 
+    const actions = document.createElement("td");
+    actions.className = "table-actions";
+    const editBtn = document.createElement("button");
+    editBtn.className = "secondary action-btn";
+    editBtn.textContent = "Edit";
+    const delBtn = document.createElement("button");
+    delBtn.className = "secondary danger action-btn";
+    delBtn.textContent = "Suppr";
+
     editBtn.addEventListener("click", () => {
       const editing = tr.dataset.editing === "true";
       if (!editing) {
@@ -197,8 +206,6 @@ function renderClients() {
 
     delBtn.addEventListener("click", () => deleteClient(id));
 
-    const actions = document.createElement("td");
-    actions.className = "table-actions";
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
 
