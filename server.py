@@ -202,6 +202,10 @@ class MyHandler(SimpleHTTPRequestHandler):
             super().end_headers()
 
     def do_GET(self):
+        if self.path.startswith("/orders"):
+            return self._handle_get_orders()
+        if self.path.startswith("/admin_orders"):
+            return self._handle_admin_orders()
         if self.path == "/":
             self.path = "/index.html"
         return super().do_GET()
@@ -294,6 +298,37 @@ class MyHandler(SimpleHTTPRequestHandler):
             pdf_bytes = None
             timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
             pdf_filename = f"commande_{data.get('clientId','unknown')}_{timestamp}.pdf"
+
+            # Sauvegarde de la commande pour consultation
+            try:
+                total = 0
+                for p in data.get("produits", []):
+                    qty = float(p.get("qty", 0) or 0)
+                    prix = float(p.get("prix", 0) or 0)
+                    total += qty * prix
+                frais = float(12.0)
+                tht = total + frais
+                ttc = tht * 1.2
+                store = self._load_data()
+                store.setdefault("orders", [])
+                order_id = f"CMD-{timestamp}"
+                store["orders"].append(
+                    {
+                        "id": order_id,
+                        "clientId": data.get("clientId"),
+                        "enseigne": data.get("enseigne"),
+                        "magasin": data.get("magasin"),
+                        "contact": data.get("contact"),
+                        "emailCompta": data.get("emailCompta"),
+                        "produits": data.get("produits", []),
+                        "totalTTC": round(ttc, 2),
+                        "status": "en traitement",
+                        "createdAt": datetime.datetime.utcnow().isoformat(),
+                    }
+                )
+                self._save_data(store)
+            except Exception as e:
+                print(f"Erreur sauvegarde commande: {e}")
 
             if REPORTLAB_AVAILABLE:
                 from reportlab.lib import colors
@@ -695,6 +730,63 @@ class MyHandler(SimpleHTTPRequestHandler):
             self._add_cors()
             self.end_headers()
             self.wfile.write(json.dumps({"message": "Mot de passe admin mis à jour"}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    # --- GET handlers ---
+    def _handle_get_orders(self):
+        try:
+            from urllib.parse import urlparse, parse_qs
+            qs = parse_qs(urlparse(self.path).query)
+            client_id = (qs.get("clientId") or [""])[0]
+            # Auth client
+            ok, err = self._validate_token(client_id)
+            if not ok:
+                self.send_response(401)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": err}).encode())
+                return
+            store = self._load_data()
+            orders = [o for o in store.get("orders", []) if o.get("clientId") == client_id]
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"orders": orders}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_admin_orders(self):
+        try:
+            if not self._validate_admin():
+                self.send_response(401)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Unauthorized"}).encode())
+                return
+            from urllib.parse import urlparse, parse_qs
+            qs = parse_qs(urlparse(self.path).query)
+            enseigne = (qs.get("enseigne") or [""])[0]
+            store = self._load_data()
+            orders = store.get("orders", [])
+            if enseigne:
+                orders = [o for o in orders if o.get("enseigne") == enseigne]
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"orders": orders}).encode())
         except Exception as e:
             self.send_response(500)
             self.send_header("Content-Type", "application/json")
