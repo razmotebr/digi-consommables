@@ -850,7 +850,8 @@ async function saveClient(payload) {
     delete state.editingClients[payload.id];
   } catch (e) {
     console.error("saveClient error", e);
-    alert("Erreur sauvegarde client");
+    const msg = e && e.message ? e.message : "Erreur sauvegarde client";
+    alert(msg);
   }
 }
 
