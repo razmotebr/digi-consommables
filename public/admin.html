@@ -70,6 +70,7 @@
             border-collapse: separate;
             border-spacing: 0;
             background: #fff;
+            table-layout: auto;
         }
         .editable-table input {
             width: 100%;
@@ -161,7 +162,7 @@
             white-space: nowrap;
         }
         .catalog-table {
-            table-layout: fixed;
+            table-layout: auto;
         }
         .catalog-table th,
         .catalog-table td {
@@ -184,6 +185,14 @@
             width: 90px;
             min-width: 90px;
             height: 70px;
+        }
+        .col-qr {
+            width: 90px;
+            min-width: 90px;
+        }
+        .col-actions {
+            width: 180px;
+            min-width: 160px;
         }
         .qr-cell img {
             display: block;
@@ -216,6 +225,15 @@
         .status.preparation { background: #ecfeff; color: #0ea5e9; border: 1px solid #bae6fd; }
         .status.envoye { background: #ecfdf3; color: #16a34a; border: 1px solid #bbf7d0; }
         .status.inconnu { background: #f1f5f9; color: #475569; border: 1px solid #e5e7eb; }
+        /* Ajuster colonnes actions et QR sur tables sans classes */
+        #tableAdminOrders th:last-child,
+        #tableAdminOrders td:last-child,
+        #tableUsers th:last-child,
+        #tableUsers td:last-child {
+            width: 140px;
+            min-width: 120px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -240,14 +258,14 @@
             <div class="panel">
                 <table id="tableEnseignes" class="editable-table">
                     <thead>
-                        <tr><th>Code</th><th>Nom</th><th>Email compta</th><th>Actions</th></tr>
+                        <tr><th>Code</th><th>Nom</th><th>Email compta</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
                             <td><input type="text" id="ensCode" placeholder="Ex: C001"></td>
                             <td><input type="text" id="ensName" placeholder="Ex: Intermarche"></td>
                             <td><input type="email" id="ensEmail" placeholder="exemple@domaine.com"></td>
-                            <td><button id="btnAddEnseigne">Ajouter</button></td>
+                            <td class="col-actions"><button id="btnAddEnseigne">Ajouter</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -264,11 +282,11 @@
             <div class="panel">
                 <table id="tableClients" class="editable-table">
                     <thead>
-                        <tr><th>QR</th><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th>Actions</th></tr>
+                        <tr><th class="col-qr">QR</th><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
-                            <td class="qr-cell"><div class="qr-placeholder"></div></td>
+                            <td class="qr-cell col-qr"><div class="qr-placeholder"></div></td>
                             <td><input type="text" id="cliId" placeholder="Ex: C001"></td>
                             <td>
                                 <select id="cliEnseigneSelect">
@@ -278,7 +296,7 @@
                             <td><input type="text" id="cliMagasin" placeholder="Ex: Paris 15"></td>
                             <td><input type="text" id="cliContact"></td>
                             <td><input type="email" id="cliEmail"></td>
-                            <td class="table-actions"><button id="btnAddClient" class="action-btn">Ajouter</button></td>
+                            <td class="table-actions col-actions"><button id="btnAddClient" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -302,7 +320,7 @@
                             <th>Étiquettes / rouleau</th>
                             <th>Rouleaux / carton</th>
                             <th>Prix carton HT</th>
-                            <th class="actions-col">Actions</th>
+                            <th class="actions-col col-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -314,7 +332,7 @@
                             <td><input type="number" id="catEtiquettes" placeholder="Ex: 800"></td>
                             <td><input type="number" id="catRouleaux" placeholder="Ex: 24"></td>
                             <td><input type="number" step="0.01" id="catPrix" placeholder="Ex: 72.24"></td>
-                            <td class="table-actions"><button id="btnAddProduitGlobal" class="action-btn">Ajouter</button></td>
+                            <td class="table-actions col-actions"><button id="btnAddProduitGlobal" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -343,14 +361,14 @@
                 </div>
                 <table id="tablePrix" class="editable-table">
                     <thead>
-                        <tr><th>ID Produit</th><th>Nom</th><th>Prix (EUR)</th><th>Actions</th></tr>
+                        <tr><th>ID Produit</th><th>Nom</th><th>Prix (EUR)</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
                             <td><input type="number" id="prixId" placeholder="Ex: 1"></td>
                             <td><input type="text" id="prixNom" placeholder="Ex: Film alimentaire 450 mm"></td>
                             <td><input type="number" step="0.01" id="prixValeur" placeholder="Ex: 12.50"></td>
-                            <td><button id="btnAddPrix">Ajouter</button></td>
+                            <td class="col-actions"><button id="btnAddPrix">Ajouter</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -402,7 +420,7 @@
                             <th>Enseigne</th>
                             <th>Magasin</th>
                             <th>Dernier login</th>
-                            <th>Action</th>
+                            <th class="col-actions">Action</th>
                         </tr>
                     </thead>
                     <tbody>

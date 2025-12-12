@@ -196,7 +196,7 @@ function renderClients() {
     const isEditing = !!draft;
 
     const tdQr = document.createElement("td");
-    tdQr.className = "qr-cell";
+    tdQr.className = "qr-cell col-qr";
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
       `${window.location.origin}/login.html?client=${encodeURIComponent(id)}`
     )}`;
@@ -247,7 +247,7 @@ function renderClients() {
     tdEmail.appendChild(inpEmail);
 
     const actions = document.createElement("td");
-    actions.className = "table-actions";
+    actions.className = "table-actions col-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = isEditing ? "Enregistrer" : "Edit";
@@ -382,8 +382,8 @@ function renderCatalogue() {
       inpPrix.disabled = true;
       tdPrix.appendChild(inpPrix);
 
-      const actions = document.createElement("td");
-      actions.className = "table-actions actions-col";
+    const actions = document.createElement("td");
+    actions.className = "table-actions actions-col col-actions";
       const editBtn = document.createElement("button");
       editBtn.className = "secondary action-btn";
       editBtn.textContent = "Edit";
@@ -479,7 +479,7 @@ function renderPrix() {
       tdPrix.appendChild(inpPrix);
 
       const actions = document.createElement("td");
-      actions.className = "table-actions";
+      actions.className = "table-actions col-actions";
       const editBtn = document.createElement("button");
       editBtn.className = "secondary action-btn";
       editBtn.textContent = "Edit";
