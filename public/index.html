@@ -6,60 +6,75 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div id="container">
-
-    <!-- LOGO -->
-    <div id="header">
-        <img src="logo_pdf.png" id="logo" alt="Logo Digi">
+<header>
+    <img src="logo_pdf.png" alt="Logo Digi" class="logo">
+    <div>
         <h1>Commande Consommables</h1>
-        <button id="btnLogout" style="margin-left: auto; padding: 8px 16px; background: #d32f2f; color: white; border: none; cursor: pointer; border-radius: 4px;">Déconnexion</button>
+        <p class="muted">Bon de commande client</p>
     </div>
+    <button id="btnLogout">Deconnexion</button>
+</header>
 
-    <!-- INFOS CLIENT -->
-    <div class="box">
-        <h2>Informations client</h2>
+<div class="container">
+    <section class="card info-card">
+        <div class="card-header">
+            <h2>Informations client</h2>
+            <span class="tag" id="clientIdTag"></span>
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <p class="label">Identifiant</p>
+                <p class="value" id="clientId"></p>
+            </div>
+            <div class="info-item">
+                <p class="label">Enseigne</p>
+                <p class="value" id="enseigne"></p>
+            </div>
+            <div class="info-item">
+                <p class="label">Magasin</p>
+                <p class="value" id="magasin"></p>
+            </div>
+            <div class="info-item">
+                <p class="label">Contact</p>
+                <p class="value" id="contact"></p>
+            </div>
+            <div class="info-item">
+                <p class="label">Email compta</p>
+                <p class="value" id="emailCompta"></p>
+            </div>
+        </div>
+    </section>
 
-        <label>Identifiant client</label>
-        <input type="text" id="clientId" readonly>
+    <section class="card">
+        <div class="card-header">
+            <h2>Consommables</h2>
+            <span class="muted" id="tarifMoisLabel">Tarif : Decembre 2025</span>
+        </div>
+        <table class="editable-table">
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Prix HT</th>
+                    <th style="width:160px;">QuantitÇ¸</th>
+                </tr>
+            </thead>
+            <tbody id="produitsBody"></tbody>
+        </table>
+    </section>
 
-        <label>Enseigne</label>
-        <input type="text" id="enseigne" readonly>
-
-        <label>Magasin</label>
-        <input type="text" id="magasin" readonly>
-
-        <label>Contact</label>
-        <input type="text" id="contact" readonly>
-		
-		<label>Email compta</label>
-		<input type="email" id="emailCompta">
-	
-    </div>
-
-    <!-- PRODUITS -->
-    <div class="box">
-        <h2>Consommables</h2>
-
-        <div id="produits"></div>
-    </div>
-
-    <!-- TOTaux -->
-    <div class="box totals">
-        <div class="line"><span>Sous-total HT :</span><span id="sousTotal">0,00 €</span></div>
-        <div class="line"><span>Frais de port :</span><span id="fraisPort">0,00 €</span></div>
-        <div class="line"><span>Total HT :</span><span id="totalHT">0,00 €</span></div>
-        <div class="line"><span>TVA :</span><span id="tva">0,00 €</span></div>
-        <div class="line totalTTC"><span>Total TTC :</span><span id="totalTTC">0,00 €</span></div>
-    </div>
-
-    <!-- BOUTON ENVOI -->
-
-    <button id="btnSend">Envoyer la commande</button>
-
+    <section class="card totals-card">
+        <h2>RÇ¸capitulatif</h2>
+        <div class="totals-grid">
+            <span class="label">Sous-total HT</span><span class="value" id="sousTotal">0,00 EUR</span>
+            <span class="label">Frais de port</span><span class="value" id="fraisPort">0,00 EUR</span>
+            <span class="label">Total HT</span><span class="value" id="totalHT">0,00 EUR</span>
+            <span class="label">TVA</span><span class="value" id="tva">0,00 EUR</span>
+            <span class="label total">Total TTC</span><span class="value total" id="totalTTC">0,00 EUR</span>
+        </div>
+        <button id="btnSend" class="full">Envoyer la commande</button>
+    </section>
 </div>
 
 <script src="app.js"></script>
 </body>
 </html>
-
