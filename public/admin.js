@@ -923,6 +923,24 @@ async function deletePrice(enseigne, produitId) {
 }
 
 async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt }) {
+  try {
+    await fetch("/admin_catalogue", {
+      method: "POST",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({
+        id,
+        nom,
+        reference,
+        mandrin,
+        etiquettesParRouleau,
+        rouleauxParCarton,
+        prixCartonHt,
+      }),
+    });
+  } catch (e) {
+    console.error("saveCatalogue backend error", e);
+  }
+
   const prod = state.catalog[id] || {};
   state.catalog[id] = {
     ...prod,
@@ -944,6 +962,16 @@ async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau
 }
 
 async function deleteCatalogue(id) {
+  try {
+    await fetch("/admin_catalogue", {
+      method: "DELETE",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ id }),
+    });
+  } catch (e) {
+    console.error("deleteCatalogue backend error", e);
+  }
+
   delete state.catalog[id];
   Object.keys(state.prix).forEach((ens) => {
     state.prix[ens] = (state.prix[ens] || []).filter((p) => p.id !== id);
