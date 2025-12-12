@@ -823,6 +823,8 @@ async function saveClient(payload) {
       magasin: payload.magasin,
       contact: payload.contact,
       email: payload.email,
+      fraisPort: body.fraisPort,
+      tva: body.tva,
     };
     if (payload.enseigne && !state.enseignes[payload.enseigne]) {
       state.enseignes[payload.enseigne] = { nom: payload.enseigne, emailCompta: payload.email || "" };
