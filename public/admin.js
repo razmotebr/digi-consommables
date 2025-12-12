@@ -229,16 +229,6 @@ function renderClients() {
     inpEmail.disabled = !isEditing;
     tdEmail.appendChild(inpEmail);
 
-    const tdQr = document.createElement("td");
-    const qrBtn = document.createElement("button");
-    qrBtn.className = "qr-btn";
-    qrBtn.title = "Copier le QR dans le presse-papiers";
-    qrBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm4 0h2v4h-2v-4zm-2 2h2v2h-2v-2zm4-4h2v2h-2v-2zm-4 4h2v2h-2v-2z"></path>
-    </svg>`;
-    qrBtn.addEventListener("click", () => copyQrToClipboard(id));
-    tdQr.appendChild(qrBtn);
-
     const actions = document.createElement("td");
     actions.className = "table-actions col-actions";
     const qrBtn = document.createElement("button");
