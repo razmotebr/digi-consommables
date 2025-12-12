@@ -65,6 +65,12 @@
             border-radius: 8px;
             background: #fff;
         }
+        .editable-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #fff;
+        }
         .editable-table input {
             width: 100%;
             box-sizing: border-box;
@@ -77,22 +83,40 @@
         .editable-table .wide {
             min-width: 140px;
         }
+        .editable-table thead th {
+            background: #f4f6f9;
+            font-weight: 700;
+            font-size: 13px;
+            color: #374151;
+            letter-spacing: 0.01em;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 10px 12px;
+        }
         .editable-table td,
         .editable-table th {
             vertical-align: middle;
+            padding: 8px 10px;
         }
         .editable-table tr { height: 72px; }
-        .editable-table input,
-        .editable-table select,
-        .action-btn {
-            height: 42px;
+        .editable-table tbody tr {
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+        .editable-table tbody tr:hover {
+            background: #f8fafc;
+            box-shadow: inset 0 1px 0 rgba(0,0,0,0.03);
+        }
+        .editable-table .add-row td {
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
         }
         .table-actions {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             align-items: center;
             justify-content: center;
             height: 100%;
+            white-space: nowrap;
         }
         .action-btn {
             min-width: 100px;
