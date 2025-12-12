@@ -9,6 +9,13 @@ const state = {
   editingEnseignes: {}, // {code: true}
   editingClients: {}, // {id: {enseigne,magasin,contact,email}}
   users: [], // [{id, enseigne, magasin, lastLogin}]
+  pagination: {
+    enseignes: 1,
+    clients: 1,
+    catalogue: 1,
+    prix: 1,
+    pageSize: 20,
+  },
 };
 
 const adminToken = sessionStorage.getItem("adminToken");
@@ -74,9 +81,14 @@ function renderEnseignes() {
   tbody.innerHTML = "";
   if (addRow) tbody.appendChild(addRow);
 
-  Object.entries(state.enseignes)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([code, e]) => {
+  const entries = Object.entries(state.enseignes).sort(([a], [b]) => a.localeCompare(b));
+  const pageSize = state.pagination.pageSize;
+  const currentPage = state.pagination.enseignes;
+  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageEntries = entries.slice(start, start + pageSize);
+
+  pageEntries.forEach(([code, e]) => {
     const tr = document.createElement("tr");
     const isEditing = !!state.editingEnseignes[code];
 
@@ -152,6 +164,10 @@ function renderEnseignes() {
     tbody.appendChild(tr);
   });
 
+  document.getElementById("enseignePageLabel").textContent = `${currentPage}/${totalPages}`;
+  document.getElementById("enseignePrev").disabled = currentPage <= 1;
+  document.getElementById("enseigneNext").disabled = currentPage >= totalPages;
+
   populateOrdersEnseigneSelect();
 }
 
@@ -167,7 +183,14 @@ function renderClients() {
     addRow.querySelectorAll("td").forEach((td) => (td.style.verticalAlign = "middle"));
   }
 
-  Object.entries(state.clients).forEach(([id, c]) => {
+  const entries = Object.entries(state.clients).sort(([a], [b]) => a.localeCompare(b));
+  const pageSize = state.pagination.pageSize;
+  const currentPage = state.pagination.clients;
+  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageEntries = entries.slice(start, start + pageSize);
+
+  pageEntries.forEach(([id, c]) => {
     const tr = document.createElement("tr");
     const draft = state.editingClients[id] || null;
     const isEditing = !!draft;
@@ -280,6 +303,10 @@ function renderClients() {
     tr.appendChild(actions);
     tbody.appendChild(tr);
   });
+
+  document.getElementById("clientsPageLabel").textContent = `${currentPage}/${totalPages}`;
+  document.getElementById("clientsPrev").disabled = currentPage <= 1;
+  document.getElementById("clientsNext").disabled = currentPage >= totalPages;
 }
 
 function renderCatalogue() {
@@ -288,10 +315,16 @@ function renderCatalogue() {
   tbody.innerHTML = "";
   if (addRow) tbody.appendChild(addRow);
 
-  Object.keys(state.catalog)
+  const entries = Object.keys(state.catalog)
     .map((k) => Number(k))
-    .sort((a, b) => a - b)
-    .forEach((id) => {
+    .sort((a, b) => a - b);
+  const pageSize = state.pagination.pageSize;
+  const currentPage = state.pagination.catalogue;
+  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageEntries = entries.slice(start, start + pageSize);
+
+  pageEntries.forEach((id) => {
       const tr = document.createElement("tr");
       const prod = state.catalog[id] || {};
 
@@ -393,10 +426,14 @@ function renderCatalogue() {
       tr.appendChild(tdMandrin);
       tr.appendChild(tdEtiq);
       tr.appendChild(tdRoul);
-      tr.appendChild(tdPrix);
-      tr.appendChild(actions);
-      tbody.appendChild(tr);
-    });
+    tr.appendChild(tdPrix);
+    tr.appendChild(actions);
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("cataloguePageLabel").textContent = `${currentPage}/${totalPages}`;
+  document.getElementById("cataloguePrev").disabled = currentPage <= 1;
+  document.getElementById("catalogueNext").disabled = currentPage >= totalPages;
 }
 
 function renderPrix() {
@@ -407,10 +444,14 @@ function renderPrix() {
   if (addRow) tbody.appendChild(addRow);
   if (!enseigne) return;
 
-  (state.prix[enseigne] || [])
-    .slice()
-    .sort((a, b) => a.id - b.id)
-    .forEach((p) => {
+  const entries = (state.prix[enseigne] || []).slice().sort((a, b) => a.id - b.id);
+  const pageSize = state.pagination.pageSize;
+  const currentPage = state.pagination.prix;
+  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageEntries = entries.slice(start, start + pageSize);
+
+  pageEntries.forEach((p) => {
       const tr = document.createElement("tr");
 
       const tdId = document.createElement("td");
@@ -473,6 +514,10 @@ function renderPrix() {
       tr.appendChild(actions);
       tbody.appendChild(tr);
     });
+
+  document.getElementById("prixPageLabel").textContent = `${currentPage}/${totalPages}`;
+  document.getElementById("prixPrev").disabled = currentPage <= 1;
+  document.getElementById("prixNext").disabled = currentPage >= totalPages;
 }
 
 function statusClass(status = "") {
@@ -979,6 +1024,7 @@ document.getElementById("tabUsers").addEventListener("click", async (e) => {
 });
 
 document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
+  state.pagination.prix = 1;
   applySelectedProduct();
   renderPrix();
 });
@@ -996,6 +1042,7 @@ document.getElementById("btnAddEnseigne").addEventListener("click", () => {
   renderEnseignes();
   fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
   populateEnseigneSelect();
+  state.pagination.enseignes = 1;
   // Reset champs avec exemples
   document.getElementById("ensCode").value = "Ex: C001";
   document.getElementById("ensName").value = "Ex: Intermarche";
@@ -1041,6 +1088,52 @@ document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
   document.getElementById("catEtiquettes").value = "";
   document.getElementById("catRouleaux").value = "";
   document.getElementById("catPrix").value = "";
+  state.pagination.catalogue = 1;
+});
+
+// Pagination controls
+document.getElementById("enseignePrev").addEventListener("click", () => {
+  if (state.pagination.enseignes > 1) {
+    state.pagination.enseignes -= 1;
+    renderEnseignes();
+  }
+});
+document.getElementById("enseigneNext").addEventListener("click", () => {
+  state.pagination.enseignes += 1;
+  renderEnseignes();
+});
+
+document.getElementById("clientsPrev").addEventListener("click", () => {
+  if (state.pagination.clients > 1) {
+    state.pagination.clients -= 1;
+    renderClients();
+  }
+});
+document.getElementById("clientsNext").addEventListener("click", () => {
+  state.pagination.clients += 1;
+  renderClients();
+});
+
+document.getElementById("cataloguePrev").addEventListener("click", () => {
+  if (state.pagination.catalogue > 1) {
+    state.pagination.catalogue -= 1;
+    renderCatalogue();
+  }
+});
+document.getElementById("catalogueNext").addEventListener("click", () => {
+  state.pagination.catalogue += 1;
+  renderCatalogue();
+});
+
+document.getElementById("prixPrev").addEventListener("click", () => {
+  if (state.pagination.prix > 1) {
+    state.pagination.prix -= 1;
+    renderPrix();
+  }
+});
+document.getElementById("prixNext").addEventListener("click", () => {
+  state.pagination.prix += 1;
+  renderPrix();
 });
 
 // Init
