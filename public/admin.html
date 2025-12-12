@@ -75,7 +75,7 @@
             height: 42px;
         }
         .editable-table .wide {
-            min-width: 220px;
+            min-width: 140px;
         }
         .editable-table td,
         .editable-table th {
@@ -101,7 +101,27 @@
             width: 100%;
         }
         .table-actions {
-            width: 170px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            white-space: nowrap;
+        }
+        .catalog-table {
+            table-layout: fixed;
+        }
+        .catalog-table th,
+        .catalog-table td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .catalog-table .actions-col,
+        .catalog-table .table-actions {
+            width: 180px;
+        }
+        .catalog-table .add-row .table-actions {
+            justify-content: flex-end;
         }
         .qr-cell {
             display: flex;
@@ -209,17 +229,17 @@
         <section id="sectionCatalogue" class="card hidden">
             <h2>Catalogue produits</h2>
             <div class="panel">
-                <table id="tableCatalogue" class="editable-table">
+                <table id="tableCatalogue" class="editable-table catalog-table">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Référence</th>
-                            <th>Désignation</th>
+                            <th class="wide">Désignation</th>
                             <th>Mandrin</th>
                             <th>Étiquettes / rouleau</th>
                             <th>Rouleaux / carton</th>
                             <th>Prix carton HT</th>
-                            <th>Actions</th>
+                            <th class="actions-col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

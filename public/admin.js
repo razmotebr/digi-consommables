@@ -348,7 +348,7 @@ function renderCatalogue() {
       tdPrix.appendChild(inpPrix);
 
       const actions = document.createElement("td");
-      actions.className = "table-actions";
+      actions.className = "table-actions actions-col";
       const editBtn = document.createElement("button");
       editBtn.className = "secondary action-btn";
       editBtn.textContent = "Edit";
