@@ -53,6 +53,29 @@ header .muted {
     padding: 0 16px;
 }
 
+nav.subnav {
+    background: #f5f5f5;
+    padding: 10px 16px;
+    display: flex;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+nav.subnav a {
+    text-decoration: none;
+    color: #4b5563;
+    font-weight: bold;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+nav.subnav a.active {
+    background: #e0e7ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
 .card {
     background: var(--surface);
     border-radius: 12px;
@@ -160,6 +183,23 @@ th {
 .totals-grid .total {
     font-size: 18px;
     color: var(--digi-dark);
+}
+
+.status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status.traitement { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.status.preparation { background: #ecfeff; color: #0ea5e9; border: 1px solid #bae6fd; }
+.status.envoye { background: #ecfdf3; color: #16a34a; border: 1px solid #bbf7d0; }
+.status.inconnu { background: #f1f5f9; color: #475569; border: 1px solid #e5e7eb; }
+
+.hidden {
+    display: none !important;
 }
 
 button {

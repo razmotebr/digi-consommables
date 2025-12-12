@@ -1,5 +1,7 @@
 let produits = [];
 const config = { fraisPort: 12.0, tva: 0.2 };
+let orders = [];
+let currentClientId = "";
 
 const setText = (id, value) => {
     const el = document.getElementById(id);
@@ -7,6 +9,7 @@ const setText = (id, value) => {
 };
 
 const getText = (id) => (document.getElementById(id)?.textContent || "").trim();
+const formatEuro = (n) => `${Number(n || 0).toFixed(2)} EUR`;
 
 console.log("app.js charge");
 
@@ -24,6 +27,7 @@ async function init() {
         clientId = params.get("client") || "C001";
     }
 
+    currentClientId = clientId;
     setText("clientIdTag", clientId);
     setText("clientId", clientId);
 
@@ -37,6 +41,9 @@ async function init() {
         setText("magasin", cl.magasin || "");
         setText("contact", cl.contact || "");
         if (cl.email_compta) setText("emailCompta", cl.email_compta);
+        const magasinName = cl.magasin ? `magasin ${cl.magasin}` : "magasin";
+        const enseigneName = cl.enseigne || "enseigne";
+        setText("ordersInfo", `Historique des commandes passées pour ${enseigneName} - ${magasinName}`);
 
         // Liste de prix depuis l'API (protegee par token)
         const resPrices = await fetch("/prices", {
@@ -48,6 +55,7 @@ async function init() {
 
         renderProduits();
         updateTotals();
+        await loadOrders(token, clientId);
     } catch (e) {
         console.error("init error:", e);
         alert("Erreur de chargement des donnees. Merci de reessayer plus tard.");
@@ -104,6 +112,62 @@ function updateTotals() {
     setText("totalHT", `${tht.toFixed(2)} EUR`);
     setText("tva", `${tva.toFixed(2)} EUR`);
     setText("totalTTC", `${ttc.toFixed(2)} EUR`);
+}
+
+function getStatusClass(status = "") {
+    const normalized = status.toLowerCase();
+    if (normalized.includes("prép") || normalized.includes("prepa")) return "preparation";
+    if (normalized.includes("trait")) return "traitement";
+    if (normalized.includes("envoy")) return "envoye";
+    return "inconnu";
+}
+
+function renderOrders() {
+    const tbody = document.getElementById("ordersBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+    if (!orders.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = "muted";
+        td.textContent = "Aucune commande trouvée.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        return;
+    }
+
+    orders
+        .slice()
+        .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0))
+        .forEach((o) => {
+            const tr = document.createElement("tr");
+            const statusClass = getStatusClass(o.status);
+            const date = o.createdAt || o.date || o.timestamp;
+            const total = o.totalTTC || o.total || 0;
+
+            tr.innerHTML = `
+                <td>${o.id || o.reference || "-"}</td>
+                <td>${date ? new Date(date).toLocaleString("fr-FR") : "-"}</td>
+                <td>${formatEuro(total)}</td>
+                <td><span class="status ${statusClass}">${o.status || "Inconnu"}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+}
+
+async function loadOrders(token, clientId) {
+    try {
+        const url = `/orders?clientId=${encodeURIComponent(clientId)}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const data = await res.json();
+        orders = data.orders || [];
+    } catch (e) {
+        console.error("loadOrders error", e);
+        orders = [];
+    }
+    renderOrders();
 }
 
 function buildMailto(payload) {
@@ -175,6 +239,27 @@ document.getElementById("btnSend").addEventListener("click", () => {
 document.getElementById("btnLogout").addEventListener("click", () => {
     sessionStorage.clear();
     window.location.href = "/login.html";
+});
+
+function showTab(tabId) {
+    document.querySelectorAll("nav.subnav a").forEach((a) => a.classList.remove("active"));
+    document.getElementById("tabBon").classList.toggle("active", tabId === "bon");
+    document.getElementById("tabCommandes").classList.toggle("active", tabId === "commandes");
+    document.getElementById("sectionBon").classList.toggle("hidden", tabId !== "bon");
+    document.getElementById("sectionCommandes").classList.toggle("hidden", tabId !== "commandes");
+    if (tabId === "commandes" && currentClientId) {
+        const token = sessionStorage.getItem("token") || "";
+        loadOrders(token, currentClientId);
+    }
+}
+
+document.getElementById("tabBon").addEventListener("click", (e) => {
+    e.preventDefault();
+    showTab("bon");
+});
+document.getElementById("tabCommandes").addEventListener("click", (e) => {
+    e.preventDefault();
+    showTab("commandes");
 });
 
 init();

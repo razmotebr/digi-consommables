@@ -125,6 +125,11 @@
         th { background: #f8fafc; color: var(--digi-dark); }
         .tag { display: inline-block; background: #f1f5f9; color: #4b5563; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
         .hidden { display: none; }
+        .status { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: bold; }
+        .status.traitement { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+        .status.preparation { background: #ecfeff; color: #0ea5e9; border: 1px solid #bae6fd; }
+        .status.envoye { background: #ecfdf3; color: #16a34a; border: 1px solid #bbf7d0; }
+        .status.inconnu { background: #f1f5f9; color: #475569; border: 1px solid #e5e7eb; }
     </style>
 </head>
 <body>
@@ -139,6 +144,7 @@
         <a href="#clients" id="tabClients">Comptes clients</a>
         <a href="#catalogue" id="tabCatalogue">Catalogue</a>
         <a href="#prix" id="tabPrix">Prix par enseigne</a>
+        <a href="#commandes" id="tabCommandes">Commandes</a>
     </nav>
 
     <div class="container">
@@ -204,7 +210,7 @@
             </div>
         </section>
 
-                <section id="sectionPrix" class="card hidden">
+        <section id="sectionPrix" class="card hidden">
             <h2>Parametrage des prix par enseigne</h2>
             <div class="panel">
                 <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
@@ -230,6 +236,36 @@
                             <td><input type="number" step="0.01" id="prixValeur" placeholder="Ex: 12.50"></td>
                             <td><button id="btnAddPrix">Ajouter</button></td>
                         </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="sectionCommandes" class="card hidden">
+            <h2>Commandes</h2>
+            <div class="panel">
+                <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
+                    <div style="flex:1 1 260px;">
+                        <label>Filtrer par enseigne</label>
+                        <select id="ordersEnseigneSelect">
+                            <option value="">Toutes les enseignes</option>
+                        </select>
+                    </div>
+                </div>
+                <table id="tableAdminOrders" class="editable-table">
+                    <thead>
+                        <tr>
+                            <th>R&eacute;f.</th>
+                            <th>Client</th>
+                            <th>Magasin</th>
+                            <th>Total</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="muted">Chargement...</td></tr>
                     </tbody>
                 </table>
             </div>

@@ -5,6 +5,7 @@ const state = {
   clients: {}, // {id: {enseigne,magasin,contact,email}}
   prix: {}, // {enseigne: [{id,nom,prix}]}
   catalog: {}, // {id: nom}
+  orders: [], // [{id, clientId, enseigne, magasin, total, status, createdAt}]
 };
 
 function showSection(id) {
@@ -112,6 +113,8 @@ function renderEnseignes() {
     tr.appendChild(actions);
     tbody.appendChild(tr);
   });
+
+  populateOrdersEnseigneSelect();
 }
 
 function renderClients() {
@@ -356,9 +359,82 @@ function renderPrix() {
     });
 }
 
+function statusClass(status = "") {
+  const normalized = status
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+  if (normalized.includes("prep")) return "preparation";
+  if (normalized.includes("trait")) return "traitement";
+  if (normalized.includes("envoy")) return "envoye";
+  return "inconnu";
+}
+
+function renderAdminOrders() {
+  const tbody = document.querySelector("#tableAdminOrders tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  if (!state.orders.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 7;
+    td.className = "muted";
+    td.textContent = "Aucune commande pour cette enseigne.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  state.orders
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0))
+    .forEach((o) => {
+      const tr = document.createElement("tr");
+      const cls = statusClass(o.status);
+      const select = document.createElement("select");
+      ["en traitement", "en préparation", "envoyé"].forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        if ((o.status || "").toLowerCase() === s.toLowerCase()) opt.selected = true;
+        select.appendChild(opt);
+      });
+      select.addEventListener("change", () => updateOrderStatus(o.id, select.value));
+
+      tr.innerHTML = `
+        <td>${o.id || o.reference || "-"}</td>
+        <td>${o.clientId || "-"}</td>
+        <td>${o.magasin || "-"}</td>
+        <td>${o.totalTTC || o.total || 0} EUR</td>
+        <td>${o.createdAt ? new Date(o.createdAt).toLocaleString("fr-FR") : "-"}</td>
+        <td><span class="status ${cls}">${o.status || "Inconnu"}</span></td>
+      `;
+      const actionsTd = document.createElement("td");
+      actionsTd.appendChild(select);
+      tr.appendChild(actionsTd);
+      tbody.appendChild(tr);
+    });
+}
+
 // --- HELPERS ---
 function populateEnseigneSelect() {
   fillEnseigneOptions(document.getElementById("prixEnseigneSelect"));
+}
+
+function populateOrdersEnseigneSelect() {
+  const sel = document.getElementById("ordersEnseigneSelect");
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Toutes les enseignes</option>';
+  Object.keys(state.enseignes)
+    .sort()
+    .forEach((code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = code;
+      if (code === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
 }
 
 function populateProduitGlobalSelect() {
@@ -445,6 +521,8 @@ async function loadInitialData() {
     populateProduitGlobalSelect();
     applySelectedProduct();
     renderPrix();
+    await loadOrdersByEnseigne(document.getElementById("ordersEnseigneSelect")?.value || "");
+    renderAdminOrders();
   } catch (e) {
     console.error("loadInitialData error", e);
     // Fallback local pour éviter un écran vide
@@ -468,6 +546,7 @@ async function loadInitialData() {
         Object.values(state.clients).forEach((c) => {
           if (c.enseigne) state.enseignes[c.enseigne] = { nom: c.enseigne, emailCompta: c.emailCompta || "" };
         });
+        populateOrdersEnseigneSelect();
         renderEnseignes();
         renderClients();
         renderCatalogue();
@@ -608,6 +687,37 @@ async function deleteCatalogue(id) {
   renderPrix();
 }
 
+async function loadOrdersByEnseigne(enseigne) {
+  try {
+    const url = enseigne ? `/admin_orders?enseigne=${encodeURIComponent(enseigne)}` : "/admin_orders";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`orders ${res.status}`);
+    const data = await res.json();
+    state.orders = data.orders || [];
+  } catch (e) {
+    console.error("loadOrdersByEnseigne error", e);
+    state.orders = [];
+  }
+  renderAdminOrders();
+}
+
+async function updateOrderStatus(orderId, status) {
+  try {
+    const res = await fetch("/admin_orders", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ orderId, status }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const found = state.orders.find((o) => o.id === orderId);
+    if (found) found.status = status;
+    renderAdminOrders();
+  } catch (e) {
+    console.error("updateOrderStatus error", e);
+    alert("Impossible de mettre à jour le statut.");
+  }
+}
+
 // --- Events ---
 document.getElementById("adminUserTag").textContent = state.admin;
 document.getElementById("btnLogout").addEventListener("click", () => {
@@ -631,12 +741,20 @@ document.getElementById("tabCatalogue").addEventListener("click", (e) => {
   e.preventDefault();
   showSection("sectionCatalogue");
 });
+document.getElementById("tabCommandes").addEventListener("click", async (e) => {
+  e.preventDefault();
+  showSection("sectionCommandes");
+  await loadOrdersByEnseigne(document.getElementById("ordersEnseigneSelect").value);
+});
 
 document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
   applySelectedProduct();
   renderPrix();
 });
 document.getElementById("prixProduitGlobalSelect").addEventListener("change", applySelectedProduct);
+document.getElementById("ordersEnseigneSelect").addEventListener("change", (e) => {
+  loadOrdersByEnseigne(e.target.value);
+});
 
 document.getElementById("btnAddEnseigne").addEventListener("click", () => {
   const code = document.getElementById("ensCode").value.trim();

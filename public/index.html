@@ -15,64 +15,93 @@
     <button id="btnLogout">D&eacute;connexion</button>
 </header>
 
+<nav class="subnav">
+    <a href="#bon" id="tabBon" class="active">Bon de commande</a>
+    <a href="#commandes" id="tabCommandes">Commandes</a>
+</nav>
+
 <div class="container">
-    <section class="card info-card">
-        <div class="card-header">
-            <h2>Informations client</h2>
-            <span class="tag" id="clientIdTag"></span>
-        </div>
-        <div class="info-grid">
-            <div class="info-item">
-                <p class="label">Identifiant</p>
-                <p class="value" id="clientId"></p>
+    <div id="sectionBon" class="tab-section">
+        <section class="card info-card">
+            <div class="card-header">
+                <h2>Informations client</h2>
+                <span class="tag" id="clientIdTag"></span>
             </div>
-            <div class="info-item">
-                <p class="label">Enseigne</p>
-                <p class="value" id="enseigne"></p>
+            <div class="info-grid">
+                <div class="info-item">
+                    <p class="label">Identifiant</p>
+                    <p class="value" id="clientId"></p>
+                </div>
+                <div class="info-item">
+                    <p class="label">Enseigne</p>
+                    <p class="value" id="enseigne"></p>
+                </div>
+                <div class="info-item">
+                    <p class="label">Magasin</p>
+                    <p class="value" id="magasin"></p>
+                </div>
+                <div class="info-item">
+                    <p class="label">Contact</p>
+                    <p class="value" id="contact"></p>
+                </div>
+                <div class="info-item">
+                    <p class="label">Email compta</p>
+                    <p class="value" id="emailCompta"></p>
+                </div>
             </div>
-            <div class="info-item">
-                <p class="label">Magasin</p>
-                <p class="value" id="magasin"></p>
-            </div>
-            <div class="info-item">
-                <p class="label">Contact</p>
-                <p class="value" id="contact"></p>
-            </div>
-            <div class="info-item">
-                <p class="label">Email compta</p>
-                <p class="value" id="emailCompta"></p>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <section class="card">
-        <div class="card-header">
-            <h2>Consommables</h2>
-            <span class="muted" id="tarifMoisLabel">Tarif : D&eacute;cembre 2025</span>
-        </div>
-        <table class="editable-table">
-            <thead>
-                <tr>
-                    <th>Produit</th>
-                    <th>Prix HT</th>
-                    <th style="width:160px;">Quantit&eacute;</th>
-                </tr>
-            </thead>
-            <tbody id="produitsBody"></tbody>
-        </table>
-    </section>
+        <section class="card">
+            <div class="card-header">
+                <h2>Consommables</h2>
+                <span class="muted" id="tarifMoisLabel">Tarif : D&eacute;cembre 2025</span>
+            </div>
+            <table class="editable-table">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Prix HT</th>
+                        <th style="width:160px;">Quantit&eacute;</th>
+                    </tr>
+                </thead>
+                <tbody id="produitsBody"></tbody>
+            </table>
+        </section>
 
-    <section class="card totals-card">
-        <h2>R&eacute;capitulatif</h2>
-        <div class="totals-grid">
-            <span class="label">Sous-total HT</span><span class="value" id="sousTotal">0,00 EUR</span>
-            <span class="label">Frais de port</span><span class="value" id="fraisPort">0,00 EUR</span>
-            <span class="label">Total HT</span><span class="value" id="totalHT">0,00 EUR</span>
-            <span class="label">TVA</span><span class="value" id="tva">0,00 EUR</span>
-            <span class="label total">Total TTC</span><span class="value total" id="totalTTC">0,00 EUR</span>
-        </div>
-        <button id="btnSend" class="full">Envoyer la commande</button>
-    </section>
+        <section class="card totals-card">
+            <h2>R&eacute;capitulatif</h2>
+            <div class="totals-grid">
+                <span class="label">Sous-total HT</span><span class="value" id="sousTotal">0,00 EUR</span>
+                <span class="label">Frais de port</span><span class="value" id="fraisPort">0,00 EUR</span>
+                <span class="label">Total HT</span><span class="value" id="totalHT">0,00 EUR</span>
+                <span class="label">TVA</span><span class="value" id="tva">0,00 EUR</span>
+                <span class="label total">Total TTC</span><span class="value total" id="totalTTC">0,00 EUR</span>
+            </div>
+            <button id="btnSend" class="full">Envoyer la commande</button>
+        </section>
+    </div>
+
+    <div id="sectionCommandes" class="tab-section hidden">
+        <section class="card">
+            <div class="card-header">
+                <h2>Commandes du magasin</h2>
+                <span class="muted" id="ordersInfo">Historique des commandes pass&eacute;es</span>
+            </div>
+            <table class="editable-table">
+                <thead>
+                    <tr>
+                        <th>R&eacute;f.</th>
+                        <th>Date</th>
+                        <th>Total TTC</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersBody">
+                    <tr><td colspan="4" class="muted">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
 </div>
 
 <script src="app.js"></script>
