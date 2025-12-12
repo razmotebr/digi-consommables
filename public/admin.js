@@ -74,7 +74,9 @@ function renderEnseignes() {
   tbody.innerHTML = "";
   if (addRow) tbody.appendChild(addRow);
 
-  Object.entries(state.enseignes).forEach(([code, e]) => {
+  Object.entries(state.enseignes)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([code, e]) => {
     const tr = document.createElement("tr");
     const isEditing = !!state.editingEnseignes[code];
 
@@ -919,6 +921,10 @@ document.getElementById("btnAddEnseigne").addEventListener("click", () => {
   renderEnseignes();
   fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
   populateEnseigneSelect();
+  // Reset champs avec exemples
+  document.getElementById("ensCode").value = "Ex: C001";
+  document.getElementById("ensName").value = "Ex: Intermarche";
+  document.getElementById("ensEmail").value = "exemple@domaine.com";
 });
 
 document.getElementById("btnAddClient").addEventListener("click", () => {
