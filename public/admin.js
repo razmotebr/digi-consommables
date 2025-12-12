@@ -7,6 +7,7 @@ const state = {
   catalog: {}, // {id: nom}
   orders: [], // [{id, clientId, enseigne, magasin, total, status, createdAt}]
   editingEnseignes: {}, // {code: true}
+  editingClients: {}, // {id: {enseigne,magasin,contact,email}}
   users: [], // [{id, enseigne, magasin, lastLogin}]
 };
 
@@ -162,6 +163,8 @@ function renderClients() {
 
   Object.entries(state.clients).forEach(([id, c]) => {
     const tr = document.createElement("tr");
+    const draft = state.editingClients[id] || null;
+    const isEditing = !!draft;
 
     const tdQr = document.createElement("td");
     tdQr.className = "qr-cell";
@@ -187,57 +190,72 @@ function renderClients() {
 
     const tdEns = document.createElement("td");
     const selEns = document.createElement("select");
-    fillEnseigneOptions(selEns, c.enseigne || "");
-    selEns.disabled = true;
+    fillEnseigneOptions(selEns, (draft && draft.enseigne) || c.enseigne || "");
+    selEns.disabled = !isEditing;
     tdEns.appendChild(selEns);
 
     const tdMag = document.createElement("td");
     const inpMag = document.createElement("input");
     inpMag.type = "text";
-    inpMag.value = c.magasin || "";
-    inpMag.disabled = true;
+    inpMag.value = (draft && draft.magasin) || c.magasin || "";
+    inpMag.disabled = !isEditing;
     tdMag.appendChild(inpMag);
 
     const tdContact = document.createElement("td");
     const inpContact = document.createElement("input");
     inpContact.type = "text";
-    inpContact.value = c.contact || "";
-    inpContact.disabled = true;
+    inpContact.value = (draft && draft.contact) || c.contact || "";
+    inpContact.disabled = !isEditing;
     tdContact.appendChild(inpContact);
 
     const tdEmail = document.createElement("td");
     const inpEmail = document.createElement("input");
     inpEmail.type = "email";
-    inpEmail.value = c.email || "";
-    inpEmail.disabled = true;
+    inpEmail.value = (draft && draft.email) || c.email || "";
+    inpEmail.disabled = !isEditing;
     tdEmail.appendChild(inpEmail);
 
     const actions = document.createElement("td");
     actions.className = "table-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
-    editBtn.textContent = "Edit";
+    editBtn.textContent = isEditing ? "Enregistrer" : "Edit";
     const delBtn = document.createElement("button");
     delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
 
-    editBtn.addEventListener("click", () => {
-      const editing = tr.dataset.editing === "true";
-      if (!editing) {
-        tr.dataset.editing = "true";
-        editBtn.textContent = "Enregistrer";
-        selEns.disabled = false;
-        inpMag.disabled = false;
-        inpContact.disabled = false;
-        inpEmail.disabled = false;
-        return;
-      }
-      saveClient({
-        id,
+    const persistDraft = () => {
+      state.editingClients[id] = {
         enseigne: selEns.value.trim(),
         magasin: inpMag.value.trim(),
         contact: inpContact.value.trim(),
         email: inpEmail.value.trim(),
+      };
+    };
+    [selEns, inpMag, inpContact, inpEmail].forEach((el) => {
+      el.addEventListener("input", persistDraft);
+      el.addEventListener("change", persistDraft);
+    });
+
+    editBtn.addEventListener("click", () => {
+      const editing = !!state.editingClients[id];
+      if (!editing) {
+        state.editingClients[id] = {
+          enseigne: c.enseigne || "",
+          magasin: c.magasin || "",
+          contact: c.contact || "",
+          email: c.email || "",
+        };
+        renderClients();
+        return;
+      }
+      persistDraft();
+      saveClient({
+        id,
+        enseigne: state.editingClients[id].enseigne,
+        magasin: state.editingClients[id].magasin,
+        contact: state.editingClients[id].contact,
+        email: state.editingClients[id].email,
       });
     });
 
@@ -670,6 +688,7 @@ async function saveClient(payload) {
     renderClients();
     renderEnseignes();
     populateEnseigneSelect();
+    delete state.editingClients[payload.id];
   } catch (e) {
     console.error("saveClient error", e);
     alert("Erreur sauvegarde client");
@@ -686,6 +705,7 @@ async function deleteClient(id) {
     if (!ensureAuthorized(res)) return;
     if (!res.ok) throw new Error(await res.text());
     delete state.clients[id];
+    delete state.editingClients[id];
     renderClients();
     renderEnseignes();
     populateEnseigneSelect();
