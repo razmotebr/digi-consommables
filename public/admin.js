@@ -179,7 +179,7 @@ function renderClients() {
     tbody.appendChild(addRow);
     fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
     // Normaliser la hauteur de la ligne d'ajout
-    addRow.style.height = "70px";
+    addRow.style.height = "64px";
     addRow.querySelectorAll("td").forEach((td) => (td.style.verticalAlign = "middle"));
   }
 
