@@ -240,10 +240,12 @@ function renderClients() {
     qrBtn.addEventListener("click", () => copyQrToClipboard(id));
 
     const editBtn = document.createElement("button");
+    editBtn.type = "button";
     editBtn.className = "secondary action-btn";
     editBtn.textContent = isEditing ? "Enregistrer" : "Edit";
     editBtn.dataset.id = id;
     const delBtn = document.createElement("button");
+    delBtn.type = "button";
     delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
     delBtn.dataset.id = id;
@@ -262,7 +264,7 @@ function renderClients() {
     });
 
     editBtn.addEventListener("click", () => {
-      const rowId = editBtn.dataset.id;
+      const rowId = id;
       const editing = !!state.editingClients[rowId];
       if (!editing) {
         state.editingClients[rowId] = {
@@ -284,7 +286,7 @@ function renderClients() {
       });
     });
 
-    delBtn.addEventListener("click", () => deleteClient(delBtn.dataset.id));
+    delBtn.addEventListener("click", () => deleteClient(id));
 
     actions.appendChild(qrBtn);
     actions.appendChild(editBtn);
