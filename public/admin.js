@@ -34,6 +34,12 @@ function showSection(id) {
   document.getElementById(id).classList.remove("hidden");
 }
 
+function setActiveTab(tabId) {
+  document.querySelectorAll("nav.subnav a").forEach((a) => a.classList.remove("active"));
+  const link = document.getElementById(tabId);
+  if (link) link.classList.add("active");
+}
+
 function withAuthHeaders(headers = {}) {
   return adminToken ? { ...headers, Authorization: `Bearer ${adminToken}` } : headers;
 }
@@ -834,27 +840,33 @@ document.getElementById("btnLogout").addEventListener("click", () => {
 document.getElementById("tabEnseignes").addEventListener("click", (e) => {
   e.preventDefault();
   showSection("sectionEnseignes");
+  setActiveTab("tabEnseignes");
 });
 document.getElementById("tabClients").addEventListener("click", (e) => {
   e.preventDefault();
   showSection("sectionClients");
+  setActiveTab("tabClients");
 });
 document.getElementById("tabPrix").addEventListener("click", (e) => {
   e.preventDefault();
   showSection("sectionPrix");
+  setActiveTab("tabPrix");
 });
 document.getElementById("tabCatalogue").addEventListener("click", (e) => {
   e.preventDefault();
   showSection("sectionCatalogue");
+  setActiveTab("tabCatalogue");
 });
 document.getElementById("tabCommandes").addEventListener("click", async (e) => {
   e.preventDefault();
   showSection("sectionCommandes");
+  setActiveTab("tabCommandes");
   await loadOrdersByEnseigne(document.getElementById("ordersEnseigneSelect").value);
 });
 document.getElementById("tabUsers").addEventListener("click", async (e) => {
   e.preventDefault();
   showSection("sectionUsers");
+  setActiveTab("tabUsers");
   await loadUsers();
 });
 
@@ -909,3 +921,4 @@ document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
 
 // Init
 loadInitialData();
+setActiveTab("tabEnseignes");

@@ -43,6 +43,8 @@
         }
         nav a { text-decoration: none; color: #4b5563; font-weight: bold; }
         nav a:hover { color: var(--accent-blue); }
+        nav.subnav a { padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; }
+        nav.subnav a.active { background: #e0e7ff; color: #1d4ed8; border-color: #bfdbfe; }
         .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
         .card {
             background: #f8fafc;
@@ -139,7 +141,7 @@
         <span class="tag" id="adminUserTag"></span>
         <button id="btnLogout" style="margin-left:auto;">Déconnexion</button>
     </header>
-    <nav>
+    <nav class="subnav">
         <a href="#enseignes" id="tabEnseignes">Enseignes</a>
         <a href="#clients" id="tabClients">Comptes clients</a>
         <a href="#catalogue" id="tabCatalogue">Catalogue</a>
