@@ -148,15 +148,15 @@
             display: flex;
             gap: 8px;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             height: 100%;
             white-space: nowrap;
         }
         .action-btn {
-            min-width: 100px;
+            min-width: auto;
             text-align: center;
-            flex: 1 1 0;
-            width: 100%;
+            flex: 0 0 auto;
+            width: auto;
         }
         .table-actions {
             display: flex;
@@ -201,7 +201,7 @@
             min-width: 90px;
         }
         .col-actions {
-            width: 180px;
+            width: auto;
             min-width: 160px;
         }
         .qr-btn {
@@ -324,7 +324,7 @@
             <div class="panel">
                 <table id="tableClients" class="editable-table">
                     <thead>
-                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th>QR</th><th class="col-actions">Actions</th></tr>
+                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
@@ -337,7 +337,6 @@
                             <td><input type="text" id="cliMagasin" placeholder="Ex: Paris 15"></td>
                             <td><input type="text" id="cliContact"></td>
                             <td><input type="email" id="cliEmail"></td>
-                            <td></td>
                             <td class="table-actions col-actions"><button id="btnAddClient" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
