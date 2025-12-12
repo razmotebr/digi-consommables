@@ -42,11 +42,13 @@
                 headers: { "content-type": "application/json" },
                 body: JSON.stringify({ id })
             });
-            const data = await res.json();
+            const raw = await res.text();
+            let data = {};
+            try { data = raw ? JSON.parse(raw) : {}; } catch (_) {}
             if (!res.ok) throw new Error(data.error || "Erreur");
             ok.textContent = data.message || "Email envoyé.";
         } catch (e) {
-            err.textContent = e.message;
+            err.textContent = e.message || "Erreur inconnue";
         } finally {
             document.getElementById("btnSend").disabled = false;
         }
