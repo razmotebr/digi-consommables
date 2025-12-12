@@ -32,9 +32,13 @@
         document.getElementById("btnSend").disabled = true;
         try {
             const res = await fetch("/forgot_admin", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Erreur");
-            ok.textContent = data.message || "Email envoyé.";
+            let data = {};
+            const text = await res.text();
+            if (text) {
+                try { data = JSON.parse(text); } catch (_) {}
+            }
+            if (!res.ok) throw new Error(data.error || text || "Erreur");
+            ok.textContent = (data && data.message) || "Email envoyé.";
         } catch (e) {
             err.textContent = e.message;
         } finally {
