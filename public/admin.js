@@ -200,13 +200,16 @@ function renderClients() {
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
       `${window.location.origin}/login.html?client=${encodeURIComponent(id)}`
     )}`;
+    const box = document.createElement("div");
+    box.className = "qr-box";
     const img = document.createElement("img");
     img.src = qrUrl;
     img.alt = `QR ${id}`;
-    img.width = 60;
-    img.height = 60;
+    img.width = 48;
+    img.height = 48;
     img.loading = "lazy";
-    tdQr.appendChild(img);
+    box.appendChild(img);
+    tdQr.appendChild(box);
     tdQr.style.flexWrap = "nowrap";
     tdQr.style.gap = "8px";
     tdQr.style.width = "90px";

@@ -184,7 +184,9 @@
             flex-wrap: nowrap;
             width: 90px;
             min-width: 90px;
+            padding: 8px 4px;
             height: 70px;
+            vertical-align: middle;
         }
         .col-qr {
             width: 90px;
@@ -196,13 +198,24 @@
         }
         .qr-cell img {
             display: block;
-            height: 60px;
-            width: 60px;
+            height: 48px;
+            width: 48px;
         }
         .qr-placeholder {
-            width: 60px;
-            height: 60px;
+            width: 48px;
+            height: 48px;
             background: transparent;
+        }
+        .qr-box {
+            width: 56px;
+            height: 56px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            box-sizing: border-box;
         }
         button {
             background: var(--accent-blue);
@@ -286,7 +299,7 @@
                     </thead>
                     <tbody>
                         <tr class="add-row">
-                            <td class="qr-cell col-qr"><div class="qr-placeholder"></div></td>
+                            <td class="qr-cell col-qr"><div class="qr-box"><div class="qr-placeholder"></div></div></td>
                             <td><input type="text" id="cliId" placeholder="Ex: C001"></td>
                             <td>
                                 <select id="cliEnseigneSelect">
