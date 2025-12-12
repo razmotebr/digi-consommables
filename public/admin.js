@@ -145,14 +145,7 @@ function renderEnseignes() {
       populateEnseigneSelect();
     });
 
-    delBtn.addEventListener("click", () => {
-      const rowCode = delBtn.dataset.code;
-      delete state.enseignes[rowCode];
-      delete state.editingEnseignes[rowCode];
-      renderEnseignes();
-      fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
-      populateEnseigneSelect();
-    });
+    delBtn.addEventListener("click", () => deleteEnseigne(code));
 
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
@@ -634,6 +627,35 @@ function populateOrdersEnseigneSelect() {
       if (code === current) opt.selected = true;
       sel.appendChild(opt);
     });
+}
+
+async function deleteEnseigne(enseigne) {
+  if (!enseigne) return;
+  const confirmDel = confirm(`Supprimer l'enseigne ${enseigne} et les données associées (clients, commandes, prix) ?`);
+  if (!confirmDel) return;
+  try {
+    await fetch("/admin_enseigne", {
+      method: "DELETE",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ enseigne }),
+    });
+  } catch (e) {
+    console.error("deleteEnseigne backend error", e);
+  }
+  // Purge locale
+  Object.entries(state.clients).forEach(([id, c]) => {
+    if (c.enseigne === enseigne) {
+      delete state.clients[id];
+    }
+  });
+  delete state.prix[enseigne];
+  delete state.enseignes[enseigne];
+  delete state.editingEnseignes[enseigne];
+  renderClients();
+  renderEnseignes();
+  populateEnseigneSelect();
+  populateOrdersEnseigneSelect();
+  renderPrix();
 }
 
 function populateProduitGlobalSelect() {
