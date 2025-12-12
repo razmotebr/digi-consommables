@@ -879,6 +879,9 @@ async function saveClient(payload) {
 }
 
 async function deleteClient(id) {
+  if (!id) return;
+  const confirmDel = confirm(`Supprimer le compte client ${id} ? (les commandes et prix associés seront supprimés)`);
+  if (!confirmDel) return;
   try {
     const res = await fetch("/admin_clients", {
       method: "DELETE",
@@ -931,6 +934,9 @@ async function savePrice({ enseigne, id, nom, prix }) {
 }
 
 async function deletePrice(enseigne, produitId) {
+  if (!enseigne || !produitId) return;
+  const confirmDel = confirm(`Supprimer le prix du produit ${produitId} pour l'enseigne ${enseigne} ?`);
+  if (!confirmDel) return;
   const clientIds = getClientsForEnseigne(enseigne);
   await Promise.all(
     clientIds.map((cid) =>
@@ -986,6 +992,9 @@ async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau
 }
 
 async function deleteCatalogue(id) {
+  if (!id) return;
+  const confirmDel = confirm(`Supprimer le produit ${id} du catalogue ? (les prix associés seront retirés)`);
+  if (!confirmDel) return;
   try {
     await fetch("/admin_catalogue", {
       method: "DELETE",

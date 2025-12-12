@@ -27,6 +27,8 @@ export async function onRequestDelete(context) {
     const data = await context.request.json();
     const { id } = data || {};
     if (!id) return new Response(JSON.stringify({ error: "id requis" }), { status: 400, headers: { "content-type": "application/json" } });
+    // Supprimer commandes, prix et client
+    await db.prepare("DELETE FROM commandes WHERE client_id = ?").bind(id).run();
     await db.prepare("DELETE FROM prix_par_client WHERE client_id = ?").bind(id).run();
     await db.prepare("DELETE FROM clients WHERE id = ?").bind(id).run();
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
