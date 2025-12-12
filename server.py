@@ -29,7 +29,7 @@ ALLOWED_ORIGINS = [
 ]
 
 ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
-ADMIN_PASS = os.environ.get("ADMIN_PASS", "admin123")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "admin")
 DATA_FILE = os.environ.get("ADMIN_DATA_FILE", "admin_data.json")
 CLIENTS_FALLBACK = "public/clients.json"
 
@@ -655,12 +655,18 @@ class MyHandler(SimpleHTTPRequestHandler):
             reset_link = f"{self.headers.get('Origin','http://localhost:8000')}/reset-admin.html?token={token}"
             subject = "Réinitialisation mot de passe admin DIGI"
             body = f"Bonjour ADV,\n\nPour réinitialiser le mot de passe administrateur, cliquez sur :\n{reset_link}\n\nLien valable 60 minutes."
-            self._send_mail(dest, subject, body)
+            try:
+                self._send_mail(dest, subject, body)
+                msg = "Email de réinitialisation envoyé."
+            except Exception as e:
+                # Ne bloque pas en cas d'échec SMTP, mais informe
+                msg = f"Email non envoyé (erreur SMTP: {e}). Utilisez le lien généré: {reset_link}"
+                print(msg)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self._add_cors()
             self.end_headers()
-            self.wfile.write(json.dumps({"message": "Email de réinitialisation envoyé"}).encode())
+            self.wfile.write(json.dumps({"message": msg, "link": reset_link}).encode())
         except Exception as e:
             self.send_response(500)
             self.send_header("Content-Type", "application/json")

@@ -39,6 +39,9 @@
             }
             if (!res.ok) throw new Error(data.error || text || "Erreur");
             ok.textContent = (data && data.message) || "Email envoyé.";
+            if (data && data.link) {
+                ok.textContent += " (Lien: " + data.link + ")";
+            }
         } catch (e) {
             err.textContent = e.message;
         } finally {
