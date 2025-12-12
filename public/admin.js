@@ -276,14 +276,15 @@ function renderClients() {
         renderClients();
         return;
       }
-      persistDraft();
-      saveClient({
+      // enregistrer
+      const payload = {
         id: rowId,
         enseigne: state.editingClients[rowId].enseigne,
         magasin: state.editingClients[rowId].magasin,
         contact: state.editingClients[rowId].contact,
         email: state.editingClients[rowId].email,
-      });
+      };
+      saveClient(payload);
     });
 
     delBtn.addEventListener("click", () => deleteClient(id));
