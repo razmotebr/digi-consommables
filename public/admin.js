@@ -342,7 +342,8 @@ function renderCatalogue() {
       const inpPrix = document.createElement("input");
       inpPrix.type = "number";
       inpPrix.step = "0.01";
-      inpPrix.value = prod.prixCartonHt != null ? prod.prixCartonHt : "";
+      const prixVal = prod.prixCartonHt;
+      inpPrix.value = prixVal != null && !isNaN(prixVal) ? Number(prixVal).toFixed(2) : "";
       inpPrix.disabled = true;
       tdPrix.appendChild(inpPrix);
 
@@ -734,7 +735,10 @@ async function saveClient(payload) {
       body: JSON.stringify(payload),
     });
     if (!ensureAuthorized(res)) return;
-    if (!res.ok) throw new Error(await res.text());
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(txt || `Erreur ${res.status}`);
+    }
     state.clients[payload.id] = {
       enseigne: payload.enseigne,
       magasin: payload.magasin,
