@@ -6,6 +6,9 @@ import io
 import datetime
 import smtplib
 from email.message import EmailMessage
+import secrets
+import string
+from typing import Dict, Any, Tuple
 
 # Load environment variables from .env if present
 try:
@@ -25,6 +28,11 @@ ALLOWED_ORIGINS = [
     o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:8000").split(",") if o.strip()
 ]
 
+ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "admin123")
+DATA_FILE = os.environ.get("ADMIN_DATA_FILE", "admin_data.json")
+CLIENTS_FALLBACK = "public/clients.json"
+
 
 class MyHandler(SimpleHTTPRequestHandler):
     # --- Utils -------------------------------------------------------------
@@ -38,6 +46,52 @@ class MyHandler(SimpleHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         raw = self.rfile.read(content_length)
         return json.loads(raw)
+
+    # --- Data helpers ------------------------------------------------------
+    def _load_data(self):
+        if os.path.exists(DATA_FILE):
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        # fallback build from public/clients.json
+        data = {"clients": {}, "catalog": {}, "prixByClient": {}, "orders": [], "resetTokens": {"client": {}, "admin": {}}, "adminPassword": ADMIN_PASS}
+        try:
+            with open(CLIENTS_FALLBACK, "r", encoding="utf-8") as f:
+                fallback = json.load(f)
+            data["clients"] = fallback.get("clients", {})
+            # default passwords
+            for cid, c in data["clients"].items():
+                c.setdefault("password", "password")
+            # catalogue from conso
+            for p in fallback.get("conso", []):
+                data["catalog"][str(p.get("id"))] = p.get("nom", f"Produit {p.get('id')}")
+            # prix identiques par client
+            for cid in data["clients"].keys():
+                data["prixByClient"][cid] = [
+                    {"id": p.get("id"), "nom": p.get("nom"), "prix": p.get("prix", 0)}
+                    for p in fallback.get("conso", [])
+                ]
+        except Exception:
+            pass
+        self._save_data(data)
+        return data
+
+    def _save_data(self, data):
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+    def _make_client_token(self, client_id: str):
+        return f"TOKEN:{client_id}:{datetime.datetime.utcnow().isoformat()}"
+
+    def _make_admin_token(self, user: str):
+        return f"ADMIN:{user}:{datetime.datetime.utcnow().isoformat()}"
+
+    def _validate_admin(self):
+        auth_header = self.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return False
+        token = auth_header.replace("Bearer ", "", 1)
+        parts = token.split(":")
+        return len(parts) >= 3 and parts[0] == "ADMIN"
 
     def _validate_token(self, client_id: str):
         auth_header = self.headers.get("Authorization", "")
@@ -76,11 +130,69 @@ class MyHandler(SimpleHTTPRequestHandler):
                 errors.append(f"produit {idx}: prix invalide")
         return errors
 
+    def _send_mail(self, to_addr: str, subject: str, body: str):
+        smtp_host = os.environ.get("SMTP_HOST")
+        smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+        smtp_user = os.environ.get("SMTP_USER")
+        smtp_pass = os.environ.get("SMTP_PASS")
+        from_addr = smtp_user or "no-reply@example.com"
+
+        msg = EmailMessage()
+        msg["Subject"] = subject
+        msg["From"] = from_addr
+        msg["To"] = to_addr
+        msg.set_content(body)
+
+        with smtplib.SMTP(smtp_host, smtp_port) as s:
+            s.starttls()
+            if smtp_user and smtp_pass:
+                s.login(smtp_user, smtp_pass)
+            s.send_message(msg)
+
+    def _generate_reset_token(self, kind: str, payload: Dict[str, Any], ttl_minutes: int = 60) -> str:
+        data = self._load_data()
+        data.setdefault("resetTokens", {"client": {}, "admin": {}})
+        token = secrets.token_urlsafe(24)
+        expires = (datetime.datetime.utcnow() + datetime.timedelta(minutes=ttl_minutes)).isoformat()
+        data["resetTokens"].setdefault(kind, {})[token] = {**payload, "exp": expires}
+        self._save_data(data)
+        return token
+
+    def _consume_reset_token(self, kind: str, token: str) -> Tuple[bool, Dict[str, Any]]:
+        data = self._load_data()
+        tok = data.get("resetTokens", {}).get(kind, {}).get(token)
+        if not tok:
+            return False, {}
+        exp = tok.get("exp")
+        if exp and datetime.datetime.fromisoformat(exp) < datetime.datetime.utcnow():
+            # expired
+            del data["resetTokens"][kind][token]
+            self._save_data(data)
+            return False, {}
+        # consume
+        del data["resetTokens"][kind][token]
+        self._save_data(data)
+        return True, tok
+
     # --- HTTP verbs --------------------------------------------------------
     def do_OPTIONS(self):
-        if self.path in ("/login", "/sendorder"):
+        cors_paths = {
+            "/login": "POST, OPTIONS",
+            "/sendorder": "POST, OPTIONS",
+            "/admin_login": "POST, OPTIONS",
+            "/admin_clients": "POST, DELETE, OPTIONS",
+            "/admin_prices": "POST, DELETE, OPTIONS",
+            "/admin_orders": "GET, PUT, OPTIONS",
+            "/admin_users": "GET, OPTIONS",
+            "/admin_reset_password": "POST, OPTIONS",
+            "/client_info": "GET, OPTIONS",
+            "/prices": "GET, OPTIONS",
+            "/orders": "GET, OPTIONS",
+            "/admin_data": "GET, OPTIONS",
+        }
+        if self.path in cors_paths:
             self.send_response(204)
-            self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Methods", cors_paths[self.path])
             self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
             self.send_header("Access-Control-Max-Age", "600")
             self._add_cors()
@@ -100,6 +212,16 @@ class MyHandler(SimpleHTTPRequestHandler):
             self._handle_login()
         elif self.path == "/sendorder":
             self._handle_send_order()
+        elif self.path == "/admin_login":
+            self._handle_admin_login()
+        elif self.path == "/forgot_client":
+            self._handle_forgot_client()
+        elif self.path == "/reset_client":
+            self._handle_reset_client()
+        elif self.path == "/forgot_admin":
+            self._handle_forgot_admin()
+        elif self.path == "/reset_admin":
+            self._handle_reset_admin()
         else:
             self.send_response(404)
             self._add_cors()
@@ -112,8 +234,10 @@ class MyHandler(SimpleHTTPRequestHandler):
             client_id = data.get("id", "").strip()
             password = data.get("password", "")
 
-            # Simple mock auth: password must be 'password'
-            if not client_id or password != "password":
+            store = self._load_data()
+            user = store.get("clients", {}).get(client_id)
+
+            if not client_id or not user or password != user.get("password", ""):
                 self.send_response(401)
                 self.send_header("Content-Type", "application/json")
                 self._add_cors()
@@ -121,7 +245,7 @@ class MyHandler(SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "Invalid credentials"}).encode())
                 return
 
-            token = f"TOKEN:{client_id}:{datetime.datetime.utcnow().isoformat()}"
+            token = self._make_client_token(client_id)
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -414,6 +538,157 @@ class MyHandler(SimpleHTTPRequestHandler):
             self._add_cors()
             self.end_headers()
             self.wfile.write(json.dumps(resp).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_admin_login(self):
+        try:
+            data = self._parse_json_body()
+            user = data.get("user", "").strip()
+            password = data.get("password", "")
+            store = self._load_data()
+            admin_pass = store.get("adminPassword", ADMIN_PASS)
+
+            if user != ADMIN_USER or password != admin_pass:
+                self.send_response(401)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Invalid credentials"}).encode())
+                return
+
+            token = self._make_admin_token(user)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"token": token, "user": user}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_forgot_client(self):
+        try:
+            data = self._parse_json_body()
+            client_id = data.get("id", "").strip()
+            store = self._load_data()
+            client = store.get("clients", {}).get(client_id)
+            if not client:
+                self.send_response(404)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Client inconnu"}).encode())
+                return
+            email = client.get("emailCompta") or client.get("email")
+            if not email:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Aucune adresse email compta"}).encode())
+                return
+            token = self._generate_reset_token("client", {"clientId": client_id})
+            reset_link = f"{self.headers.get('Origin','http://localhost:8000')}/reset-client.html?token={token}"
+            subject = f"Réinitialisation mot de passe client {client_id}"
+            body = f"Bonjour,\n\nPour réinitialiser le mot de passe du client {client_id}, utilisez le lien suivant :\n{reset_link}\n\nCe lien expirera dans 60 minutes."
+            self._send_mail(email, subject, body)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"message": "Email de réinitialisation envoyé"}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_reset_client(self):
+        try:
+            data = self._parse_json_body()
+            token = data.get("token", "")
+            new_pass = data.get("password", "")
+            ok, payload = self._consume_reset_token("client", token)
+            if not ok:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Token invalide ou expiré"}).encode())
+                return
+            cid = payload.get("clientId")
+            store = self._load_data()
+            if cid not in store.get("clients", {}):
+                self.send_response(404)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Client introuvable"}).encode())
+                return
+            store["clients"][cid]["password"] = new_pass
+            self._save_data(store)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"message": "Mot de passe mis à jour"}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_forgot_admin(self):
+        try:
+            token = self._generate_reset_token("admin", {"user": ADMIN_USER})
+            dest = os.environ.get("EMAIL_DIGI") or os.environ.get("SMTP_USER") or "adv@example.com"
+            reset_link = f"{self.headers.get('Origin','http://localhost:8000')}/reset-admin.html?token={token}"
+            subject = "Réinitialisation mot de passe admin DIGI"
+            body = f"Bonjour ADV,\n\nPour réinitialiser le mot de passe administrateur, cliquez sur :\n{reset_link}\n\nLien valable 60 minutes."
+            self._send_mail(dest, subject, body)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"message": "Email de réinitialisation envoyé"}).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_reset_admin(self):
+        try:
+            data = self._parse_json_body()
+            token = data.get("token", "")
+            new_pass = data.get("password", "")
+            ok, payload = self._consume_reset_token("admin", token)
+            if not ok:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": "Token invalide ou expiré"}).encode())
+                return
+            store = self._load_data()
+            store["adminPassword"] = new_pass
+            self._save_data(store)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self._add_cors()
+            self.end_headers()
+            self.wfile.write(json.dumps({"message": "Mot de passe admin mis à jour"}).encode())
         except Exception as e:
             self.send_response(500)
             self.send_header("Content-Type", "application/json")

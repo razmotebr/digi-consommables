@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mot de passe oublié - Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8fafc; margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+        .card { background:#fff; padding:24px; border:1px solid #e5e7eb; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.06); width:100%; max-width:420px; }
+        h1 { margin:0 0 6px 0; color:#1f2937; }
+        p { margin:0 0 16px 0; color:#6b7280; }
+        label { display:block; margin:12px 0 6px; font-weight:bold; color:#1f2937; }
+        input { width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:8px; }
+        button { width:100%; margin-top:16px; padding:12px; background:#0078d7; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer; }
+        .msg { margin-top:12px; color:#16a34a; min-height:18px; }
+        .error { margin-top:12px; color:#b91c1c; min-height:18px; }
+        a { color:#0078d7; text-decoration:none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Mot de passe oublié</h1>
+        <p>Un email sera envoyé à l'adresse compta du client.</p>
+        <label for="clientId">Identifiant client</label>
+        <input id="clientId" placeholder="Ex: C001">
+        <button id="btnSend">Envoyer le lien</button>
+        <div class="msg" id="msgOk"></div>
+        <div class="error" id="msgErr"></div>
+        <div style="margin-top:12px; text-align:center;"><a href="/login.html">Retour connexion</a></div>
+    </div>
+    <script>
+    document.getElementById("btnSend").addEventListener("click", async () => {
+        const id = document.getElementById("clientId").value.trim();
+        const ok = document.getElementById("msgOk");
+        const err = document.getElementById("msgErr");
+        ok.textContent = "";
+        err.textContent = "";
+        if (!id) { err.textContent = "Identifiant requis"; return; }
+        document.getElementById("btnSend").disabled = true;
+        try {
+            const res = await fetch("/forgot_client", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ id })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Erreur");
+            ok.textContent = data.message || "Email envoyé.";
+        } catch (e) {
+            err.textContent = e.message;
+        } finally {
+            document.getElementById("btnSend").disabled = false;
+        }
+    });
+    </script>
+</body>
+</html>
