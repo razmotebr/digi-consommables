@@ -810,15 +810,16 @@ async function saveClient(payload) {
       body: JSON.stringify(body),
     });
     if (!ensureAuthorized(res)) return;
+    const raw = await res.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.warn("saveClient parse error", e, raw);
+      data = {};
+    }
     if (!res.ok) {
-      const txt = await res.text();
-      let data;
-      try {
-        data = txt ? JSON.parse(txt) : {};
-      } catch {
-        data = {};
-      }
-      const msg = data?.error || txt || `Erreur ${res.status}`;
+      const msg = data?.error || raw || `Erreur ${res.status}`;
       throw new Error(msg);
     }
     state.clients[payload.id] = {
