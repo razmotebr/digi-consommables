@@ -95,7 +95,7 @@ function renderEnseignes() {
     const tdCode = document.createElement("td");
     const inpCode = document.createElement("input");
     inpCode.type = "text";
-    inpCode.value = code;
+    inpCode.value = code || "";
     inpCode.disabled = !isEditing;
     tdCode.appendChild(inpCode);
 
@@ -179,7 +179,7 @@ function renderClients() {
     tbody.appendChild(addRow);
     fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
     // Normaliser la hauteur de la ligne d'ajout
-    addRow.style.height = "78px";
+    addRow.style.height = "70px";
     addRow.querySelectorAll("td").forEach((td) => (td.style.verticalAlign = "middle"));
   }
 
@@ -203,12 +203,14 @@ function renderClients() {
     const img = document.createElement("img");
     img.src = qrUrl;
     img.alt = `QR ${id}`;
-    img.width = 70;
-    img.height = 70;
+    img.width = 60;
+    img.height = 60;
     img.loading = "lazy";
     tdQr.appendChild(img);
     tdQr.style.flexWrap = "nowrap";
     tdQr.style.gap = "8px";
+    tdQr.style.width = "90px";
+    tdQr.style.minWidth = "90px";
 
     const tdId = document.createElement("td");
     const inpId = document.createElement("input");
