@@ -1021,14 +1021,22 @@ async function loadUsers() {
     const res = await fetch("/admin_users", { headers: withAuthHeaders() });
     if (!ensureAuthorized(res)) return;
     const raw = await res.text();
+    const ct = res.headers.get("content-type") || "";
     let data = {};
-    try {
-      data = raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      console.error("loadUsers parse error", e, raw);
-      data = {};
+    if (ct.includes("application/json")) {
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        console.warn("loadUsers parse error", e);
+        data = {};
+      }
     }
-    if (!res.ok) throw new Error(data.error || raw || `Erreur ${res.status}`);
+    if (!res.ok) {
+      console.warn("admin_users non disponible", raw ? raw.slice(0, 200) : "");
+      state.users = [];
+      renderUsers();
+      return;
+    }
     state.users = data.users || [];
   } catch (e) {
     console.error("loadUsers error", e);
