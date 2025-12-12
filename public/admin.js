@@ -314,6 +314,7 @@ function renderCatalogue() {
       inpNom.type = "text";
       inpNom.value = prod.nom || "";
       inpNom.disabled = true;
+      inpNom.classList.add("wide");
       tdNom.appendChild(inpNom);
 
       const tdMandrin = document.createElement("td");
