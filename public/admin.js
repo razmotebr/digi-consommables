@@ -195,26 +195,6 @@ function renderClients() {
     const draft = state.editingClients[id] || null;
     const isEditing = !!draft;
 
-    const tdQr = document.createElement("td");
-    tdQr.className = "qr-cell col-qr";
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
-      `${window.location.origin}/login.html?client=${encodeURIComponent(id)}`
-    )}`;
-    const box = document.createElement("div");
-    box.className = "qr-box";
-    const img = document.createElement("img");
-    img.src = qrUrl;
-    img.alt = `QR ${id}`;
-    img.width = 48;
-    img.height = 48;
-    img.loading = "lazy";
-    box.appendChild(img);
-    tdQr.appendChild(box);
-    tdQr.style.flexWrap = "nowrap";
-    tdQr.style.gap = "8px";
-    tdQr.style.width = "90px";
-    tdQr.style.minWidth = "90px";
-
     const tdId = document.createElement("td");
     const inpId = document.createElement("input");
     inpId.type = "text";
@@ -248,6 +228,16 @@ function renderClients() {
     inpEmail.value = (draft && draft.email) || c.email || "";
     inpEmail.disabled = !isEditing;
     tdEmail.appendChild(inpEmail);
+
+    const tdQr = document.createElement("td");
+    const qrBtn = document.createElement("button");
+    qrBtn.className = "qr-btn";
+    qrBtn.title = "Copier le QR dans le presse-papiers";
+    qrBtn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm4 0h2v4h-2v-4zm-2 2h2v2h-2v-2zm4-4h2v2h-2v-2zm-4 4h2v2h-2v-2z"></path>
+    </svg>`;
+    qrBtn.addEventListener("click", () => copyQrToClipboard(id));
+    tdQr.appendChild(qrBtn);
 
     const actions = document.createElement("td");
     actions.className = "table-actions col-actions";
@@ -299,7 +289,6 @@ function renderClients() {
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
 
-    tr.appendChild(tdQr);
     tr.appendChild(tdId);
     tr.appendChild(tdEns);
     tr.appendChild(tdMag);
@@ -682,6 +671,27 @@ function getClientsForEnseigne(enseigne) {
   return Object.entries(state.clients)
     .filter(([, c]) => c.enseigne === enseigne)
     .map(([id]) => id);
+}
+
+async function copyQrToClipboard(clientId) {
+  if (!clientId) return;
+  const loginUrl = `${window.location.origin}/login.html?client=${encodeURIComponent(clientId)}`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(loginUrl)}`;
+  try {
+    const res = await fetch(qrUrl);
+    const blob = await res.blob();
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    alert("QR copié dans le presse-papiers.");
+  } catch (e) {
+    console.error("copyQrToClipboard error", e);
+    // Fallback : copier juste l'URL si l'image n'est pas autorisée
+    try {
+      await navigator.clipboard.writeText(loginUrl);
+      alert("URL copiée (QR non disponible dans le presse-papiers).");
+    } catch (err) {
+      alert("Impossible de copier le QR ou l'URL.");
+    }
+  }
 }
 
 function getNextCatalogId() {

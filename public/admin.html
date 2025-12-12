@@ -204,6 +204,27 @@
             width: 180px;
             min-width: 160px;
         }
+        .qr-btn {
+            width: 44px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: #f8fafc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .qr-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #1f2937;
+        }
+        .qr-btn:hover {
+            background: #eef2f7;
+            border-color: #cbd5e1;
+        }
         .qr-cell img {
             display: block;
             height: 48px;
@@ -303,11 +324,10 @@
             <div class="panel">
                 <table id="tableClients" class="editable-table">
                     <thead>
-                        <tr><th class="col-qr">QR</th><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th class="col-actions">Actions</th></tr>
+                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th>QR</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
-                            <td class="qr-cell col-qr"><div class="qr-box"><div class="qr-placeholder"></div></div></td>
                             <td><input type="text" id="cliId" placeholder="Ex: C001"></td>
                             <td>
                                 <select id="cliEnseigneSelect">
@@ -317,6 +337,7 @@
                             <td><input type="text" id="cliMagasin" placeholder="Ex: Paris 15"></td>
                             <td><input type="text" id="cliContact"></td>
                             <td><input type="email" id="cliEmail"></td>
+                            <td></td>
                             <td class="table-actions col-actions"><button id="btnAddClient" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
