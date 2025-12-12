@@ -6,11 +6,35 @@ const state = {
   prix: {}, // {enseigne: [{id,nom,prix}]}
   catalog: {}, // {id: nom}
   orders: [], // [{id, clientId, enseigne, magasin, total, status, createdAt}]
+  users: [], // [{id, enseigne, magasin, lastLogin}]
 };
+
+const adminToken = sessionStorage.getItem("adminToken");
+if (!adminToken) {
+  window.location.href = "/admin-login.html";
+}
+
+function redirectAdminLogin() {
+  sessionStorage.removeItem("adminUser");
+  sessionStorage.removeItem("adminToken");
+  window.location.href = "/admin-login.html";
+}
+
+function ensureAuthorized(res) {
+  if (res.status === 401) {
+    redirectAdminLogin();
+    return false;
+  }
+  return true;
+}
 
 function showSection(id) {
   document.querySelectorAll("section").forEach((s) => s.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
+}
+
+function withAuthHeaders(headers = {}) {
+  return adminToken ? { ...headers, Authorization: `Bearer ${adminToken}` } : headers;
 }
 
 function fillEnseigneOptions(selectEl, selected = "") {
@@ -416,6 +440,46 @@ function renderAdminOrders() {
     });
 }
 
+function renderUsers() {
+  const tbody = document.querySelector("#tableUsers tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  if (!state.users.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 5;
+    td.className = "muted";
+    td.textContent = "Aucun utilisateur.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  state.users
+    .slice()
+    .sort((a, b) => (a.id || "").localeCompare(b.id || ""))
+    .forEach((u) => {
+      const tr = document.createElement("tr");
+      const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleString("fr-FR") : "-";
+
+      tr.innerHTML = `
+        <td>${u.id || "-"}</td>
+        <td>${u.enseigne || "-"}</td>
+        <td>${u.magasin || "-"}</td>
+        <td>${lastLogin}</td>
+      `;
+
+      const actions = document.createElement("td");
+      const resetBtn = document.createElement("button");
+      resetBtn.className = "secondary action-btn";
+      resetBtn.textContent = "Reset MDP";
+      resetBtn.addEventListener("click", () => resetUserPassword(u.id));
+      actions.appendChild(resetBtn);
+      tr.appendChild(actions);
+      tbody.appendChild(tr);
+    });
+}
+
 // --- HELPERS ---
 function populateEnseigneSelect() {
   fillEnseigneOptions(document.getElementById("prixEnseigneSelect"));
@@ -484,7 +548,8 @@ function getNextCatalogId() {
 // --- API ---
 async function loadInitialData() {
   try {
-    const res = await fetch("/admin_data");
+    const res = await fetch("/admin_data", { headers: withAuthHeaders() });
+    if (!ensureAuthorized(res)) return;
     if (!res.ok) throw new Error(`admin_data ${res.status}`);
     const data = await res.json();
 
@@ -523,6 +588,7 @@ async function loadInitialData() {
     renderPrix();
     await loadOrdersByEnseigne(document.getElementById("ordersEnseigneSelect")?.value || "");
     renderAdminOrders();
+    await loadUsers();
   } catch (e) {
     console.error("loadInitialData error", e);
     // Fallback local pour éviter un écran vide
@@ -568,9 +634,10 @@ async function saveClient(payload) {
   try {
     const res = await fetch("/admin_clients", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: withAuthHeaders({ "content-type": "application/json" }),
       body: JSON.stringify(payload),
     });
+    if (!ensureAuthorized(res)) return;
     if (!res.ok) throw new Error(await res.text());
     state.clients[payload.id] = {
       enseigne: payload.enseigne,
@@ -587,7 +654,7 @@ async function saveClient(payload) {
         state.prix[payload.enseigne].map((p) =>
           fetch("/admin_prices", {
             method: "POST",
-            headers: { "content-type": "application/json" },
+            headers: withAuthHeaders({ "content-type": "application/json" }),
             body: JSON.stringify({ clientId: payload.id, produitId: p.id, nom: p.nom, prix: p.prix }),
           })
         )
@@ -606,9 +673,10 @@ async function deleteClient(id) {
   try {
     const res = await fetch("/admin_clients", {
       method: "DELETE",
-      headers: { "content-type": "application/json" },
+      headers: withAuthHeaders({ "content-type": "application/json" }),
       body: JSON.stringify({ id }),
     });
+    if (!ensureAuthorized(res)) return;
     if (!res.ok) throw new Error(await res.text());
     delete state.clients[id];
     renderClients();
@@ -628,7 +696,7 @@ async function savePrice({ enseigne, id, nom, prix }) {
     clientIds.map((cid) =>
       fetch("/admin_prices", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: withAuthHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ clientId: cid, produitId: id, nom, prix }),
       })
     )
@@ -654,7 +722,7 @@ async function deletePrice(enseigne, produitId) {
     clientIds.map((cid) =>
       fetch("/admin_prices", {
         method: "DELETE",
-        headers: { "content-type": "application/json" },
+        headers: withAuthHeaders({ "content-type": "application/json" }),
         body: JSON.stringify({ clientId: cid, produitId }),
       })
     )
@@ -690,7 +758,8 @@ async function deleteCatalogue(id) {
 async function loadOrdersByEnseigne(enseigne) {
   try {
     const url = enseigne ? `/admin_orders?enseigne=${encodeURIComponent(enseigne)}` : "/admin_orders";
-    const res = await fetch(url);
+    const res = await fetch(url, { headers: withAuthHeaders() });
+    if (!ensureAuthorized(res)) return;
     if (!res.ok) throw new Error(`orders ${res.status}`);
     const data = await res.json();
     state.orders = data.orders || [];
@@ -705,9 +774,10 @@ async function updateOrderStatus(orderId, status) {
   try {
     const res = await fetch("/admin_orders", {
       method: "PUT",
-      headers: { "content-type": "application/json" },
+      headers: withAuthHeaders({ "content-type": "application/json" }),
       body: JSON.stringify({ orderId, status }),
     });
+    if (!ensureAuthorized(res)) return;
     if (!res.ok) throw new Error(await res.text());
     const found = state.orders.find((o) => o.id === orderId);
     if (found) found.status = status;
@@ -718,11 +788,46 @@ async function updateOrderStatus(orderId, status) {
   }
 }
 
+async function loadUsers() {
+  try {
+    const res = await fetch("/admin_users", { headers: withAuthHeaders() });
+    if (!ensureAuthorized(res)) return;
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    state.users = data.users || [];
+  } catch (e) {
+    console.error("loadUsers error", e);
+    state.users = [];
+  }
+  renderUsers();
+}
+
+async function resetUserPassword(userId) {
+  if (!userId) return;
+  const confirmReset = confirm(`Réinitialiser le mot de passe pour ${userId} ?`);
+  if (!confirmReset) return;
+  try {
+    const res = await fetch("/admin_reset_password", {
+      method: "POST",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ userId }),
+    });
+    if (!ensureAuthorized(res)) return;
+    if (!res.ok) throw new Error(await res.text());
+    alert("Mot de passe réinitialisé. Un nouveau mot de passe a été généré.");
+    await loadUsers();
+  } catch (e) {
+    console.error("resetUserPassword error", e);
+    alert("Impossible de réinitialiser le mot de passe.");
+  }
+}
+
 // --- Events ---
 document.getElementById("adminUserTag").textContent = state.admin;
 document.getElementById("btnLogout").addEventListener("click", () => {
   sessionStorage.removeItem("adminUser");
-  window.location.href = "/login.html";
+  sessionStorage.removeItem("adminToken");
+  window.location.href = "/admin-login.html";
 });
 
 document.getElementById("tabEnseignes").addEventListener("click", (e) => {
@@ -745,6 +850,11 @@ document.getElementById("tabCommandes").addEventListener("click", async (e) => {
   e.preventDefault();
   showSection("sectionCommandes");
   await loadOrdersByEnseigne(document.getElementById("ordersEnseigneSelect").value);
+});
+document.getElementById("tabUsers").addEventListener("click", async (e) => {
+  e.preventDefault();
+  showSection("sectionUsers");
+  await loadUsers();
 });
 
 document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
