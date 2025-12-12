@@ -232,6 +232,17 @@ document.getElementById("btnSend").addEventListener("click", () => {
         return;
     }
 
+    // Enregistrer la commande côté backend (meilleur suivi)
+    const token = sessionStorage.getItem("token") || "";
+    fetch("/api_commande", {
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    }).catch((e) => console.error("log commande error", e));
+
     window.location.href = mailtoUrl;
     alert("Votre application mail va s'ouvrir avec la commande pre-remplie.");
 });
