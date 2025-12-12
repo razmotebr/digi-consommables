@@ -245,6 +245,12 @@ document.getElementById("btnSend").addEventListener("click", () => {
 
     window.location.href = mailtoUrl;
     alert("Votre application mail va s'ouvrir avec la commande pre-remplie.");
+
+    // Reset des quantités
+    document.querySelectorAll("input[type=number]").forEach((inp) => {
+        inp.value = "0";
+    });
+    updateTotals();
 });
 
 document.getElementById("btnLogout").addEventListener("click", () => {
