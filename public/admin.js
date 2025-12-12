@@ -790,15 +790,33 @@ async function loadInitialData() {
 
 async function saveClient(payload) {
   try {
+    const body = {
+      id: payload.id,
+      enseigne: payload.enseigne || "",
+      magasin: payload.magasin || "",
+      contact: payload.contact || "",
+      email: payload.email || "",
+      emailCompta: payload.email || "",
+      fraisPort: payload.fraisPort ?? state.clients[payload.id]?.fraisPort ?? 12.0,
+      tva: payload.tva ?? state.clients[payload.id]?.tva ?? 0.2,
+    };
+
     const res = await fetch("/admin_clients", {
       method: "POST",
       headers: withAuthHeaders({ "content-type": "application/json" }),
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     if (!ensureAuthorized(res)) return;
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error(txt || `Erreur ${res.status}`);
+      let data;
+      try {
+        data = txt ? JSON.parse(txt) : {};
+      } catch {
+        data = {};
+      }
+      const msg = data?.error || txt || `Erreur ${res.status}`;
+      throw new Error(msg);
     }
     state.clients[payload.id] = {
       enseigne: payload.enseigne,
