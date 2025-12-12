@@ -104,14 +104,17 @@ function renderEnseignes() {
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = isEditing ? "Enregistrer" : "Edit";
+    editBtn.dataset.code = code;
     const delBtn = document.createElement("button");
     delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
+    delBtn.dataset.code = code;
 
     editBtn.addEventListener("click", () => {
-      const editing = !!state.editingEnseignes[code];
+      const rowCode = editBtn.dataset.code;
+      const editing = !!state.editingEnseignes[rowCode];
       if (!editing) {
-        state.editingEnseignes[code] = true;
+        state.editingEnseignes[rowCode] = true;
         renderEnseignes();
         return;
       }
@@ -119,18 +122,19 @@ function renderEnseignes() {
       const newNom = inpNom.value.trim();
       const newEmail = inpEmail.value.trim();
       if (!newCode) return alert("Code requis");
-      if (newCode !== code && state.enseignes[newCode]) return alert("Code déjà existant");
-      delete state.enseignes[code];
+      if (newCode !== rowCode && state.enseignes[newCode]) return alert("Code déjà existant");
+      delete state.enseignes[rowCode];
       state.enseignes[newCode] = { nom: newNom, emailCompta: newEmail };
-      delete state.editingEnseignes[code];
+      delete state.editingEnseignes[rowCode];
       renderEnseignes();
       fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
       populateEnseigneSelect();
     });
 
     delBtn.addEventListener("click", () => {
-      delete state.enseignes[code];
-      delete state.editingEnseignes[code];
+      const rowCode = delBtn.dataset.code;
+      delete state.enseignes[rowCode];
+      delete state.editingEnseignes[rowCode];
       renderEnseignes();
       fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
       populateEnseigneSelect();
@@ -238,9 +242,10 @@ function renderClients() {
     });
 
     editBtn.addEventListener("click", () => {
-      const editing = !!state.editingClients[id];
+      const rowId = editBtn.dataset.id;
+      const editing = !!state.editingClients[rowId];
       if (!editing) {
-        state.editingClients[id] = {
+        state.editingClients[rowId] = {
           enseigne: c.enseigne || "",
           magasin: c.magasin || "",
           contact: c.contact || "",
@@ -251,15 +256,15 @@ function renderClients() {
       }
       persistDraft();
       saveClient({
-        id,
-        enseigne: state.editingClients[id].enseigne,
-        magasin: state.editingClients[id].magasin,
-        contact: state.editingClients[id].contact,
-        email: state.editingClients[id].email,
+        id: rowId,
+        enseigne: state.editingClients[rowId].enseigne,
+        magasin: state.editingClients[rowId].magasin,
+        contact: state.editingClients[rowId].contact,
+        email: state.editingClients[rowId].email,
       });
     });
 
-    delBtn.addEventListener("click", () => deleteClient(id));
+    delBtn.addEventListener("click", () => deleteClient(delBtn.dataset.id));
 
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
@@ -306,11 +311,14 @@ function renderCatalogue() {
       const editBtn = document.createElement("button");
       editBtn.className = "secondary action-btn";
       editBtn.textContent = "Edit";
+      editBtn.dataset.catalogId = id;
       const delBtn = document.createElement("button");
       delBtn.className = "secondary danger action-btn";
       delBtn.textContent = "Suppr";
+      delBtn.dataset.catalogId = id;
 
       editBtn.addEventListener("click", () => {
+        const rowId = Number(editBtn.dataset.catalogId);
         const editing = tr.dataset.editing === "true";
         if (!editing) {
           tr.dataset.editing = "true";
@@ -320,10 +328,10 @@ function renderCatalogue() {
         }
         const nom = inpNom.value.trim();
         if (!nom) return alert("Nom requis");
-        saveCatalogue({ id, nom });
+        saveCatalogue({ id: rowId, nom });
       });
 
-      delBtn.addEventListener("click", () => deleteCatalogue(id));
+      delBtn.addEventListener("click", () => deleteCatalogue(Number(delBtn.dataset.catalogId)));
 
       actions.appendChild(editBtn);
       actions.appendChild(delBtn);
@@ -376,11 +384,14 @@ function renderPrix() {
       const editBtn = document.createElement("button");
       editBtn.className = "secondary action-btn";
       editBtn.textContent = "Edit";
+      editBtn.dataset.produitId = p.id;
       const delBtn = document.createElement("button");
       delBtn.className = "secondary danger action-btn";
       delBtn.textContent = "Suppr";
+      delBtn.dataset.produitId = p.id;
 
       editBtn.addEventListener("click", () => {
+        const rowId = Number(editBtn.dataset.produitId);
         const editing = tr.dataset.editing === "true";
         if (!editing) {
           tr.dataset.editing = "true";
@@ -392,10 +403,10 @@ function renderPrix() {
         const nom = inpNom.value.trim();
         const prix = Number(inpPrix.value);
         if (!nom || isNaN(prix)) return alert("Champs invalides");
-        savePrice({ enseigne, id: p.id, nom, prix });
+        savePrice({ enseigne, id: rowId, nom, prix });
       });
 
-      delBtn.addEventListener("click", () => deletePrice(enseigne, p.id));
+      delBtn.addEventListener("click", () => deletePrice(enseigne, Number(delBtn.dataset.produitId)));
 
       actions.appendChild(editBtn);
       actions.appendChild(delBtn);
