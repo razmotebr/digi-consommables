@@ -242,9 +242,11 @@ function renderClients() {
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
     editBtn.textContent = isEditing ? "Enregistrer" : "Edit";
+    editBtn.dataset.id = id;
     const delBtn = document.createElement("button");
     delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
+    delBtn.dataset.id = id;
 
     const persistDraft = () => {
       state.editingClients[id] = {
