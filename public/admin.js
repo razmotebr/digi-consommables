@@ -293,6 +293,7 @@ function renderCatalogue() {
     .sort((a, b) => a - b)
     .forEach((id) => {
       const tr = document.createElement("tr");
+      const prod = state.catalog[id] || {};
 
       const tdId = document.createElement("td");
       const inpId = document.createElement("input");
@@ -301,12 +302,48 @@ function renderCatalogue() {
       inpId.disabled = true;
       tdId.appendChild(inpId);
 
+      const tdRef = document.createElement("td");
+      const inpRef = document.createElement("input");
+      inpRef.type = "text";
+      inpRef.value = prod.reference || "";
+      inpRef.disabled = true;
+      tdRef.appendChild(inpRef);
+
       const tdNom = document.createElement("td");
       const inpNom = document.createElement("input");
       inpNom.type = "text";
-      inpNom.value = state.catalog[id] || "";
+      inpNom.value = prod.nom || "";
       inpNom.disabled = true;
       tdNom.appendChild(inpNom);
+
+      const tdMandrin = document.createElement("td");
+      const inpMandrin = document.createElement("input");
+      inpMandrin.type = "text";
+      inpMandrin.value = prod.mandrin || "";
+      inpMandrin.disabled = true;
+      tdMandrin.appendChild(inpMandrin);
+
+      const tdEtiq = document.createElement("td");
+      const inpEtiq = document.createElement("input");
+      inpEtiq.type = "number";
+      inpEtiq.value = prod.etiquettesParRouleau || "";
+      inpEtiq.disabled = true;
+      tdEtiq.appendChild(inpEtiq);
+
+      const tdRoul = document.createElement("td");
+      const inpRoul = document.createElement("input");
+      inpRoul.type = "number";
+      inpRoul.value = prod.rouleauxParCarton || "";
+      inpRoul.disabled = true;
+      tdRoul.appendChild(inpRoul);
+
+      const tdPrix = document.createElement("td");
+      const inpPrix = document.createElement("input");
+      inpPrix.type = "number";
+      inpPrix.step = "0.01";
+      inpPrix.value = prod.prixCartonHt != null ? prod.prixCartonHt : "";
+      inpPrix.disabled = true;
+      tdPrix.appendChild(inpPrix);
 
       const actions = document.createElement("td");
       actions.className = "table-actions";
@@ -325,12 +362,22 @@ function renderCatalogue() {
         if (!editing) {
           tr.dataset.editing = "true";
           editBtn.textContent = "Enregistrer";
+          inpRef.disabled = false;
           inpNom.disabled = false;
+          inpMandrin.disabled = false;
+          inpEtiq.disabled = false;
+          inpRoul.disabled = false;
+          inpPrix.disabled = false;
           return;
         }
         const nom = inpNom.value.trim();
+        const reference = inpRef.value.trim();
+        const mandrin = inpMandrin.value.trim();
+        const etiquettesParRouleau = inpEtiq.value === "" ? null : Number(inpEtiq.value);
+        const rouleauxParCarton = inpRoul.value === "" ? null : Number(inpRoul.value);
+        const prixCartonHt = inpPrix.value === "" ? null : Number(inpPrix.value);
         if (!nom) return alert("Nom requis");
-        saveCatalogue({ id: rowId, nom });
+        saveCatalogue({ id: rowId, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt });
       });
 
       delBtn.addEventListener("click", () => deleteCatalogue(Number(delBtn.dataset.catalogId)));
@@ -339,7 +386,12 @@ function renderCatalogue() {
       actions.appendChild(delBtn);
 
       tr.appendChild(tdId);
+      tr.appendChild(tdRef);
       tr.appendChild(tdNom);
+      tr.appendChild(tdMandrin);
+      tr.appendChild(tdEtiq);
+      tr.appendChild(tdRoul);
+      tr.appendChild(tdPrix);
       tr.appendChild(actions);
       tbody.appendChild(tr);
     });
@@ -547,9 +599,11 @@ function populateProduitGlobalSelect() {
     .map((k) => Number(k))
     .sort((a, b) => a - b)
     .forEach((id) => {
+      const prod = state.catalog[id] || {};
       const opt = document.createElement("option");
       opt.value = id;
-      opt.textContent = `${id} - ${state.catalog[id]}`;
+      const label = prod.reference ? `${prod.reference} - ${prod.nom || ""}` : `${id} - ${prod.nom || ""}`;
+      opt.textContent = label.trim();
       sel.appendChild(opt);
     });
   document.getElementById("prixId").value = "";
@@ -567,7 +621,7 @@ function applySelectedProduct() {
     return;
   }
   document.getElementById("prixId").value = prodId;
-  document.getElementById("prixNom").value = state.catalog[prodId] || "";
+  document.getElementById("prixNom").value = (state.catalog[prodId]?.nom) || "";
   const prod = (state.prix[enseigne] || []).find((p) => p.id === prodId);
   document.getElementById("prixValeur").value = prod ? prod.prix : "";
 }
@@ -637,7 +691,10 @@ async function loadInitialData() {
         state.clients = data.clients || {};
         state.catalog = {};
         (data.conso || []).forEach((p) => {
-          state.catalog[p.id] = p.nom;
+          state.catalog[p.id] = {
+            nom: p.nom,
+            reference: p.id ? String(p.id) : "",
+          };
         });
         // Prix identiques pour chaque client du fallback
         state.prix = {};
@@ -743,14 +800,18 @@ async function savePrice({ enseigne, id, nom, prix }) {
   ).catch((e) => console.error("savePrice error", e));
 
   // Maj locale
-  state.catalog[id] = nom || state.catalog[id] || `Produit ${id}`;
+  const existingProd = state.catalog[id] || {};
+  state.catalog[id] = {
+    ...existingProd,
+    nom: nom || existingProd.nom || `Produit ${id}`,
+  };
   if (!state.prix[enseigne]) state.prix[enseigne] = [];
   const existing = state.prix[enseigne].find((p) => p.id === id);
   if (existing) {
-    existing.nom = state.catalog[id];
+    existing.nom = state.catalog[id].nom;
     existing.prix = prix;
   } else {
-    state.prix[enseigne].push({ id, nom: state.catalog[id], prix });
+    state.prix[enseigne].push({ id, nom: state.catalog[id].nom, prix });
   }
   populateProduitGlobalSelect();
   renderPrix();
@@ -772,8 +833,17 @@ async function deletePrice(enseigne, produitId) {
   renderPrix();
 }
 
-async function saveCatalogue({ id, nom }) {
-  state.catalog[id] = nom;
+async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt }) {
+  const prod = state.catalog[id] || {};
+  state.catalog[id] = {
+    ...prod,
+    nom,
+    reference: reference || prod.reference || "",
+    mandrin: mandrin || prod.mandrin || "",
+    etiquettesParRouleau: etiquettesParRouleau != null ? etiquettesParRouleau : prod.etiquettesParRouleau,
+    rouleauxParCarton: rouleauxParCarton != null ? rouleauxParCarton : prod.rouleauxParCarton,
+    prixCartonHt: prixCartonHt != null ? prixCartonHt : prod.prixCartonHt,
+  };
   // Propager le libellé dans toutes les grilles de prix locales
   Object.keys(state.prix).forEach((ens) => {
     state.prix[ens] = (state.prix[ens] || []).map((p) => (p.id === id ? { ...p, nom } : p));
@@ -952,8 +1022,20 @@ document.getElementById("btnAddPrix").addEventListener("click", () => {
 document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
   const nom = document.getElementById("catNom").value.trim();
   if (!nom) return alert("Nom requis");
+  const reference = document.getElementById("catRef").value.trim();
+  const mandrin = document.getElementById("catMandrin").value.trim();
+  const etiquettesParRouleau = document.getElementById("catEtiquettes").value === "" ? null : Number(document.getElementById("catEtiquettes").value);
+  const rouleauxParCarton = document.getElementById("catRouleaux").value === "" ? null : Number(document.getElementById("catRouleaux").value);
+  const prixCartonHt = document.getElementById("catPrix").value === "" ? null : Number(document.getElementById("catPrix").value);
   const id = getNextCatalogId();
-  saveCatalogue({ id, nom });
+  saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt });
+  // reset inputs
+  document.getElementById("catRef").value = "Ex: DIGI604840V";
+  document.getElementById("catNom").value = "Ex: Etiquette blanche 60x48";
+  document.getElementById("catMandrin").value = "Ex: Ø40mm";
+  document.getElementById("catEtiquettes").value = "";
+  document.getElementById("catRouleaux").value = "";
+  document.getElementById("catPrix").value = "";
 });
 
 // Init

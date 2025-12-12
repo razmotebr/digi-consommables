@@ -2,7 +2,7 @@ export async function onRequestPost(context) {
   try {
     const db = context.env.DB;
     const data = await context.request.json();
-    const { clientId, produitId, nom, prix } = data;
+    const { clientId, produitId, nom, prix, reference, designation, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt } = data;
     if (!clientId || !produitId || typeof prix !== "number") {
       return new Response(JSON.stringify({ error: "clientId, produitId, prix requis" }), {
         status: 400,
@@ -10,15 +10,30 @@ export async function onRequestPost(context) {
       });
     }
 
-    if (nom) {
-      await db
-        .prepare(
-          `INSERT INTO catalog_produits (id, nom) VALUES (?, ?)
-           ON CONFLICT(id) DO UPDATE SET nom=excluded.nom`
-        )
-        .bind(produitId, nom)
-        .run();
-    }
+    await db
+      .prepare(
+        `INSERT INTO catalog_produits (id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton, prix_carton_ht)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET
+           reference=excluded.reference,
+           nom=excluded.nom,
+           designation=excluded.designation,
+           mandrin=excluded.mandrin,
+           etiquettes_par_rouleau=excluded.etiquettes_par_rouleau,
+           rouleaux_par_carton=excluded.rouleaux_par_carton,
+           prix_carton_ht=excluded.prix_carton_ht`
+      )
+      .bind(
+        produitId,
+        reference || null,
+        nom || null,
+        designation || nom || null,
+        mandrin || null,
+        etiquettesParRouleau || null,
+        rouleauxParCarton || null,
+        prixCartonHt || null
+      )
+      .run();
 
     await db
       .prepare(

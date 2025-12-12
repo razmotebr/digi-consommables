@@ -10,7 +10,13 @@ export async function onRequestGet(context) {
          LEFT JOIN catalog_produits cp ON cp.id = pc.produit_id`
       )
       .all();
-    const catalogRes = await db.prepare("SELECT id, nom, description FROM catalog_produits ORDER BY id").all();
+    const catalogRes = await db
+      .prepare(
+        `SELECT id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton, prix_carton_ht, description
+         FROM catalog_produits
+         ORDER BY id`
+      )
+      .all();
 
     const clients = {};
     (clientsRes.results || []).forEach((c) => {
@@ -31,7 +37,16 @@ export async function onRequestGet(context) {
     });
     const catalog = {};
     (catalogRes.results || []).forEach((p) => {
-      catalog[p.id] = p.nom || `Produit ${p.id}`;
+      catalog[p.id] = {
+        reference: p.reference || "",
+        nom: p.nom || `Produit ${p.id}`,
+        designation: p.designation || "",
+        mandrin: p.mandrin || "",
+        etiquettesParRouleau: p.etiquettes_par_rouleau,
+        rouleauxParCarton: p.rouleaux_par_carton,
+        prixCartonHt: p.prix_carton_ht,
+        description: p.description || "",
+      };
     });
 
     return new Response(

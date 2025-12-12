@@ -200,12 +200,26 @@
             <div class="panel">
                 <table id="tableCatalogue" class="editable-table">
                     <thead>
-                        <tr><th>ID Produit</th><th>Nom</th><th>Actions</th></tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>Référence</th>
+                            <th>Désignation</th>
+                            <th>Mandrin</th>
+                            <th>Étiquettes / rouleau</th>
+                            <th>Rouleaux / carton</th>
+                            <th>Prix carton HT</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
                             <td><input type="number" id="catId" placeholder="Auto" disabled value=""></td>
-                            <td><input type="text" id="catNom" placeholder="Ex: Film alimentaire 450 mm"></td>
+                            <td><input type="text" id="catRef" placeholder="Ex: DIGI604840V"></td>
+                            <td><input type="text" id="catNom" placeholder="Ex: Etiquette blanche 60x48"></td>
+                            <td><input type="text" id="catMandrin" placeholder="Ex: Ø40mm"></td>
+                            <td><input type="number" id="catEtiquettes" placeholder="Ex: 800"></td>
+                            <td><input type="number" id="catRouleaux" placeholder="Ex: 24"></td>
+                            <td><input type="number" step="0.01" id="catPrix" placeholder="Ex: 72.24"></td>
                             <td class="table-actions"><button id="btnAddProduitGlobal" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
