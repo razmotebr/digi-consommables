@@ -6,6 +6,7 @@ const state = {
   prix: {}, // {enseigne: [{id,nom,prix}]}
   catalog: {}, // {id: nom}
   orders: [], // [{id, clientId, enseigne, magasin, total, status, createdAt}]
+  editingEnseignes: {}, // {code: true}
   users: [], // [{id, enseigne, magasin, lastLogin}]
 };
 
@@ -68,45 +69,43 @@ function renderEnseignes() {
 
   Object.entries(state.enseignes).forEach(([code, e]) => {
     const tr = document.createElement("tr");
+    const isEditing = !!state.editingEnseignes[code];
 
     const tdCode = document.createElement("td");
     const inpCode = document.createElement("input");
     inpCode.type = "text";
     inpCode.value = code;
-    inpCode.disabled = true;
+    inpCode.disabled = !isEditing;
     tdCode.appendChild(inpCode);
 
     const tdNom = document.createElement("td");
     const inpNom = document.createElement("input");
     inpNom.type = "text";
     inpNom.value = e.nom || "";
-    inpNom.disabled = true;
+    inpNom.disabled = !isEditing;
     tdNom.appendChild(inpNom);
 
     const tdEmail = document.createElement("td");
     const inpEmail = document.createElement("input");
     inpEmail.type = "email";
     inpEmail.value = e.emailCompta || "";
-    inpEmail.disabled = true;
+    inpEmail.disabled = !isEditing;
     tdEmail.appendChild(inpEmail);
 
     const actions = document.createElement("td");
     actions.className = "table-actions";
     const editBtn = document.createElement("button");
     editBtn.className = "secondary action-btn";
-    editBtn.textContent = "Edit";
+    editBtn.textContent = isEditing ? "Enregistrer" : "Edit";
     const delBtn = document.createElement("button");
     delBtn.className = "secondary danger action-btn";
     delBtn.textContent = "Suppr";
 
     editBtn.addEventListener("click", () => {
-      const editing = tr.dataset.editing === "true";
+      const editing = !!state.editingEnseignes[code];
       if (!editing) {
-        tr.dataset.editing = "true";
-        editBtn.textContent = "Enregistrer";
-        inpCode.disabled = false;
-        inpNom.disabled = false;
-        inpEmail.disabled = false;
+        state.editingEnseignes[code] = true;
+        renderEnseignes();
         return;
       }
       const newCode = inpCode.value.trim();
@@ -116,6 +115,7 @@ function renderEnseignes() {
       if (newCode !== code && state.enseignes[newCode]) return alert("Code déjà existant");
       delete state.enseignes[code];
       state.enseignes[newCode] = { nom: newNom, emailCompta: newEmail };
+      delete state.editingEnseignes[code];
       renderEnseignes();
       fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
       populateEnseigneSelect();
@@ -123,6 +123,7 @@ function renderEnseignes() {
 
     delBtn.addEventListener("click", () => {
       delete state.enseignes[code];
+      delete state.editingEnseignes[code];
       renderEnseignes();
       fillEnseigneOptions(document.getElementById("cliEnseigneSelect"));
       populateEnseigneSelect();
