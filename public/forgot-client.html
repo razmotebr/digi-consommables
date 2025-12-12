@@ -45,7 +45,10 @@
             const raw = await res.text();
             let data = {};
             try { data = raw ? JSON.parse(raw) : {}; } catch (_) {}
-            if (!res.ok) throw new Error(data.error || "Erreur");
+            if (!res.ok) {
+                if (res.status === 404) throw new Error("Compte client inexistant");
+                throw new Error(data.error || "Erreur");
+            }
             ok.textContent = data.message || "Email envoyé.";
         } catch (e) {
             err.textContent = e.message || "Erreur inconnue";
