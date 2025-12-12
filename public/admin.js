@@ -845,10 +845,10 @@ async function saveClient(payload) {
         )
       ).catch((e) => console.error("copy prices to new client error", e));
     }
+    delete state.editingClients[payload.id];
     renderClients();
     renderEnseignes();
     populateEnseigneSelect();
-    delete state.editingClients[payload.id];
   } catch (e) {
     console.error("saveClient error", e);
     const msg = e && e.message ? e.message : "Erreur sauvegarde client";
