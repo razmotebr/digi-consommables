@@ -1020,8 +1020,15 @@ async function loadUsers() {
   try {
     const res = await fetch("/admin_users", { headers: withAuthHeaders() });
     if (!ensureAuthorized(res)) return;
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
+    const raw = await res.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.error("loadUsers parse error", e, raw);
+      data = {};
+    }
+    if (!res.ok) throw new Error(data.error || raw || `Erreur ${res.status}`);
     state.users = data.users || [];
   } catch (e) {
     console.error("loadUsers error", e);
