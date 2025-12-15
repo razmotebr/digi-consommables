@@ -20,13 +20,13 @@ const state = {
 
 const adminToken = sessionStorage.getItem("adminToken");
 if (!adminToken) {
-  window.location.href = "/admin-login.html";
+  window.location.href = "/login.html"; // login unique pour admin et clients
 }
 
 function redirectAdminLogin() {
   sessionStorage.removeItem("adminUser");
   sessionStorage.removeItem("adminToken");
-  window.location.href = "/admin-login.html";
+  window.location.href = "/login.html";
 }
 
 function ensureAuthorized(res) {
@@ -1167,7 +1167,7 @@ document.getElementById("adminUserTag").textContent = state.admin;
 document.getElementById("btnLogout").addEventListener("click", () => {
   sessionStorage.removeItem("adminUser");
   sessionStorage.removeItem("adminToken");
-  window.location.href = "/admin-login.html";
+  window.location.href = "/login.html";
 });
 
 document.getElementById("tabEnseignes").addEventListener("click", (e) => {

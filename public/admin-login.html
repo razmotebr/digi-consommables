@@ -1,103 +1,23 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Connexion admin</title>
-    <style>
-        :root {
-            --accent: #0078d7;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-        }
-        * { box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #009C84 0%, #00b69c 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-        }
-        .card {
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-            padding: 28px;
-            width: 100%;
-            max-width: 400px;
-        }
-        h1 { margin: 0 0 6px 0; color: #1f2937; }
-        p { margin: 0 0 18px 0; color: var(--muted); }
-        label { display: block; margin: 12px 0 6px; font-weight: bold; color: #1f2937; }
-        input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-        }
-        button {
-            width: 100%;
-            margin-top: 18px;
-            padding: 12px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .error { color: #b91c1c; margin-top: 10px; min-height: 18px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Connexion admin</title>
+  <meta http-equiv="refresh" content="0;url=/login.html">
+  <style>
+    body { font-family: Arial, sans-serif; display:flex; align-items:center; justify-content:center; min-height:100vh; background: #f5f5f5; margin:0; }
+    .card { background:#fff; padding:24px 28px; border:1px solid #e5e7eb; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.08); max-width:420px; width:100%; }
+    h1 { margin:0 0 8px 0; }
+    p { margin:0 0 12px 0; color:#4b5563; }
+    a { color:#0f766e; text-decoration:none; font-weight:bold; }
+  </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Admin</h1>
-        <p>Accès réservé</p>
-        <form id="adminLoginForm">
-            <label for="adminUser">Utilisateur</label>
-            <input id="adminUser" name="adminUser" required>
-
-            <label for="adminPass">Mot de passe</label>
-            <input id="adminPass" name="adminPass" type="password" required>
-
-            <button type="submit" id="btnAdminLogin">Connexion</button>
-            <div class="error" id="adminLoginError"></div>
-            <div style="margin-top:8px; text-align:center;">
-                <a href="/forgot-admin.html">Mot de passe oublié ?</a>
-            </div>
-        </form>
-    </div>
-
-    <script>
-    document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const user = document.getElementById("adminUser").value.trim();
-        const pass = document.getElementById("adminPass").value;
-        const btn = document.getElementById("btnAdminLogin");
-        const err = document.getElementById("adminLoginError");
-        err.textContent = "";
-        btn.disabled = true;
-        btn.textContent = "Connexion...";
-        try {
-            const res = await fetch("/admin_login", {
-                method: "POST",
-                headers: { "content-type": "application/json" },
-                body: JSON.stringify({ user, password: pass })
-            });
-            if (!res.ok) throw new Error("Identifiants invalides");
-            const data = await res.json();
-            if (!data.token) throw new Error("Token manquant");
-            sessionStorage.setItem("adminToken", data.token);
-            sessionStorage.setItem("adminUser", data.user || user);
-            window.location.href = "/admin.html";
-        } catch (error) {
-            err.textContent = error.message || "Erreur de connexion";
-            btn.disabled = false;
-            btn.textContent = "Connexion";
-        }
-    });
-    </script>
+  <div class="card">
+    <h1>Connexion unique</h1>
+    <p>La connexion admin passe désormais par la page unique de login.</p>
+    <p><strong>Redirection...</strong> Si rien ne se passe, <a href="/login.html">cliquez ici</a>.</p>
+  </div>
+  <script>window.location.href="/login.html";</script>
 </body>
 </html>
