@@ -32,13 +32,26 @@ async function hashPassword(password) {
   }
 }
 
+async function ensureLastLoginColumn(db) {
+  try {
+    const res = await db.prepare("PRAGMA table_info(users)").all();
+    const has = (res.results || []).some((r) => r.name === "last_login" || r[1] === "last_login");
+    if (!has) {
+      await db.prepare("ALTER TABLE users ADD COLUMN last_login TEXT").run();
+    }
+  } catch (_) {
+    // ignore
+  }
+}
+
 export async function onRequestGet(context) {
   if (!isAdmin(context.request)) return unauthorized();
   try {
     const db = context.env.DB;
+    await ensureLastLoginColumn(db);
     const res = await db
       .prepare(
-        `SELECT u.id, u.role, c.enseigne, c.magasin, NULL as lastLogin
+        `SELECT u.id, u.role, u.last_login as lastLogin, c.enseigne, c.magasin
          FROM users u
          LEFT JOIN clients c ON c.id = u.id
          ORDER BY u.id`
@@ -58,6 +71,7 @@ export async function onRequestPost(context) {
     if (!id) return json({ error: "id requis" }, 400);
 
     const db = context.env.DB;
+    await ensureLastLoginColumn(db);
     const roleSafe = (role || "client").toLowerCase() === "admin" ? "admin" : "client";
 
     const existing = await db.prepare("SELECT id FROM users WHERE id = ?1 LIMIT 1").bind(id).all();

@@ -67,14 +67,9 @@
         }
 .user-form-grid {
             display: grid;
-            grid-template-columns: minmax(200px, 1fr) 160px minmax(240px, 1fr) 180px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 12px;
             align-items: end;
-        }
-        @media (max-width: 900px) {
-            .user-form-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            }
         }
 .editable-table {
             width: 100%;

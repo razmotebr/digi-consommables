@@ -9,7 +9,8 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   password_hash TEXT NOT NULL,
-  role TEXT DEFAULT 'client'
+  role TEXT DEFAULT 'client',
+  last_login TEXT
 );
 
 CREATE TABLE IF NOT EXISTS clients (

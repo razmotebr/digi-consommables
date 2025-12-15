@@ -24,6 +24,30 @@ function json(payload, status = 200) {
   });
 }
 
+async function ensureLastLoginColumn(db) {
+  try {
+    const res = await db.prepare("PRAGMA table_info(users)").all();
+    const has = (res.results || []).some((r) => r.name === "last_login" || r[1] === "last_login");
+    if (!has) {
+      await db.prepare("ALTER TABLE users ADD COLUMN last_login TEXT").run();
+    }
+  } catch (_) {}
+}
+
+async function touchLastLogin(db, id) {
+  try {
+    await ensureLastLoginColumn(db);
+    await db
+      .prepare(
+        `INSERT INTO users (id, password_hash, role, last_login)
+         VALUES (?1, COALESCE((SELECT password_hash FROM users WHERE id = ?1), ''), 'admin', ?2)
+         ON CONFLICT(id) DO UPDATE SET last_login = excluded.last_login, role = excluded.role`
+      )
+      .bind(id, new Date().toISOString())
+      .run();
+  } catch (_) {}
+}
+
 export async function onRequestPost(context) {
   try {
     const data = await context.request.json();
@@ -52,6 +76,10 @@ export async function onRequestPost(context) {
     // 2) Fallback : variables d'environnement
     if (user !== envUser || password !== envPass) {
       return json({ error: "Invalid credentials" }, 401);
+    }
+
+    if (context.env?.DB) {
+      await touchLastLogin(context.env.DB, user);
     }
 
     const token = `ADMIN:${user}:${Date.now()}`;

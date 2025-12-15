@@ -29,6 +29,35 @@ function json(payload, status = 200) {
   });
 }
 
+async function ensureLastLoginColumn(db) {
+  try {
+    const res = await db.prepare("PRAGMA table_info(users)").all();
+    const has = (res.results || []).some((r) => r.name === "last_login" || r[1] === "last_login");
+    if (!has) {
+      await db.prepare("ALTER TABLE users ADD COLUMN last_login TEXT").run();
+    }
+  } catch (_) {
+    // ignore
+  }
+}
+
+async function touchLastLogin(db, id, role, passwordHash = null) {
+  try {
+    await ensureLastLoginColumn(db);
+    const now = new Date().toISOString();
+    await db
+      .prepare(
+        `INSERT INTO users (id, password_hash, role, last_login)
+         VALUES (?1, COALESCE(?2, (SELECT password_hash FROM users WHERE id = ?1)), ?3, ?4)
+         ON CONFLICT(id) DO UPDATE SET last_login = excluded.last_login, role = excluded.role`
+      )
+      .bind(id, passwordHash, role, now)
+      .run();
+  } catch (_) {
+    // best-effort only
+  }
+}
+
 export async function onRequestPost(context) {
   try {
     const db = context.env.DB;
@@ -57,12 +86,14 @@ export async function onRequestPost(context) {
         role === "admin"
           ? { token, role: "admin", id: user.id }
           : { token, role: "client", clientId: user.id, id: user.id };
+      await touchLastLogin(db, user.id, role, user.password_hash);
       return json(payload, 200);
     }
 
     // 2) Fallback : admin défini par variables d'environnement
     if (id === envAdminUser && password === envAdminPass) {
       const token = buildToken("admin", id);
+      await touchLastLogin(db, id, "admin");
       return json({ token, role: "admin", id }, 200);
     }
 
@@ -76,6 +107,7 @@ export async function onRequestPost(context) {
     }
 
     const token = buildToken("client", id);
+    await touchLastLogin(db, id, "client");
     return json({ token, role: "client", clientId: id, id }, 200);
   } catch (e) {
     return json({ error: e.toString() }, 500);

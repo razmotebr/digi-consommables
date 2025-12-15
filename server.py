@@ -264,6 +264,11 @@ class MyHandler(SimpleHTTPRequestHandler):
             # Admin peut utiliser le meme point d'entree
             if client_id == ADMIN_USER and password == admin_pass:
                 token = self._make_admin_token(client_id)
+                store.setdefault("users", {})
+                user_entry = store["users"].get(client_id, {"role": "admin"})
+                user_entry["lastLogin"] = datetime.datetime.utcnow().isoformat()
+                store["users"][client_id] = user_entry
+                self._save_data(store)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self._add_cors()
@@ -282,6 +287,8 @@ class MyHandler(SimpleHTTPRequestHandler):
                 return
 
             token = self._make_client_token(client_id)
+            store["clients"][client_id]["lastLogin"] = datetime.datetime.utcnow().isoformat()
+            self._save_data(store)
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -629,6 +636,11 @@ class MyHandler(SimpleHTTPRequestHandler):
                 return
 
             token = self._make_admin_token(user)
+            store.setdefault("users", {})
+            entry = store["users"].get(user, {"role": "admin"})
+            entry["lastLogin"] = datetime.datetime.utcnow().isoformat()
+            store["users"][user] = entry
+            self._save_data(store)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self._add_cors()
@@ -843,11 +855,14 @@ class MyHandler(SimpleHTTPRequestHandler):
                     "role": c.get("role", "client"),
                     "enseigne": c.get("enseigne", ""),
                     "magasin": c.get("magasin", ""),
+                    "lastLogin": c.get("lastLogin"),
                 }
             # Explicit users override
             for uid, info in base_users.items():
                 u = users.get(uid, {"id": uid})
                 u["role"] = info.get("role", u.get("role", "client"))
+                if info.get("lastLogin"):
+                    u["lastLogin"] = info.get("lastLogin")
                 users[uid] = u
 
             self._send_json(200, {"users": list(users.values())})
