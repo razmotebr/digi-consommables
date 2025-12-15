@@ -453,11 +453,35 @@
 
         <section id="sectionUsers" class="card hidden">
             <h2>Gestion des utilisateurs / mots de passe</h2>
+            <div class="panel" style="margin-bottom:12px;">
+                <div style="display:grid; grid-template-columns: 1fr 140px 1fr 160px; gap:10px; align-items:end;">
+                    <div>
+                        <label for="userIdInput">Utilisateur</label>
+                        <input id="userIdInput" type="text" placeholder="Ex: C001 ou admin">
+                    </div>
+                    <div>
+                        <label for="userRoleSelect">Rôle</label>
+                        <select id="userRoleSelect">
+                            <option value="client">client</option>
+                            <option value="admin">admin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="userPasswordInput">Mot de passe (optionnel)</label>
+                        <input id="userPasswordInput" type="text" placeholder="Laisser vide pour conserver">
+                    </div>
+                    <div>
+                        <button id="btnSaveUser" class="full">Créer / mettre à jour</button>
+                    </div>
+                </div>
+                <p class="muted" style="margin-top:6px;">Laisser le mot de passe vide pour garder celui existant. Le rôle est mis à jour dans tous les cas.</p>
+            </div>
             <div class="panel">
                 <table id="tableUsers" class="editable-table">
                     <thead>
                         <tr>
                             <th>Utilisateur</th>
+                            <th>Rôle</th>
                             <th>Enseigne</th>
                             <th>Magasin</th>
                             <th>Dernier login</th>
@@ -465,7 +489,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="5" class="muted">Chargement...</td></tr>
+                        <tr><td colspan="6" class="muted">Chargement...</td></tr>
                     </tbody>
                 </table>
             </div>

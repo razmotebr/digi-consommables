@@ -575,7 +575,7 @@ function renderUsers() {
   if (!state.users.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
-    td.colSpan = 5;
+    td.colSpan = 6;
     td.className = "muted";
     td.textContent = "Aucun utilisateur.";
     tr.appendChild(td);
@@ -589,9 +589,11 @@ function renderUsers() {
     .forEach((u) => {
       const tr = document.createElement("tr");
       const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleString("fr-FR") : "-";
+      const role = (u.role || "client").toLowerCase();
 
       tr.innerHTML = `
         <td>${u.id || "-"}</td>
+        <td>${role}</td>
         <td>${u.enseigne || "-"}</td>
         <td>${u.magasin || "-"}</td>
         <td>${lastLogin}</td>
@@ -602,7 +604,12 @@ function renderUsers() {
       resetBtn.className = "secondary action-btn";
       resetBtn.textContent = "Reset MDP";
       resetBtn.addEventListener("click", () => resetUserPassword(u.id));
+      const delBtn = document.createElement("button");
+      delBtn.className = "secondary danger action-btn";
+      delBtn.textContent = "Suppr";
+      delBtn.addEventListener("click", () => deleteUser(u.id));
       actions.appendChild(resetBtn);
+      actions.appendChild(delBtn);
       tr.appendChild(actions);
       tbody.appendChild(tr);
     });
@@ -1077,9 +1084,56 @@ async function loadUsers() {
   renderUsers();
 }
 
+async function saveUser(payload) {
+  try {
+    const res = await fetch("/admin_users", {
+      method: "POST",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify(payload),
+    });
+    if (!ensureAuthorized(res)) return;
+    const raw = await res.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.warn("saveUser parse error", e, raw);
+    }
+    if (!res.ok) {
+      const msg = data?.error || raw || `Erreur ${res.status}`;
+      throw new Error(msg);
+    }
+    await loadUsers();
+    alert("Utilisateur enregistre.");
+    } catch (e) {
+      console.error("saveUser error", e);
+      alert((e && e.message) || "Erreur sauvegarde utilisateur");
+    }
+  }
+
+async function deleteUser(userId) {
+  if (!userId) return;
+  const confirmDel = confirm(`Supprimer l'utilisateur ${userId} ?`);
+  if (!confirmDel) return;
+  try {
+    const res = await fetch("/admin_users", {
+      method: "DELETE",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ id: userId }),
+    });
+    if (!ensureAuthorized(res)) return;
+    if (!res.ok) throw new Error(await res.text());
+    state.users = state.users.filter((u) => u.id !== userId);
+    renderUsers();
+  } catch (e) {
+    console.error("deleteUser error", e);
+    alert("Impossible de supprimer l'utilisateur");
+  }
+}
+
 async function resetUserPassword(userId) {
   if (!userId) return;
-  const confirmReset = confirm(`Réinitialiser le mot de passe pour ${userId} ?`);
+  const confirmReset = confirm(`Reinitialiser le mot de passe pour ${userId} ?`);
   if (!confirmReset) return;
   try {
     const res = await fetch("/admin_reset_password", {
@@ -1088,13 +1142,24 @@ async function resetUserPassword(userId) {
       body: JSON.stringify({ userId }),
     });
     if (!ensureAuthorized(res)) return;
-    if (!res.ok) throw new Error(await res.text());
-    alert("Mot de passe réinitialisé. Un nouveau mot de passe a été généré.");
-    await loadUsers();
-  } catch (e) {
-    console.error("resetUserPassword error", e);
-    alert("Impossible de réinitialiser le mot de passe.");
-  }
+    const raw = await res.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.warn("resetUserPassword parse error", e, raw);
+    }
+      if (!res.ok) {
+        const msg = data?.error || raw || `Erreur ${res.status}`;
+        throw new Error(msg);
+      }
+      const newPass = data.password || "(non disponible)";
+      alert(`Mot de passe reinitialise.\nNouveau mot de passe pour ${userId} : ${newPass}`);
+      await loadUsers();
+    } catch (e) {
+      console.error("resetUserPassword error", e);
+      alert("Impossible de reinitialiser le mot de passe.");
+    }
 }
 
 // --- Events ---
@@ -1136,6 +1201,16 @@ document.getElementById("tabUsers").addEventListener("click", async (e) => {
   showSection("sectionUsers");
   setActiveTab("tabUsers");
   await loadUsers();
+});
+
+document.getElementById("btnSaveUser").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const id = document.getElementById("userIdInput").value.trim();
+  const role = document.getElementById("userRoleSelect").value;
+  const password = document.getElementById("userPasswordInput").value;
+  if (!id) return alert("Utilisateur requis");
+  await saveUser({ id, role, password: password || undefined });
+  document.getElementById("userPasswordInput").value = "";
 });
 
 document.getElementById("prixEnseigneSelect").addEventListener("change", () => {

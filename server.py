@@ -79,6 +79,13 @@ class MyHandler(SimpleHTTPRequestHandler):
         with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
+    def _send_json(self, status: int, payload: Dict[str, Any]):
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self._add_cors()
+        self.end_headers()
+        self.wfile.write(json.dumps(payload).encode())
+
     def _make_client_token(self, client_id: str):
         return f"TOKEN:{client_id}:{datetime.datetime.utcnow().isoformat()}"
 
@@ -206,6 +213,8 @@ class MyHandler(SimpleHTTPRequestHandler):
             return self._handle_get_orders()
         if self.path.startswith("/admin_orders"):
             return self._handle_admin_orders()
+        if self.path.startswith("/admin_users"):
+            return self._handle_admin_users_get()
         if self.path == "/":
             self.path = "/index.html"
         return super().do_GET()
@@ -226,10 +235,21 @@ class MyHandler(SimpleHTTPRequestHandler):
             self._handle_forgot_admin()
         elif self.path == "/reset_admin":
             self._handle_reset_admin()
+        elif self.path == "/admin_users":
+            self._handle_admin_users_post()
+        elif self.path == "/admin_reset_password":
+            self._handle_admin_reset_password()
         else:
             self.send_response(404)
             self._add_cors()
             self.end_headers()
+
+    def do_DELETE(self):
+        if self.path == "/admin_users":
+            return self._handle_admin_users_delete()
+        self.send_response(404)
+        self._add_cors()
+        self.end_headers()
 
     # --- Handlers ----------------------------------------------------------
     def _handle_login(self):
@@ -805,6 +825,99 @@ class MyHandler(SimpleHTTPRequestHandler):
             self._add_cors()
             self.end_headers()
             self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_admin_users_get(self):
+        try:
+            if not self._validate_admin():
+                return self._send_json(401, {"error": "Unauthorized"})
+            store = self._load_data()
+            base_users = {ADMIN_USER: {"role": "admin"}}
+            base_users.update(store.get("users", {}))
+            clients = store.get("clients", {})
+
+            users = {}
+            # Clients as users (role client)
+            for cid, c in clients.items():
+                users[cid] = {
+                    "id": cid,
+                    "role": c.get("role", "client"),
+                    "enseigne": c.get("enseigne", ""),
+                    "magasin": c.get("magasin", ""),
+                }
+            # Explicit users override
+            for uid, info in base_users.items():
+                u = users.get(uid, {"id": uid})
+                u["role"] = info.get("role", u.get("role", "client"))
+                users[uid] = u
+
+            self._send_json(200, {"users": list(users.values())})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_admin_users_post(self):
+        try:
+            if not self._validate_admin():
+                return self._send_json(401, {"error": "Unauthorized"})
+            data = self._parse_json_body()
+            uid = str(data.get("id", "")).strip()
+            role = str(data.get("role", "client")).lower()
+            password = data.get("password")
+            if not uid:
+                return self._send_json(400, {"error": "id requis"})
+            store = self._load_data()
+            store.setdefault("users", {})
+            user = store["users"].get(uid, {})
+            if not user and not password:
+                return self._send_json(400, {"error": "password requis pour creer l'utilisateur"})
+            if password:
+                user["password"] = password
+            user["role"] = "admin" if role == "admin" else "client"
+            store["users"][uid] = user
+            self._save_data(store)
+            self._send_json(200, {"ok": True})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_admin_users_delete(self):
+        try:
+            if not self._validate_admin():
+                return self._send_json(401, {"error": "Unauthorized"})
+            data = self._parse_json_body()
+            uid = str(data.get("id", "")).strip()
+            if not uid:
+                return self._send_json(400, {"error": "id requis"})
+            store = self._load_data()
+            store.setdefault("users", {})
+            if uid in store["users"]:
+                del store["users"][uid]
+                self._save_data(store)
+            self._send_json(200, {"ok": True})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_admin_reset_password(self):
+        try:
+            if not self._validate_admin():
+                return self._send_json(401, {"error": "Unauthorized"})
+            data = self._parse_json_body()
+            uid = str(data.get("userId", "")).strip()
+            if not uid:
+                return self._send_json(400, {"error": "userId requis"})
+            new_pass = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(10))
+            store = self._load_data()
+            store.setdefault("users", {})
+            if uid == ADMIN_USER:
+                store["adminPassword"] = new_pass
+            elif uid in store.get("clients", {}):
+                store["clients"][uid]["password"] = new_pass
+            else:
+                user = store["users"].get(uid, {"role": "client"})
+                user["password"] = new_pass
+                store["users"][uid] = user
+            self._save_data(store)
+            self._send_json(200, {"ok": True, "password": new_pass, "userId": uid})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
 
 
 if __name__ == "__main__":
