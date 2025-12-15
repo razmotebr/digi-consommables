@@ -65,25 +65,52 @@
             border-radius: 8px;
             background: #fff;
         }
-.user-form-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1.2fr);
-            gap: 12px;
-            align-items: end;
+.user-form-grid{
+            display:grid;
+            gap:12px;
+            align-items:end;
+
+            /* desktop: 4 colonnes sur 1 ligne */
+            grid-template-columns: minmax(0,2fr) minmax(0,1fr) minmax(0,2fr) minmax(0,1.2fr);
+            grid-template-areas: "user role pass btn";
         }
+
+        /* Assigne chaque bloc à une zone */
+        .user-form-grid > div:nth-child(1){ grid-area:user; }
+        .user-form-grid > div:nth-child(2){ grid-area:role; }
+        .user-form-grid > div:nth-child(3){ grid-area:pass; }
+        .user-form-grid > div:nth-child(4){ grid-area:btn; }
+
         .user-form-grid input,
         .user-form-grid select,
         .user-form-grid button { width: 100%; }
         .user-form-grid button { white-space: nowrap; }
-        @media (max-width: 960px) {
-            .user-form-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        /* tablette: 2 colonnes, 2 lignes */
+        @media (max-width: 960px){
+            .user-form-grid{
+                grid-template-columns: repeat(2, minmax(0,1fr));
+                grid-template-areas:
+                  "user role"
+                  "pass btn";
             }
         }
-        @media (max-width: 640px) {
-            .user-form-grid {
+
+        /* mobile: 1 colonne */
+        @media (max-width: 640px){
+            .user-form-grid{
                 grid-template-columns: 1fr;
+                grid-template-areas:
+                  "user"
+                  "role"
+                  "pass"
+                  "btn";
             }
+        }
+
+        /* Important si une classe .full existe ailleurs */
+        .user-form-grid .full{
+            grid-column:auto !important;
         }
 .editable-table {
             width: 100%;
