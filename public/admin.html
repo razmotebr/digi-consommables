@@ -66,11 +66,13 @@
             background: #fff;
         }
 .user-form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 12px;
-            align-items: end;
+            align-items: flex-end;
         }
+        .user-form-grid > div { flex: 1 1 220px; min-width: 220px; }
+        .user-form-grid button { width: 100%; }
 .editable-table {
             width: 100%;
             border-collapse: separate;
