@@ -239,6 +239,18 @@ class MyHandler(SimpleHTTPRequestHandler):
             password = data.get("password", "")
 
             store = self._load_data()
+            admin_pass = store.get("adminPassword", ADMIN_PASS)
+
+            # Admin peut utiliser le meme point d'entree
+            if client_id == ADMIN_USER and password == admin_pass:
+                token = self._make_admin_token(client_id)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self._add_cors()
+                self.end_headers()
+                self.wfile.write(json.dumps({"token": token, "role": "admin", "id": client_id}).encode())
+                return
+
             user = store.get("clients", {}).get(client_id)
 
             if not client_id or not user or password != user.get("password", ""):
@@ -255,7 +267,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self._add_cors()
             self.end_headers()
-            self.wfile.write(json.dumps({"token": token}).encode())
+            self.wfile.write(json.dumps({"token": token, "role": "client", "id": client_id}).encode())
         except Exception as e:
             self.send_response(500)
             self.send_header("Content-Type", "application/json")

@@ -1174,6 +1174,12 @@ document.getElementById("btnAddClient").addEventListener("click", () => {
     contact: document.getElementById("cliContact").value.trim(),
     email: document.getElementById("cliEmail").value.trim(),
   });
+  // Reset des champs avec les exemples
+  document.getElementById("cliId").value = "Ex: C001";
+  document.getElementById("cliEnseigneSelect").value = "";
+  document.getElementById("cliMagasin").value = "Ex: Paris 15";
+  document.getElementById("cliContact").value = "";
+  document.getElementById("cliEmail").value = "";
 });
 
 document.getElementById("btnAddPrix").addEventListener("click", () => {

@@ -71,3 +71,10 @@ INSERT OR IGNORE INTO catalog_produits (id, nom) VALUES
 
 INSERT OR IGNORE INTO prix_par_client (client_id, produit_id, prix) VALUES
 ('C001',1,12.50),('C001',2,9.90),('C001',3,4.50),('C001',4,101.30),('C001',5,3.90);
+
+-- Comptes utilisateurs (mot de passe hache SHA-256)
+-- admin => "admin" / clients => "password"
+INSERT OR IGNORE INTO users (id, password_hash, role) VALUES
+('admin','8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918','admin'),
+('C001','5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8','client'),
+('C002','5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8','client');

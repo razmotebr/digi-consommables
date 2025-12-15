@@ -148,13 +148,25 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         }
 
         const data = await res.json();
+        const role = (data.role || '').toLowerCase();
+        const token = data.token || '';
+        if (!token) {
+            throw new Error('Token manquant dans la reponse');
+        }
 
-        // Save token to sessionStorage
-        sessionStorage.setItem('token', data.token);
-        sessionStorage.setItem('clientId', clientId);
+        // Nettoyer l'ancienne session avant de stocker les infos
+        sessionStorage.clear();
 
-        // Redirect to index.html (page de commande)
-        window.location.href = '/index.html';
+        // Si l'utilisateur est admin => redirection admin, sinon vers le bon de commande
+        if (role === 'admin' || token.startsWith('ADMIN:')) {
+            sessionStorage.setItem('adminToken', token);
+            sessionStorage.setItem('adminUser', data.id || clientId);
+            window.location.href = '/admin.html';
+        } else {
+            sessionStorage.setItem('token', token);
+            sessionStorage.setItem('clientId', data.clientId || clientId);
+            window.location.href = '/index.html';
+        }
 
     } catch (error) {
         errorMsg.textContent = error.message;
