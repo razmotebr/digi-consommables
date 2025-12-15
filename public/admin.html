@@ -66,18 +66,24 @@
             background: #fff;
         }
 .user-form-grid {
-            display: flex;
-            flex-wrap: nowrap;
-            gap: 12px;
-            align-items: flex-end;
+            display: grid;
+            grid-template-columns: 220px 140px 220px 140px;
+            gap: 10px;
+            align-items: end;
         }
-        .user-form-grid > div { flex: 1 1 0; min-width: 0; }
-        .user-form-grid > div:nth-child(2) { flex: 0 0 140px; min-width: 120px; }
-        .user-form-grid > div:nth-child(4) { flex: 0 0 160px; min-width: 140px; }
-        .user-form-grid button { width: 100%; white-space: nowrap; }
+        .user-form-grid input,
+        .user-form-grid select,
+        .user-form-grid button { width: 100%; }
+        .user-form-grid button { white-space: nowrap; }
         @media (max-width: 960px) {
-            .user-form-grid { flex-wrap: wrap; }
-            .user-form-grid > div { flex: 1 1 220px; }
+            .user-form-grid {
+                grid-template-columns: repeat(2, minmax(200px, 1fr));
+            }
+        }
+        @media (max-width: 640px) {
+            .user-form-grid {
+                grid-template-columns: 1fr;
+            }
         }
 .editable-table {
             width: 100%;
