@@ -125,6 +125,7 @@
             font-size: 13px;
             color: #374151;
             letter-spacing: 0.01em;
+            position: relative;
         }
         .editable-table td,
         .editable-table th {
@@ -151,18 +152,31 @@
             padding: 8px 10px;
             height: 36px;
         }
-        .editable-table tbody tr:not(.add-row) input,
-        .editable-table tbody tr:not(.add-row) select {
-            border: 1px solid transparent;
+        .editable-table tbody tr:not(.add-row):not(.editing) input,
+        .editable-table tbody tr:not(.add-row):not(.editing) select {
+            border: none;
             background: transparent;
-            padding: 6px 0;
+            padding: 0;
             height: auto;
             color: inherit;
+            border-radius: 0;
+            pointer-events: none;
         }
-        .editable-table tbody tr:not(.add-row) input:focus,
-        .editable-table tbody tr:not(.add-row) select:focus,
+        .editable-table tbody tr.editing input,
+        .editable-table tbody tr.editing select {
+            border: 1px solid #d1d5db;
+            background: #fff;
+            padding: 6px 8px;
+            height: 32px;
+            border-radius: 6px;
+            pointer-events: auto;
+        }
+        .editable-table tbody tr:not(.add-row):not(.editing) input:focus,
+        .editable-table tbody tr:not(.add-row):not(.editing) select:focus,
         .editable-table .add-row input:focus,
-        .editable-table .add-row select:focus {
+        .editable-table .add-row select:focus,
+        .editable-table tbody tr.editing input:focus,
+        .editable-table tbody tr.editing select:focus {
             outline: none;
             border: 1px solid #93c5fd;
             background: #f8fbff;
@@ -319,6 +333,18 @@
             width: 140px;
             min-width: 120px;
             text-align: center;
+        }
+        .col-resize-handle {
+            position: absolute;
+            top: 0;
+            right: -4px;
+            width: 8px;
+            height: 100%;
+            cursor: col-resize;
+            user-select: none;
+        }
+        .col-resize-handle:hover {
+            background: rgba(0,0,0,0.04);
         }
         @media (max-width: 960px) {
             body { font-size: 14px; }
@@ -555,5 +581,43 @@
     </div>
 
     <script src="admin.js"></script>
+    <script>
+        (function enableResizableTables() {
+            function applyResize(table) {
+                if (!table || table.dataset.resizable === "true") return;
+                table.dataset.resizable = "true";
+                const headers = table.querySelectorAll("thead th");
+                headers.forEach((th, index) => {
+                    const handle = document.createElement("span");
+                    handle.className = "col-resize-handle";
+                    th.appendChild(handle);
+                    let startX = 0;
+                    let startWidth = 0;
+                    const onMouseMove = (e) => {
+                        const delta = e.pageX - startX;
+                        const newWidth = Math.max(60, startWidth + delta);
+                        th.style.width = newWidth + "px";
+                        table.querySelectorAll(`tbody tr td:nth-child(${index + 1})`).forEach((td) => {
+                            td.style.width = newWidth + "px";
+                        });
+                    };
+                    const onMouseUp = () => {
+                        document.removeEventListener("mousemove", onMouseMove);
+                        document.removeEventListener("mouseup", onMouseUp);
+                    };
+                    handle.addEventListener("mousedown", (e) => {
+                        e.preventDefault();
+                        startX = e.pageX;
+                        startWidth = th.offsetWidth;
+                        document.addEventListener("mousemove", onMouseMove);
+                        document.addEventListener("mouseup", onMouseUp);
+                    });
+                });
+            }
+            document.addEventListener("DOMContentLoaded", () => {
+                document.querySelectorAll(".editable-table").forEach(applyResize);
+            });
+        })();
+    </script>
 </body>
 </html>

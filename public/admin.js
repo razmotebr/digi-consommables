@@ -91,6 +91,7 @@ function renderEnseignes() {
   pageEntries.forEach(([code, e]) => {
     const tr = document.createElement("tr");
     const isEditing = !!state.editingEnseignes[code];
+    if (isEditing) tr.classList.add("editing");
 
     const tdCode = document.createElement("td");
     const inpCode = document.createElement("input");
@@ -187,6 +188,7 @@ function renderClients() {
     const tr = document.createElement("tr");
     const draft = state.editingClients[id] || null;
     const isEditing = !!draft;
+    if (isEditing) tr.classList.add("editing");
 
     const tdId = document.createElement("td");
     const inpId = document.createElement("input");
@@ -318,6 +320,7 @@ function renderCatalogue() {
   pageEntries.forEach((id) => {
       const tr = document.createElement("tr");
       const prod = state.catalog[id] || {};
+      if (tr.dataset.editing === "true") tr.classList.add("editing");
 
       const tdId = document.createElement("td");
       const inpId = document.createElement("input");
@@ -387,6 +390,7 @@ function renderCatalogue() {
         const editing = tr.dataset.editing === "true";
         if (!editing) {
           tr.dataset.editing = "true";
+          tr.classList.add("editing");
           editBtn.textContent = "Enregistrer";
           inpRef.disabled = false;
           inpNom.disabled = false;
@@ -444,6 +448,7 @@ function renderPrix() {
 
   pageEntries.forEach((p) => {
       const tr = document.createElement("tr");
+      if (tr.dataset.editing === "true") tr.classList.add("editing");
 
       const tdId = document.createElement("td");
       const inpId = document.createElement("input");
@@ -483,6 +488,7 @@ function renderPrix() {
         const editing = tr.dataset.editing === "true";
         if (!editing) {
           tr.dataset.editing = "true";
+          tr.classList.add("editing");
           editBtn.textContent = "Enregistrer";
           inpNom.disabled = false;
           inpPrix.disabled = false;
