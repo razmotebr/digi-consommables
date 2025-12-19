@@ -55,7 +55,7 @@
             border: 1px solid var(--border);
         }
         .flex { display: flex; gap: 16px; flex-wrap: wrap; }
-        .panel { flex: 1 1 360px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+        .panel { flex: 1 1 360px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; overflow-x: auto; }
         .panel h3 { margin-top: 0; color: var(--digi-dark); }
         label { display: block; font-weight: bold; margin: 8px 0 4px; color: var(--digi-dark); }
         input, select, textarea {
@@ -112,40 +112,12 @@
         .user-form-grid .full{
             grid-column:auto !important;
         }
-.editable-table {
+        .editable-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
             background: #fff;
             table-layout: auto;
-        }
-        .editable-table input {
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #d1d5db;
-            background: #fff;
-            padding: 8px 10px;
-            height: 36px;
-            border-radius: 8px;
-        }
-        .editable-table input:focus,
-        .editable-table select:focus {
-            outline: none;
-            border: 1px solid #93c5fd;
-            background: #f8fbff;
-        }
-        .editable-table select {
-            height: 36px;
-            border: 1px solid #d1d5db;
-            background: #fff;
-            border-radius: 8px;
-            padding: 6px 8px;
-        }
-        .editable-table button {
-            height: 36px;
-        }
-        .editable-table .wide {
-            min-width: 140px;
+            font-size: 14px;
         }
         .editable-table thead th {
             background: #f1f5f9;
@@ -153,28 +125,53 @@
             font-size: 13px;
             color: #374151;
             letter-spacing: 0.01em;
-            padding: 10px 12px;
-            border-bottom: 1px solid #e5e7eb;
         }
         .editable-table td,
         .editable-table th {
             vertical-align: middle;
             padding: 10px 12px;
-        }
-        .editable-table td {
-            border-bottom: 1px solid #e5e7eb;
-            height: 50px;
+            border: 1px solid #e5e7eb;
         }
         .editable-table tbody tr:hover {
             background: #f8fafc;
         }
         .editable-table .add-row td {
-            padding-top: 10px;
-            padding-bottom: 10px;
-            vertical-align: middle;
-        }
-        .editable-table .add-row td {
             background: #f9fafb;
+        }
+        .editable-table input,
+        .editable-table select {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 6px;
+        }
+        .editable-table .add-row input,
+        .editable-table .add-row select {
+            border: 1px solid #d1d5db;
+            background: #fff;
+            padding: 8px 10px;
+            height: 36px;
+        }
+        .editable-table tbody tr:not(.add-row) input,
+        .editable-table tbody tr:not(.add-row) select {
+            border: 1px solid transparent;
+            background: transparent;
+            padding: 6px 0;
+            height: auto;
+            color: inherit;
+        }
+        .editable-table tbody tr:not(.add-row) input:focus,
+        .editable-table tbody tr:not(.add-row) select:focus,
+        .editable-table .add-row input:focus,
+        .editable-table .add-row select:focus {
+            outline: none;
+            border: 1px solid #93c5fd;
+            background: #f8fbff;
+        }
+        .editable-table button {
+            height: 36px;
+        }
+        .editable-table .wide {
+            min-width: 140px;
         }
         .pager {
             display: flex;
@@ -322,6 +319,20 @@
             width: 140px;
             min-width: 120px;
             text-align: center;
+        }
+        @media (max-width: 960px) {
+            body { font-size: 14px; }
+            header, nav { padding: 12px 16px; }
+            .card { padding: 14px; }
+            .editable-table td,
+            .editable-table th { padding: 8px 10px; }
+            .editable-table { font-size: 13px; }
+        }
+        @media (max-width: 640px) {
+            header { flex-wrap: wrap; gap: 8px; }
+            nav { flex-wrap: wrap; }
+            .card { margin: 16px auto; }
+            .panel { padding: 12px; }
         }
     </style>
 </head>
