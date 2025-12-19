@@ -432,14 +432,24 @@ function renderCatalogue() {
 }
 
 function renderPrix() {
-  const enseigne = document.getElementById("prixEnseigneSelect").value.trim();
   const tbody = document.querySelector("#tablePrix tbody");
   const addRow = tbody.querySelector(".add-row");
   tbody.innerHTML = "";
-  if (addRow) tbody.appendChild(addRow);
-  if (!enseigne) return;
+  if (addRow) {
+    tbody.appendChild(addRow);
+    fillEnseigneOptions(document.getElementById("prixEnseigneAdd"));
+    fillProduitOptions(document.getElementById("prixProduitSelect"));
+    updatePrixAddRowFromSelection();
+  }
 
-  const entries = (state.prix[enseigne] || []).slice().sort((a, b) => a.id - b.id);
+  const entries = Object.entries(state.prix || {})
+    .flatMap(([ens, list]) => (list || []).map((p) => ({ ...p, enseigne: ens })))
+    .sort((a, b) => {
+      const cmpEns = (a.enseigne || "").localeCompare(b.enseigne || "");
+      if (cmpEns !== 0) return cmpEns;
+      return (a.id || 0) - (b.id || 0);
+    });
+
   const pageSize = state.pagination.pageSize;
   const currentPage = state.pagination.prix;
   const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
@@ -452,6 +462,12 @@ function renderPrix() {
 
       const prod = state.catalog[p.id] || {};
 
+      const tdEnseigne = document.createElement("td");
+      const selEns = document.createElement("select");
+      fillEnseigneOptions(selEns, p.enseigne || "");
+      selEns.disabled = true;
+      tdEnseigne.appendChild(selEns);
+
       const tdId = document.createElement("td");
       const inpId = document.createElement("input");
       inpId.type = "number";
@@ -463,11 +479,10 @@ function renderPrix() {
       tdRef.textContent = prod.reference || "";
 
       const tdNom = document.createElement("td");
-      const inpNom = document.createElement("input");
-      inpNom.type = "text";
-      inpNom.value = p.nom || "";
-      inpNom.disabled = true;
-      tdNom.appendChild(inpNom);
+      const selProd = document.createElement("select");
+      fillProduitOptions(selProd, String(p.id || ""));
+      selProd.disabled = true;
+      tdNom.appendChild(selProd);
 
       const tdMandrin = document.createElement("td");
       tdMandrin.textContent = prod.mandrin || "";
@@ -504,21 +519,32 @@ function renderPrix() {
           tr.dataset.editing = "true";
           tr.classList.add("editing");
           editBtn.textContent = "Enregistrer";
-          inpNom.disabled = false;
+          selEns.disabled = false;
+          selProd.disabled = false;
           inpPrix.disabled = false;
+          selProd.addEventListener("change", () =>
+            updatePrixRowProductFields(selProd, { inpId, tdRef, tdMandrin, tdEtiq, tdRouleaux })
+          );
           return;
         }
-        const nom = inpNom.value.trim();
+        const newEnseigne = selEns.value.trim();
+        const newProdId = Number(selProd.value);
         const prix = Number(inpPrix.value);
-        if (!nom || isNaN(prix)) return alert("Champs invalides");
-        savePrice({ enseigne, id: rowId, nom, prix });
+        if (!newEnseigne || !newProdId || isNaN(prix)) return alert("Champs invalides");
+        const prodSelected = state.catalog[newProdId] || {};
+        const nom = prodSelected.nom || p.nom || "";
+        if (newEnseigne !== p.enseigne || newProdId !== p.id) {
+          state.prix[p.enseigne] = (state.prix[p.enseigne] || []).filter((x) => !(x.id === p.id));
+        }
+        savePrice({ enseigne: newEnseigne, id: newProdId, nom, prix });
       });
 
-      delBtn.addEventListener("click", () => deletePrice(enseigne, Number(delBtn.dataset.produitId)));
+      delBtn.addEventListener("click", () => deletePrice(p.enseigne, Number(delBtn.dataset.produitId)));
 
       actions.appendChild(editBtn);
       actions.appendChild(delBtn);
 
+      tr.appendChild(tdEnseigne);
       tr.appendChild(tdId);
       tr.appendChild(tdRef);
       tr.appendChild(tdNom);
@@ -642,7 +668,57 @@ function renderUsers() {
 
 // --- HELPERS ---
 function populateEnseigneSelect() {
-  fillEnseigneOptions(document.getElementById("prixEnseigneSelect"));
+  fillEnseigneOptions(document.getElementById("prixEnseigneAdd"));
+}
+
+function fillProduitOptions(selectEl, selected = "") {
+  if (!selectEl) return;
+  const current = String(selected || "");
+  selectEl.innerHTML = '<option value="">-- Choisir un produit --</option>';
+  Object.keys(state.catalog)
+    .map((k) => Number(k))
+    .sort((a, b) => a - b)
+    .forEach((id) => {
+      const prod = state.catalog[id] || {};
+      const opt = document.createElement("option");
+      opt.value = id;
+      const label = (prod.reference ? `${prod.reference} - ` : "") + (prod.nom || `Produit ${id}`);
+      opt.textContent = label;
+      if (String(id) === current) opt.selected = true;
+      selectEl.appendChild(opt);
+    });
+}
+
+function updatePrixRowProductFields(selectEl, refs) {
+  const prodId = Number(selectEl?.value);
+  const prod = prodId ? state.catalog[prodId] || {} : {};
+  if (refs.inpId) refs.inpId.value = prodId || "";
+  if (refs.tdRef) refs.tdRef.textContent = prod.reference || "";
+  if (refs.tdMandrin) refs.tdMandrin.textContent = prod.mandrin || "";
+  if (refs.tdEtiq) refs.tdEtiq.textContent = prod.etiquettesParRouleau != null ? prod.etiquettesParRouleau : "";
+  if (refs.tdRouleaux) refs.tdRouleaux.textContent = prod.rouleauxParCarton != null ? prod.rouleauxParCarton : "";
+}
+
+function updatePrixAddRowFromSelection() {
+  const selEns = document.getElementById("prixEnseigneAdd");
+  const selProd = document.getElementById("prixProduitSelect");
+  const prodId = Number(selProd?.value);
+  const prod = prodId ? state.catalog[prodId] || {} : {};
+  if (document.getElementById("prixId")) document.getElementById("prixId").value = prodId || "";
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || "--";
+  };
+  setText("prixRefPreview", prod.reference || "");
+  setText("prixMandrinPreview", prod.mandrin || "");
+  setText("prixEtiquettesPreview", prod.etiquettesParRouleau != null ? prod.etiquettesParRouleau : "");
+  setText("prixRouleauxPreview", prod.rouleauxParCarton != null ? prod.rouleauxParCarton : "");
+
+  const enseigne = selEns?.value?.trim() || "";
+  const existing = enseigne && prodId ? (state.prix[enseigne] || []).find((p) => p.id === prodId) : null;
+  if (document.getElementById("prixValeur")) {
+    document.getElementById("prixValeur").value = existing ? existing.prix : "";
+  }
 }
 
 function populateOrdersEnseigneSelect() {
@@ -688,57 +764,6 @@ async function deleteEnseigne(enseigne) {
   populateEnseigneSelect();
   populateOrdersEnseigneSelect();
   renderPrix();
-}
-
-function populateProduitGlobalSelect() {
-  const sel = document.getElementById("prixProduitGlobalSelect");
-  if (!sel) return;
-  sel.innerHTML = '<option value="">-- Nouveau produit --</option>';
-  Object.keys(state.catalog)
-    .map((k) => Number(k))
-    .sort((a, b) => a - b)
-    .forEach((id) => {
-      const prod = state.catalog[id] || {};
-      const opt = document.createElement("option");
-      opt.value = id;
-      const label = prod.reference ? `${prod.reference} - ${prod.nom || ""}` : `${id} - ${prod.nom || ""}`;
-      opt.textContent = label.trim();
-      sel.appendChild(opt);
-    });
-  document.getElementById("prixId").value = "";
-  document.getElementById("prixNom").value = "";
-  document.getElementById("prixValeur").value = "";
-}
-
-function updatePrixAddRowPreview(prodId) {
-  const prod = prodId ? state.catalog[prodId] || {} : {};
-  const setText = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val || "--";
-  };
-  setText("prixRefPreview", prod.reference || "");
-  setText("prixMandrinPreview", prod.mandrin || "");
-  const etiquettes = prod.etiquettesParRouleau != null ? String(prod.etiquettesParRouleau) : "";
-  const rouleaux = prod.rouleauxParCarton != null ? String(prod.rouleauxParCarton) : "";
-  setText("prixEtiquettesPreview", etiquettes);
-  setText("prixRouleauxPreview", rouleaux);
-}
-
-function applySelectedProduct() {
-  const enseigne = document.getElementById("prixEnseigneSelect").value.trim();
-  const prodId = Number(document.getElementById("prixProduitGlobalSelect").value);
-  if (!prodId) {
-    document.getElementById("prixId").value = "";
-    document.getElementById("prixNom").value = "";
-    document.getElementById("prixValeur").value = "";
-    updatePrixAddRowPreview(null);
-    return;
-  }
-  document.getElementById("prixId").value = prodId;
-  document.getElementById("prixNom").value = (state.catalog[prodId]?.nom) || "";
-  const prod = (state.prix[enseigne] || []).find((p) => p.id === prodId);
-  document.getElementById("prixValeur").value = prod ? prod.prix : "";
-  updatePrixAddRowPreview(prodId);
 }
 
 function getClientsForEnseigne(enseigne) {
@@ -811,8 +836,6 @@ async function loadInitialData() {
     renderClients();
     renderCatalogue();
     populateEnseigneSelect();
-    populateProduitGlobalSelect();
-    applySelectedProduct();
     renderPrix();
     await loadOrdersByEnseigne(document.getElementById("ordersEnseigneSelect")?.value || "");
     renderAdminOrders();
@@ -848,8 +871,6 @@ async function loadInitialData() {
         renderClients();
         renderCatalogue();
         populateEnseigneSelect();
-        populateProduitGlobalSelect();
-        applySelectedProduct();
         renderPrix();
         alert("Chargement admin_data impossible. Données locales de secours chargées.");
         return;
@@ -977,8 +998,9 @@ async function savePrice({ enseigne, id, nom, prix }) {
   } else {
     state.prix[enseigne].push({ id, nom: state.catalog[id].nom, prix });
   }
-  populateProduitGlobalSelect();
   renderPrix();
+  fillProduitOptions(document.getElementById("prixProduitSelect"));
+  updatePrixAddRowFromSelection();
 }
 
 async function deletePrice(enseigne, produitId) {
@@ -1034,9 +1056,9 @@ async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau
     state.prix[ens] = (state.prix[ens] || []).map((p) => (p.id === id ? { ...p, nom } : p));
   });
   renderCatalogue();
-  populateProduitGlobalSelect();
-  applySelectedProduct();
   renderPrix();
+  fillProduitOptions(document.getElementById("prixProduitSelect"));
+  updatePrixAddRowFromSelection();
 }
 
 async function deleteCatalogue(id) {
@@ -1058,9 +1080,9 @@ async function deleteCatalogue(id) {
     state.prix[ens] = (state.prix[ens] || []).filter((p) => p.id !== id);
   });
   renderCatalogue();
-  populateProduitGlobalSelect();
-  applySelectedProduct();
   renderPrix();
+  fillProduitOptions(document.getElementById("prixProduitSelect"));
+  updatePrixAddRowFromSelection();
 }
 
 async function loadOrdersByEnseigne(enseigne) {
@@ -1254,16 +1276,10 @@ document.getElementById("btnSaveUser").addEventListener("click", async (e) => {
   document.getElementById("userPasswordInput").value = "";
 });
 
-document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
-  state.pagination.prix = 1;
-  applySelectedProduct();
-  renderPrix();
-});
-document.getElementById("prixProduitGlobalSelect").addEventListener("change", applySelectedProduct);
-document.getElementById("prixId").addEventListener("input", (e) => {
-  const val = Number(e.target.value);
-  updatePrixAddRowPreview(!isNaN(val) && val > 0 ? val : null);
-});
+const prixEnseigneAdd = document.getElementById("prixEnseigneAdd");
+const prixProduitSelect = document.getElementById("prixProduitSelect");
+if (prixEnseigneAdd) prixEnseigneAdd.addEventListener("change", updatePrixAddRowFromSelection);
+if (prixProduitSelect) prixProduitSelect.addEventListener("change", updatePrixAddRowFromSelection);
 document.getElementById("ordersEnseigneSelect").addEventListener("change", (e) => {
   loadOrdersByEnseigne(e.target.value);
 });
@@ -1303,13 +1319,15 @@ document.getElementById("btnAddClient").addEventListener("click", () => {
 });
 
 document.getElementById("btnAddPrix").addEventListener("click", () => {
-  const enseigne = document.getElementById("prixEnseigneSelect").value.trim();
-  const id = Number(document.getElementById("prixId").value);
-  const nom = document.getElementById("prixNom").value.trim();
+  const enseigne = document.getElementById("prixEnseigneAdd").value.trim();
+  const prodId = Number(document.getElementById("prixProduitSelect").value);
   const prix = Number(document.getElementById("prixValeur").value);
   if (!enseigne) return alert("Enseigne requise");
-  if (!id || !nom || isNaN(prix)) return alert("Champs prix invalides");
-  savePrice({ enseigne, id, nom, prix });
+  if (!prodId || isNaN(prix)) return alert("Champs prix invalides");
+  const prod = state.catalog[prodId] || {};
+  const nom = prod.nom || "";
+  savePrice({ enseigne, id: prodId, nom, prix });
+  document.getElementById("prixValeur").value = "";
 });
 
 document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
