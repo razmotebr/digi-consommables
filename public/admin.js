@@ -624,6 +624,7 @@ function renderUsers() {
       `;
 
       const actions = document.createElement("td");
+      actions.className = "table-actions user-actions col-actions";
       const resetBtn = document.createElement("button");
       resetBtn.className = "secondary action-btn";
       resetBtn.textContent = "Reset MDP";
