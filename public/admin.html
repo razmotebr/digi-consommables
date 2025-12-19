@@ -147,13 +147,13 @@
         }
         .editable-table .add-row input,
         .editable-table .add-row select {
-            border: 1px solid transparent;
-            border-bottom: 1px solid #d1d5db;
+            border: none;
             background: transparent;
-            padding: 6px 4px;
+            padding: 0;
             height: auto;
             border-radius: 0;
             color: inherit;
+            box-shadow: none;
         }
         .editable-table tbody tr:not(.add-row):not(.editing) input,
         .editable-table tbody tr:not(.add-row):not(.editing) select {
@@ -186,11 +186,8 @@
         }
         .editable-table .add-row input:focus,
         .editable-table .add-row select:focus {
-            border-radius: 0;
-            border-left-color: transparent;
-            border-right-color: transparent;
-            border-top-color: transparent;
-            border-bottom-color: #3b82f6;
+            border: none;
+            background: transparent;
         }
         .editable-table button {
             height: 36px;
