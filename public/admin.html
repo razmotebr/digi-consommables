@@ -147,10 +147,11 @@
         }
         .editable-table .add-row input,
         .editable-table .add-row select {
-            border: 1px solid #d1d5db;
+            border: 1px solid #cbd5e1;
             background: #fff;
-            padding: 8px 10px;
-            height: 36px;
+            padding: 6px 8px;
+            height: 32px;
+            border-radius: 4px;
         }
         .editable-table tbody tr:not(.add-row):not(.editing) input,
         .editable-table tbody tr:not(.add-row):not(.editing) select {
@@ -333,6 +334,10 @@
             width: 140px;
             min-width: 120px;
             text-align: center;
+        }
+        .editable-table .add-row .col-actions button,
+        .editable-table .add-row .table-actions button {
+            width: 100%;
         }
         .col-resize-handle {
             position: absolute;
