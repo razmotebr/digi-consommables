@@ -450,6 +450,8 @@ function renderPrix() {
       const tr = document.createElement("tr");
       if (tr.dataset.editing === "true") tr.classList.add("editing");
 
+      const prod = state.catalog[p.id] || {};
+
       const tdId = document.createElement("td");
       const inpId = document.createElement("input");
       inpId.type = "number";
@@ -457,12 +459,24 @@ function renderPrix() {
       inpId.disabled = true;
       tdId.appendChild(inpId);
 
+      const tdRef = document.createElement("td");
+      tdRef.textContent = prod.reference || "";
+
       const tdNom = document.createElement("td");
       const inpNom = document.createElement("input");
       inpNom.type = "text";
       inpNom.value = p.nom || "";
       inpNom.disabled = true;
       tdNom.appendChild(inpNom);
+
+      const tdMandrin = document.createElement("td");
+      tdMandrin.textContent = prod.mandrin || "";
+
+      const tdEtiq = document.createElement("td");
+      tdEtiq.textContent = prod.etiquettesParRouleau != null ? prod.etiquettesParRouleau : "";
+
+      const tdRouleaux = document.createElement("td");
+      tdRouleaux.textContent = prod.rouleauxParCarton != null ? prod.rouleauxParCarton : "";
 
       const tdPrix = document.createElement("td");
       const inpPrix = document.createElement("input");
@@ -506,7 +520,11 @@ function renderPrix() {
       actions.appendChild(delBtn);
 
       tr.appendChild(tdId);
+      tr.appendChild(tdRef);
       tr.appendChild(tdNom);
+      tr.appendChild(tdMandrin);
+      tr.appendChild(tdEtiq);
+      tr.appendChild(tdRouleaux);
       tr.appendChild(tdPrix);
       tr.appendChild(actions);
       tbody.appendChild(tr);
@@ -691,6 +709,20 @@ function populateProduitGlobalSelect() {
   document.getElementById("prixValeur").value = "";
 }
 
+function updatePrixAddRowPreview(prodId) {
+  const prod = prodId ? state.catalog[prodId] || {} : {};
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || "--";
+  };
+  setText("prixRefPreview", prod.reference || "");
+  setText("prixMandrinPreview", prod.mandrin || "");
+  const etiquettes = prod.etiquettesParRouleau != null ? String(prod.etiquettesParRouleau) : "";
+  const rouleaux = prod.rouleauxParCarton != null ? String(prod.rouleauxParCarton) : "";
+  setText("prixEtiquettesPreview", etiquettes);
+  setText("prixRouleauxPreview", rouleaux);
+}
+
 function applySelectedProduct() {
   const enseigne = document.getElementById("prixEnseigneSelect").value.trim();
   const prodId = Number(document.getElementById("prixProduitGlobalSelect").value);
@@ -698,12 +730,14 @@ function applySelectedProduct() {
     document.getElementById("prixId").value = "";
     document.getElementById("prixNom").value = "";
     document.getElementById("prixValeur").value = "";
+    updatePrixAddRowPreview(null);
     return;
   }
   document.getElementById("prixId").value = prodId;
   document.getElementById("prixNom").value = (state.catalog[prodId]?.nom) || "";
   const prod = (state.prix[enseigne] || []).find((p) => p.id === prodId);
   document.getElementById("prixValeur").value = prod ? prod.prix : "";
+  updatePrixAddRowPreview(prodId);
 }
 
 function getClientsForEnseigne(enseigne) {
@@ -1225,6 +1259,10 @@ document.getElementById("prixEnseigneSelect").addEventListener("change", () => {
   renderPrix();
 });
 document.getElementById("prixProduitGlobalSelect").addEventListener("change", applySelectedProduct);
+document.getElementById("prixId").addEventListener("input", (e) => {
+  const val = Number(e.target.value);
+  updatePrixAddRowPreview(!isNaN(val) && val > 0 ? val : null);
+});
 document.getElementById("ordersEnseigneSelect").addEventListener("change", (e) => {
   loadOrdersByEnseigne(e.target.value);
 });

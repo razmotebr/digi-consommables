@@ -461,12 +461,25 @@
                 </div>
                 <table id="tablePrix" class="editable-table">
                     <thead>
-                        <tr><th>ID Produit</th><th>Nom</th><th>Prix (EUR)</th><th class="col-actions">Actions</th></tr>
+                        <tr>
+                            <th>ID Produit</th>
+                            <th>R&eacute;f&eacute;rence</th>
+                            <th>Nom</th>
+                            <th>Mandrin</th>
+                            <th>&Eacute;tiq./rouleau</th>
+                            <th>Rouleaux/carton</th>
+                            <th>Prix (EUR)</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
                             <td><input type="number" id="prixId" placeholder="Ex: 1"></td>
+                            <td><span id="prixRefPreview" class="muted">--</span></td>
                             <td><input type="text" id="prixNom" placeholder="Ex: Film alimentaire 450 mm"></td>
+                            <td><span id="prixMandrinPreview" class="muted">--</span></td>
+                            <td><span id="prixEtiquettesPreview" class="muted">--</span></td>
+                            <td><span id="prixRouleauxPreview" class="muted">--</span></td>
                             <td><input type="number" step="0.01" id="prixValeur" placeholder="Ex: 12.50"></td>
                             <td class="col-actions"><button id="btnAddPrix">Ajouter</button></td>
                         </tr>
