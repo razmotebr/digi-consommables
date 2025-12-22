@@ -212,8 +212,8 @@ function buildPdfDocument(content, image) {
   const hasImages = images.length > 0;
   const xObjectEntries = images.map((img) => `/${img.name} ${img.obj} 0 R`).join(" ");
   const resources = hasImages
-    ? `/Resources << /Font << /F1 5 0 R /F2 6 0 R >> /XObject << ${xObjectEntries} >> >>`
-    : "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >>";
+    ? `/Resources << /Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R >> /XObject << ${xObjectEntries} >> >>`
+    : "/Resources << /Font << /F1 5 0 R /F2 6 0 R /F3 7 0 R >> >>";
 
   objects.push("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
   objects.push("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n");
@@ -224,6 +224,7 @@ function buildPdfDocument(content, image) {
   objects.push(`4 0 obj\n<< /Length ${contentBytes.length} >>\nstream\n${content}endstream\nendobj\n`);
   objects.push("5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n");
   objects.push("6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n");
+  objects.push("7 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>\nendobj\n");
 
   if (hasImages) {
     images.forEach((img) => {
@@ -303,8 +304,21 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   const enseigneY = headerTop - enseigneH;
   pdf.image("ImEns", enseigneX, enseigneY, enseigneW, enseigneH);
 
-  const infoX = pageW - margin - 220;
-  const infoY = headerTop - Math.max(logoH, enseigneH) - 8;
+  const addrX = logoX + logoW + 16;
+  const addrTop = headerTop - 4;
+  pdf.setStrokeColor(0.6, 0.6, 0.6);
+  pdf.setLineWidth(1);
+  pdf.line(addrX - 8, logoY, addrX - 8, logoY + logoH);
+
+  pdf.setStrokeColor(0, 0, 0);
+  pdf.text(addrX, addrTop, "DIGI France SA", "F2", 9);
+  pdf.text(addrX, addrTop - 12, "Z.A. Central Parc - 4, allee du Sanglier, 93421 VILLEPINTE CEDEX FRANCE", "F1", 7);
+  pdf.text(addrX, addrTop - 24, "Tel: 01 56 48 06 06 | S.A.V: 01 45 91 02 97", "F1", 7);
+  pdf.text(addrX, addrTop - 36, "Site web https://www.digisystem.com/fr/", "F1", 7);
+  pdf.text(addrX, addrTop - 48, "LinkedIn https://www.linkedin.com/company/digi-france-groupe-teraoka/", "F1", 7);
+
+  const infoX = logoX;
+  const infoY = logoY - 18;
   pdf.text(infoX, infoY, `Date : ${row.date ? new Date(row.date).toLocaleDateString("fr-FR") : "-"}`, "F1", 9);
   pdf.text(infoX, infoY - 14, `Enseigne : ${payload.enseigne || ""}`, "F1", 9);
   pdf.text(infoX, infoY - 28, `Magasin : ${payload.magasin || ""}`, "F1", 9);
@@ -385,6 +399,20 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   pdf.text(totalsX + 8, totalsY + 18, `TVA ${tvaPct} : ${formatEuro(totalHt * tvaRate)}`, "F1", 8);
   pdf.text(totalsX + 8, totalsY + 4, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);
 
+  const disclaimer =
+    "Les prix affiches ne sont valables qu'au moment de la proposition et peuvent etre revises en fonction de la situation du marche (economique, geopolitique, ...)";
+  const disclaimerSize = 7;
+  const disclaimerX = (pageW - textWidth(disclaimer, disclaimerSize)) / 2;
+  pdf.text(disclaimerX, 100, disclaimer, "F3", disclaimerSize);
+
+  const notice =
+    "Toute commande transmise et non annulee dans un delai de 4 heures sera reputee ferme et acceptee par le magasin.";
+  const noticeSize = 7;
+  const noticeX = (pageW - textWidth(notice, noticeSize)) / 2;
+  pdf.setFillColor(1, 0, 0);
+  pdf.text(noticeX, 88, notice, "F1", noticeSize);
+  pdf.setFillColor(0, 0, 0);
+
   pdf.setLineWidth(0.5);
   pdf.line(margin, 80, pageW - margin, 80);
   const footerLine1 =
@@ -398,8 +426,8 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   pdf.text(footerX2, 54, footerLine2, "F1", footerSize);
 
   return buildPdfDocument(pdf.build(), [
-    { name: "ImDigi", obj: 7, bytes: getLogoBytes(), width: LOGO_JPG_WIDTH, height: LOGO_JPG_HEIGHT },
-    { name: "ImEns", obj: 8, bytes: getEnseigneBytes(), width: ENSEIGNE_JPG_WIDTH, height: ENSEIGNE_JPG_HEIGHT },
+    { name: "ImDigi", obj: 8, bytes: getLogoBytes(), width: LOGO_JPG_WIDTH, height: LOGO_JPG_HEIGHT },
+    { name: "ImEns", obj: 9, bytes: getEnseigneBytes(), width: ENSEIGNE_JPG_WIDTH, height: ENSEIGNE_JPG_HEIGHT },
   ]);
 }
 
