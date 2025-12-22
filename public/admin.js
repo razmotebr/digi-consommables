@@ -164,6 +164,7 @@ function renderEnseignes() {
 
   populateOrdersEnseigneSelect();
   populatePrixFilterSelect();
+  populateClientsFilterSelect();
 }
 
 function renderClients() {
@@ -178,7 +179,10 @@ function renderClients() {
     addRow.querySelectorAll("td").forEach((td) => (td.style.verticalAlign = "middle"));
   }
 
-  const entries = Object.entries(state.clients).sort(([a], [b]) => a.localeCompare(b));
+  const filterEns = document.getElementById("clientsEnseigneFilter")?.value || "";
+  const entries = Object.entries(state.clients)
+    .filter(([, c]) => !filterEns || (c.enseigne || "") === filterEns)
+    .sort(([a], [b]) => a.localeCompare(b));
   const pageSize = state.pagination.pageSize;
   const currentPage = state.pagination.clients;
   const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
@@ -780,6 +784,22 @@ function populatePrixFilterSelect() {
     });
 }
 
+function populateClientsFilterSelect() {
+  const sel = document.getElementById("clientsEnseigneFilter");
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Toutes les enseignes</option>';
+  Object.keys(state.enseignes)
+    .sort()
+    .forEach((code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = code;
+      if (code === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+}
+
 async function deleteEnseigne(enseigne) {
   if (!enseigne) return;
   const confirmDel = confirm(`Supprimer l'enseigne ${enseigne} et les données associées (clients, commandes, prix) ?`);
@@ -1341,6 +1361,13 @@ if (prixEnseigneFilter) {
   prixEnseigneFilter.addEventListener("change", () => {
     state.pagination.prix = 1;
     renderPrix();
+  });
+}
+const clientsEnseigneFilter = document.getElementById("clientsEnseigneFilter");
+if (clientsEnseigneFilter) {
+  clientsEnseigneFilter.addEventListener("change", () => {
+    state.pagination.clients = 1;
+    renderClients();
   });
 }
 document.getElementById("ordersEnseigneSelect").addEventListener("change", (e) => {

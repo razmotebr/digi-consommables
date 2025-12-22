@@ -441,9 +441,17 @@
             </div>
         </section>
 
-                <section id="sectionClients" class="card hidden">
+        <section id="sectionClients" class="card hidden">
             <h2>Parametrage des comptes clients</h2>
             <div class="panel">
+                <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
+                    <div style="flex:1 1 260px;">
+                        <label>Filtrer par enseigne</label>
+                        <select id="clientsEnseigneFilter">
+                            <option value="">Toutes les enseignes</option>
+                        </select>
+                    </div>
+                </div>
                 <table id="tableClients" class="editable-table">
                     <thead>
                         <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th class="col-actions">Actions</th></tr>
