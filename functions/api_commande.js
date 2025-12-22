@@ -23,7 +23,9 @@ export async function onRequestPost(context) {
       qty: Number(p.qty) || 0,
     }));
     const sousTotal = produits.reduce((acc, p) => acc + p.prix * p.qty, 0);
-    const fraisPort = Number(body.fraisPort ?? body.frais_port ?? 12.0);
+    const totalCartons = produits.reduce((acc, p) => acc + p.qty, 0);
+    const baseFraisPort = Number(body.fraisPortBase ?? body.fraisPort ?? body.frais_port ?? 12.0);
+    const fraisPort = totalCartons >= 5 ? 0 : baseFraisPort * totalCartons;
     const tva = Number(body.tva ?? 0.2);
     const totalHT = sousTotal + fraisPort;
     const totalTVA = totalHT * tva;

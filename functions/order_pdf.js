@@ -1706,8 +1706,12 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   }
 
   const sousTotal = rows.reduce((acc, p) => acc + Number(p.prix || 0) * Number(p.qty || 0), 0);
-  const totalHt = Number(row.total_ht != null ? row.total_ht : sousTotal);
-  const fraisPort = payload.fraisPort ?? payload.frais_port ?? Math.max(0, totalHt - sousTotal);
+  const totalCartons = rows.reduce((acc, p) => acc + Number(p.qty || 0), 0);
+  const baseFraisPort = Number(
+    payload.fraisPortBase ?? payload.fraisPort ?? payload.frais_port ?? Math.max(0, Number(row.total_ht || 0) - sousTotal)
+  );
+  const fraisPort = totalCartons >= 5 ? 0 : baseFraisPort * totalCartons;
+  const totalHt = sousTotal + fraisPort;
   const tvaRate = Number(row.tva != null ? row.tva : payload.tva ?? 0.2);
   const totalTtc = Number(row.total_ttc != null ? row.total_ttc : totalHt + totalHt * tvaRate);
   const tvaPct = `${(tvaRate * 100).toFixed(1).replace(".", ",")}%`;
@@ -1720,8 +1724,9 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
 
   pdf.setLineWidth(0.6);
   pdf.rect(totalsX, totalsY, totalsBoxW, totalsBoxH, false, true);
+  const fraisLabel = totalCartons >= 5 ? "Offert" : formatEuro(fraisPort);
   pdf.text(totalsX + 8, totalsY + 60, `Sous-total HT : ${formatEuro(sousTotal)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY + 46, `Frais de port : ${formatEuro(fraisPort)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 46, `Frais de port : ${fraisLabel}`, "F1", 8);
   pdf.text(totalsX + 8, totalsY + 32, `Total HT : ${formatEuro(totalHt)}`, "F1", 8);
   pdf.text(totalsX + 8, totalsY + 18, `TVA ${tvaPct} : ${formatEuro(totalHt * tvaRate)}`, "F1", 8);
   pdf.text(totalsX + 8, totalsY + 4, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);

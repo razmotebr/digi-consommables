@@ -33,6 +33,20 @@ export async function onRequestGet(context) {
       });
     }
 
+    let fraisPortSetting = "";
+    try {
+      const settingsRes = await db
+        .prepare("SELECT value FROM app_settings WHERE key = ?1 LIMIT 1")
+        .bind("frais_port")
+        .all();
+      fraisPortSetting = settingsRes?.results?.[0]?.value ?? "";
+    } catch (_) {
+      fraisPortSetting = "";
+    }
+    if (fraisPortSetting !== "") {
+      client.frais_port = Number(fraisPortSetting);
+    }
+
     return new Response(JSON.stringify({ client }), {
       status: 200,
       headers: { "content-type": "application/json" },

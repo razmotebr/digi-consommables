@@ -21,6 +21,14 @@ function normalizeEnseigneName(value) {
     return raw.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
 
+function computeFraisPort(totalCartons, base) {
+    if (totalCartons >= 5) {
+        return { amount: 0, label: "Offert" };
+    }
+    const amount = Number(base || 0) * totalCartons;
+    return { amount, label: formatEuro(amount) };
+}
+
 function updateEnseigneLogo(enseigne) {
     const logoEl = document.getElementById("enseigneLogo");
     if (!logoEl) return;
@@ -131,21 +139,24 @@ function renderProduits() {
 
 function updateTotals() {
     let sous = 0;
+    let totalCartons = 0;
 
     document.querySelectorAll("input[type=number]").forEach((inp) => {
         const id = inp.dataset.id;
         const qty = Number(inp.value);
         const pr = produits.find((p) => p.id == id);
         if (pr) sous += pr.prix * qty;
+        if (!Number.isNaN(qty)) totalCartons += qty;
     });
 
-    const frais = config.fraisPort;
+    const fraisInfo = computeFraisPort(totalCartons, config.fraisPort);
+    const frais = fraisInfo.amount;
     const tht = sous + frais;
     const tva = tht * config.tva;
     const ttc = tht + tva;
 
     setText("sousTotal", `${sous.toFixed(2)} EUR`);
-    setText("fraisPort", `${frais.toFixed(2)} EUR`);
+    setText("fraisPort", fraisInfo.label);
     setText("totalHT", `${tht.toFixed(2)} EUR`);
     setText("tva", `${tva.toFixed(2)} EUR`);
     setText("totalTTC", `${ttc.toFixed(2)} EUR`);
@@ -265,7 +276,9 @@ function buildMailto(payload) {
     if (!lignes) return null;
 
     const sousTotal = payload.produits.reduce((acc, p) => acc + p.prix * p.qty, 0);
-    const fraisPort = config.fraisPort;
+    const totalCartons = payload.produits.reduce((acc, p) => acc + p.qty, 0);
+    const fraisInfo = computeFraisPort(totalCartons, config.fraisPort);
+    const fraisPort = fraisInfo.amount;
     const totalHT = sousTotal + fraisPort;
     const tva = totalHT * config.tva;
     const totalTTC = totalHT + tva;
@@ -286,7 +299,7 @@ function buildMailto(payload) {
         lignes,
         "",
         `Sous-total HT : ${formatEuro(sousTotal)}`,
-        `Frais de port : ${formatEuro(fraisPort)}`,
+        `Frais de port : ${fraisInfo.label}`,
         `Total HT : ${formatEuro(totalHT)}`,
         `TVA : ${formatEuro(tva)}`,
         `Total TTC : ${formatEuro(totalTTC)}`
@@ -310,7 +323,7 @@ document.getElementById("btnSend").addEventListener("click", () => {
             prix: p.prix,
             qty: Number(document.querySelector(`input[data-id="${p.id}"]`).value)
         })),
-        fraisPort: config.fraisPort,
+        fraisPortBase: config.fraisPort,
         tva: config.tva,
     };
 
