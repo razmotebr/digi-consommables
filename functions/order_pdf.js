@@ -431,6 +431,51 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   ]);
 }
 
+async function loadCatalogById(db, produits) {
+  if (!db) return {};
+  const ids = Array.from(
+    new Set(
+      produits
+        .map((p) => Number(p.id))
+        .filter((id) => !Number.isNaN(id) && id > 0)
+    )
+  );
+  if (!ids.length) return {};
+  const placeholders = ids.map((_, i) => `?${i + 1}`).join(",");
+  const catRes = await db
+    .prepare(
+      `SELECT id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton
+       FROM catalog_produits
+       WHERE id IN (${placeholders})`
+    )
+    .bind(...ids)
+    .all();
+  const catalogById = {};
+  (catRes.results || []).forEach((p) => {
+    catalogById[Number(p.id)] = p;
+  });
+  return catalogById;
+}
+
+export async function generateOrderPdfBytes({ payload, db, orderId, status, date }) {
+  const produits = Array.isArray(payload?.produits) ? payload.produits : [];
+  const sousTotal = produits.reduce((acc, p) => acc + Number(p.prix || 0) * Number(p.qty || 0), 0);
+  const fraisPort = Number(payload?.fraisPort ?? payload?.frais_port ?? 0);
+  const tvaRate = Number(payload?.tva ?? 0.2);
+  const totalHt = sousTotal + fraisPort;
+  const totalTtc = totalHt + totalHt * tvaRate;
+  const row = {
+    id: orderId || "",
+    date: date || new Date().toISOString(),
+    status: status || "",
+    total_ht: totalHt,
+    tva: tvaRate,
+    total_ttc: totalTtc,
+  };
+  const catalogById = await loadCatalogById(db, produits);
+  return buildOrderPdf({ row, payload, produits, catalogById });
+}
+
 export async function onRequestGet(context) {
   try {
     const auth = parseAuth(context.request.headers.get("Authorization") || "");
@@ -482,28 +527,7 @@ export async function onRequestGet(context) {
     }
 
     const produits = Array.isArray(payload.produits) ? payload.produits : [];
-    const ids = Array.from(
-      new Set(
-        produits
-          .map((p) => Number(p.id))
-          .filter((id) => !Number.isNaN(id) && id > 0)
-      )
-    );
-    const catalogById = {};
-    if (ids.length) {
-      const placeholders = ids.map((_, i) => `?${i + 1}`).join(",");
-      const catRes = await db
-        .prepare(
-          `SELECT id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton
-           FROM catalog_produits
-           WHERE id IN (${placeholders})`
-        )
-        .bind(...ids)
-        .all();
-      (catRes.results || []).forEach((p) => {
-        catalogById[Number(p.id)] = p;
-      });
-    }
+    const catalogById = await loadCatalogById(db, produits);
 
     const pdfBytes = buildOrderPdf({ row, payload, produits, catalogById });
 
