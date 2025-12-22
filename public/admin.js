@@ -163,6 +163,7 @@ function renderEnseignes() {
   document.getElementById("enseigneNext").disabled = currentPage >= totalPages;
 
   populateOrdersEnseigneSelect();
+  populatePrixFilterSelect();
 }
 
 function renderClients() {
@@ -430,8 +431,10 @@ function renderPrix() {
     updatePrixAddRowFromSelection();
   }
 
+  const filterEns = document.getElementById("prixEnseigneFilter")?.value || "";
   const entries = Object.entries(state.prix || {})
     .flatMap(([ens, list]) => (list || []).map((p) => ({ ...p, enseigne: ens })))
+    .filter((p) => !filterEns || p.enseigne === filterEns)
     .sort((a, b) => {
       const cmpEns = (a.enseigne || "").localeCompare(b.enseigne || "");
       if (cmpEns !== 0) return cmpEns;
@@ -747,6 +750,22 @@ function updatePrixAddRowFromSelection() {
 
 function populateOrdersEnseigneSelect() {
   const sel = document.getElementById("ordersEnseigneSelect");
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Toutes les enseignes</option>';
+  Object.keys(state.enseignes)
+    .sort()
+    .forEach((code) => {
+      const opt = document.createElement("option");
+      opt.value = code;
+      opt.textContent = code;
+      if (code === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+}
+
+function populatePrixFilterSelect() {
+  const sel = document.getElementById("prixEnseigneFilter");
   if (!sel) return;
   const current = sel.value;
   sel.innerHTML = '<option value="">Toutes les enseignes</option>';
@@ -1317,6 +1336,13 @@ const prixEnseigneAdd = document.getElementById("prixEnseigneAdd");
 const prixProduitSelect = document.getElementById("prixProduitSelect");
 if (prixEnseigneAdd) prixEnseigneAdd.addEventListener("change", updatePrixAddRowFromSelection);
 if (prixProduitSelect) prixProduitSelect.addEventListener("change", updatePrixAddRowFromSelection);
+const prixEnseigneFilter = document.getElementById("prixEnseigneFilter");
+if (prixEnseigneFilter) {
+  prixEnseigneFilter.addEventListener("change", () => {
+    state.pagination.prix = 1;
+    renderPrix();
+  });
+}
 document.getElementById("ordersEnseigneSelect").addEventListener("change", (e) => {
   loadOrdersByEnseigne(e.target.value);
 });
