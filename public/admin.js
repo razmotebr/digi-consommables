@@ -365,15 +365,6 @@ function renderCatalogue() {
       inpRoul.disabled = true;
       tdRoul.appendChild(inpRoul);
 
-      const tdPrix = document.createElement("td");
-      const inpPrix = document.createElement("input");
-      inpPrix.type = "number";
-      inpPrix.step = "0.01";
-      const prixVal = prod.prixCartonHt;
-      inpPrix.value = prixVal != null && !isNaN(prixVal) ? Number(prixVal).toFixed(2) : "";
-      inpPrix.disabled = true;
-      tdPrix.appendChild(inpPrix);
-
     const actions = document.createElement("td");
     actions.className = "table-actions actions-col col-actions";
       const editBtn = document.createElement("button");
@@ -397,7 +388,6 @@ function renderCatalogue() {
           inpMandrin.disabled = false;
           inpEtiq.disabled = false;
           inpRoul.disabled = false;
-          inpPrix.disabled = false;
           return;
         }
         const nom = inpNom.value.trim();
@@ -405,9 +395,8 @@ function renderCatalogue() {
         const mandrin = inpMandrin.value.trim();
         const etiquettesParRouleau = inpEtiq.value === "" ? null : Number(inpEtiq.value);
         const rouleauxParCarton = inpRoul.value === "" ? null : Number(inpRoul.value);
-        const prixCartonHt = inpPrix.value === "" ? null : Number(inpPrix.value);
         if (!nom) return alert("Nom requis");
-        saveCatalogue({ id: rowId, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt });
+        saveCatalogue({ id: rowId, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton });
       });
 
       delBtn.addEventListener("click", () => deleteCatalogue(Number(delBtn.dataset.catalogId)));
@@ -421,7 +410,6 @@ function renderCatalogue() {
       tr.appendChild(tdMandrin);
       tr.appendChild(tdEtiq);
       tr.appendChild(tdRoul);
-    tr.appendChild(tdPrix);
     tr.appendChild(actions);
     tbody.appendChild(tr);
   });
@@ -1022,7 +1010,7 @@ async function deletePrice(enseigne, produitId) {
   renderPrix();
 }
 
-async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt }) {
+async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton }) {
   try {
     const res = await fetch("/admin_catalogue", {
       method: "POST",
@@ -1034,7 +1022,6 @@ async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau
         mandrin,
         etiquettesParRouleau,
         rouleauxParCarton,
-        prixCartonHt,
       }),
     });
     if (!ensureAuthorized(res)) return;
@@ -1064,7 +1051,6 @@ async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau
     mandrin: mandrin || prod.mandrin || "",
     etiquettesParRouleau: etiquettesParRouleau != null ? etiquettesParRouleau : prod.etiquettesParRouleau,
     rouleauxParCarton: rouleauxParCarton != null ? rouleauxParCarton : prod.rouleauxParCarton,
-    prixCartonHt: prixCartonHt != null ? prixCartonHt : prod.prixCartonHt,
   };
   // Propager le libellé dans toutes les grilles de prix locales
   Object.keys(state.prix).forEach((ens) => {
@@ -1352,16 +1338,14 @@ document.getElementById("btnAddProduitGlobal").addEventListener("click", () => {
   const mandrin = document.getElementById("catMandrin").value.trim();
   const etiquettesParRouleau = document.getElementById("catEtiquettes").value === "" ? null : Number(document.getElementById("catEtiquettes").value);
   const rouleauxParCarton = document.getElementById("catRouleaux").value === "" ? null : Number(document.getElementById("catRouleaux").value);
-  const prixCartonHt = document.getElementById("catPrix").value === "" ? null : Number(document.getElementById("catPrix").value);
   const id = getNextCatalogId();
-  saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt });
+  saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton });
   // reset inputs
   document.getElementById("catRef").value = "Ex: DIGI604840V";
   document.getElementById("catNom").value = "Ex: Etiquette blanche 60x48";
   document.getElementById("catMandrin").value = "Ex: Ø40mm";
   document.getElementById("catEtiquettes").value = "";
   document.getElementById("catRouleaux").value = "";
-  document.getElementById("catPrix").value = "";
   state.pagination.catalogue = 1;
 });
 

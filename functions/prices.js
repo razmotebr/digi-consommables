@@ -19,7 +19,7 @@ export async function onRequestGet(context) {
   // Ne renvoie que les produits qui ont un prix defini pour ce client (catalogue unique)
   const stmt = db
     .prepare(
-      `SELECT cp.id, cp.reference, cp.nom, cp.designation, cp.mandrin, cp.etiquettes_par_rouleau, cp.rouleaux_par_carton, cp.prix_carton_ht, pc.prix
+      `SELECT cp.id, cp.reference, cp.nom, cp.designation, cp.mandrin, cp.etiquettes_par_rouleau, cp.rouleaux_par_carton, pc.prix
        FROM prix_par_client pc
        JOIN catalog_produits cp ON cp.id = pc.produit_id
        WHERE pc.client_id = ?

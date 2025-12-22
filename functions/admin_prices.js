@@ -2,7 +2,7 @@ export async function onRequestPost(context) {
   try {
     const db = context.env.DB;
     const data = await context.request.json();
-    const { clientId, produitId, nom, prix, reference, designation, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt } = data;
+    const { clientId, produitId, nom, prix, reference, designation, mandrin, etiquettesParRouleau, rouleauxParCarton } = data;
     if (!clientId || !produitId || typeof prix !== "number") {
       return new Response(JSON.stringify({ error: "clientId, produitId, prix requis" }), {
         status: 400,
@@ -12,16 +12,15 @@ export async function onRequestPost(context) {
 
     await db
       .prepare(
-        `INSERT INTO catalog_produits (id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton, prix_carton_ht)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO catalog_produits (id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET
            reference=COALESCE(excluded.reference, catalog_produits.reference),
            nom=COALESCE(excluded.nom, catalog_produits.nom),
            designation=COALESCE(excluded.designation, catalog_produits.designation),
            mandrin=COALESCE(excluded.mandrin, catalog_produits.mandrin),
            etiquettes_par_rouleau=COALESCE(excluded.etiquettes_par_rouleau, catalog_produits.etiquettes_par_rouleau),
-           rouleaux_par_carton=COALESCE(excluded.rouleaux_par_carton, catalog_produits.rouleaux_par_carton),
-           prix_carton_ht=COALESCE(excluded.prix_carton_ht, catalog_produits.prix_carton_ht)`
+           rouleaux_par_carton=COALESCE(excluded.rouleaux_par_carton, catalog_produits.rouleaux_par_carton)`
       )
       .bind(
         produitId,
@@ -30,8 +29,7 @@ export async function onRequestPost(context) {
         designation ?? nom ?? null,
         mandrin ?? null,
         etiquettesParRouleau ?? null,
-        rouleauxParCarton ?? null,
-        prixCartonHt ?? null
+        rouleauxParCarton ?? null
       )
       .run();
 

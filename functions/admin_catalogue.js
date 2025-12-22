@@ -10,7 +10,6 @@ export async function onRequestPost(context) {
       mandrin = "",
       etiquettesParRouleau = null,
       rouleauxParCarton = null,
-      prixCartonHt = null,
       description = "",
     } = data || {};
 
@@ -23,11 +22,11 @@ export async function onRequestPost(context) {
 
     await db
       .prepare(
-        `INSERT INTO catalog_produits (id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton, prix_carton_ht, description)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO catalog_produits (id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton, description)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET reference=excluded.reference, nom=excluded.nom, designation=excluded.designation,
            mandrin=excluded.mandrin, etiquettes_par_rouleau=excluded.etiquettes_par_rouleau,
-           rouleaux_par_carton=excluded.rouleaux_par_carton, prix_carton_ht=excluded.prix_carton_ht, description=excluded.description`
+           rouleaux_par_carton=excluded.rouleaux_par_carton, description=excluded.description`
       )
       .bind(
         id,
@@ -37,7 +36,6 @@ export async function onRequestPost(context) {
         mandrin,
         etiquettesParRouleau,
         rouleauxParCarton,
-        prixCartonHt,
         description
       )
       .run();

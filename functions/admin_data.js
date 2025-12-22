@@ -15,7 +15,6 @@ export async function onRequestGet(context) {
       has("mandrin") ? "mandrin" : "'' AS mandrin",
       has("etiquettes_par_rouleau") ? "etiquettes_par_rouleau AS etiquettesParRouleau" : "NULL AS etiquettesParRouleau",
       has("rouleaux_par_carton") ? "rouleaux_par_carton AS rouleauxParCarton" : "NULL AS rouleauxParCarton",
-      has("prix_carton_ht") ? "prix_carton_ht AS prixCartonHt" : "NULL AS prixCartonHt",
       has("description") ? "description" : "'' AS description",
     ].join(", ");
 
@@ -55,7 +54,6 @@ export async function onRequestGet(context) {
         mandrin: p.mandrin || "",
         etiquettesParRouleau: p.etiquettesParRouleau,
         rouleauxParCarton: p.rouleauxParCarton,
-        prixCartonHt: p.prixCartonHt,
         description: p.description || "",
       };
     });

@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS catalog_produits (
   mandrin TEXT,
   etiquettes_par_rouleau INTEGER,
   rouleaux_par_carton INTEGER,
-  prix_carton_ht REAL,
   description TEXT
 );
 
