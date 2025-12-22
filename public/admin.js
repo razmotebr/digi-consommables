@@ -1490,7 +1490,10 @@ async function loadSettings() {
     const input = document.getElementById("settingsEmailCompta");
     if (input) input.value = state.settings.emailCompta;
     const fraisInput = document.getElementById("settingsFraisPort");
-    if (fraisInput) fraisInput.value = state.settings.fraisPort;
+    if (fraisInput) {
+      const parsed = Number(String(state.settings.fraisPort).replace(",", "."));
+      fraisInput.value = Number.isFinite(parsed) ? parsed.toFixed(2).replace(".", ",") : "";
+    }
   } catch (e) {
     console.error("loadSettings error", e);
   }
@@ -1501,7 +1504,12 @@ async function saveSettings() {
   const emailCompta = input ? input.value.trim() : "";
   const fraisInput = document.getElementById("settingsFraisPort");
   const fraisPortRaw = fraisInput ? fraisInput.value.trim() : "";
-  const fraisPort = fraisPortRaw === "" ? "" : Number(fraisPortRaw);
+  const fraisPortNormalized = fraisPortRaw.replace(",", ".");
+  const fraisPort = fraisPortRaw === "" ? "" : Number(fraisPortNormalized);
+  if (fraisPortRaw !== "" && !Number.isFinite(fraisPort)) {
+    alert("Montant frais de port invalide.");
+    return false;
+  }
   if (
     emailCompta === (state.settings.emailCompta || "") &&
     (fraisPort === "" ? "" : String(fraisPort)) === (state.settings.fraisPort === "" ? "" : String(state.settings.fraisPort))

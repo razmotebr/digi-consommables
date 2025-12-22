@@ -459,6 +459,22 @@
             width: calc((var(--prix-btn-width, 64px) * 2) + 8px);
             min-width: calc((var(--prix-btn-width, 64px) * 2) + 8px);
         }
+        #tableCatalogue .table-actions {
+            display: inline-flex;
+            gap: 8px;
+            justify-content: flex-start;
+        }
+        #tableCatalogue .table-actions .action-btn {
+            width: auto;
+            min-width: var(--cat-btn-width, 64px);
+        }
+        #tableCatalogue .add-row .col-actions button {
+            width: calc((var(--cat-btn-width, 64px) * 2) + 8px);
+        }
+        #tableCatalogue .col-actions {
+            width: calc((var(--cat-btn-width, 64px) * 2) + 8px);
+            min-width: calc((var(--cat-btn-width, 64px) * 2) + 8px);
+        }
         .col-resize-handle {
             position: absolute;
             top: 0;
@@ -769,8 +785,8 @@
                 <div class="field">
                     <label for="settingsEmailCompta">Email compta</label>
                     <input id="settingsEmailCompta" type="email" placeholder="exemple@domaine.com">
-                    <label for="settingsFraisPort" style="margin-top:12px;">Frais de port (&euro;)</label>
-                    <input id="settingsFraisPort" type="number" step="0.01" placeholder="Ex: 12.00">
+                    <label for="settingsFraisPort" style="margin-top:12px;">Frais de port (en &euro;)</label>
+                    <input id="settingsFraisPort" type="text" inputmode="decimal" placeholder="Ex: 12,00">
                 </div>
             </div>
             <div class="modal-actions">
