@@ -1651,10 +1651,12 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   const headerH = 18;
   const rowH = 16;
   const cols = [
-    { key: "qty", label: "Qte", w: 50 },
-    { key: "designation", label: "Designation", w: 300 },
-    { key: "prix", label: "P.U. HT", w: 75 },
-    { key: "total", label: "Total HT", w: 90 },
+    { key: "qty", label: "Nb cartons", w: 55 },
+    { key: "designation", label: "Designation", w: 220 },
+    { key: "mandrin", label: "Mandrin", w: 70 },
+    { key: "rouleaux", label: "Rouleaux/carton", w: 70 },
+    { key: "prix", label: "P.U. HT", w: 50 },
+    { key: "total", label: "Total HT", w: 50 },
   ];
   const tableW = cols.reduce((acc, c) => acc + c.w, 0);
   const rows = produits.filter((p) => Number(p.qty || 0) > 0);
@@ -1681,15 +1683,21 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
     const designation = cat.designation || cat.nom || p.nom || "";
     const prix = Number(p.prix || 0);
     const qty = Number(p.qty || 0);
+    const mandrin = cat.mandrin || "";
+    const rouleauxParCarton = cat.rouleaux_par_carton != null ? String(cat.rouleaux_par_carton) : "";
     const total = prix * qty;
 
     let x = tableX + 2;
     pdf.text(x, y, String(qty), "F1", 8);
     x += cols[0].w;
-    pdf.text(x, y, clampText(designation, 48), "F1", 8);
+    pdf.text(x, y, clampText(designation, 32), "F1", 8);
     x += cols[1].w;
-    pdf.text(x, y, num(prix), "F1", 8);
+    pdf.text(x, y, clampText(mandrin, 10), "F1", 8);
     x += cols[2].w;
+    pdf.text(x, y, clampText(rouleauxParCarton, 10), "F1", 8);
+    x += cols[3].w;
+    pdf.text(x, y, num(prix), "F1", 8);
+    x += cols[4].w;
     pdf.text(x, y, num(total), "F1", 8);
   });
 

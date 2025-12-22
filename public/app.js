@@ -100,6 +100,12 @@ function renderProduits() {
         const tdNom = document.createElement("td");
         tdNom.textContent = p.nom;
 
+        const tdMandrin = document.createElement("td");
+        tdMandrin.textContent = p.mandrin || "";
+
+        const tdRouleaux = document.createElement("td");
+        tdRouleaux.textContent = p.rouleaux_par_carton != null ? String(p.rouleaux_par_carton) : "";
+
         const tdPrix = document.createElement("td");
         tdPrix.textContent = `${p.prix.toFixed(2)} EUR`;
 
@@ -113,6 +119,8 @@ function renderProduits() {
         tdQty.appendChild(qtyInput);
 
         tr.appendChild(tdNom);
+        tr.appendChild(tdMandrin);
+        tr.appendChild(tdRouleaux);
         tr.appendChild(tdPrix);
         tr.appendChild(tdQty);
         tbody.appendChild(tr);
