@@ -401,7 +401,13 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
 
   const disclaimer =
     "Les prix affiches ne sont valables qu'au moment de la proposition et peuvent etre revises en fonction de la situation du marche (economique, geopolitique, ...)";
-  const disclaimerSize = 7;
+  const disclaimerBaseSize = 7;
+  const disclaimerMaxWidth = pageW - margin * 2;
+  const disclaimerWidth = textWidth(disclaimer, disclaimerBaseSize);
+  const disclaimerSize =
+    disclaimerWidth > disclaimerMaxWidth
+      ? Math.max(5, (disclaimerBaseSize * disclaimerMaxWidth) / disclaimerWidth)
+      : disclaimerBaseSize;
   const disclaimerX = (pageW - textWidth(disclaimer, disclaimerSize)) / 2;
   pdf.text(disclaimerX, 100, disclaimer, "F3", disclaimerSize);
 
