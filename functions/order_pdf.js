@@ -318,7 +318,7 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   pdf.text(addrX, addrTop - 48, "LinkedIn https://www.linkedin.com/company/digi-france-groupe-teraoka/", "F1", 7);
 
   const infoX = logoX;
-  const infoY = logoY - 18;
+  const infoY = logoY - 28;
   pdf.text(infoX, infoY, `Date : ${row.date ? new Date(row.date).toLocaleDateString("fr-FR") : "-"}`, "F1", 9);
   pdf.text(infoX, infoY - 14, `Enseigne : ${payload.enseigne || ""}`, "F1", 9);
   pdf.text(infoX, infoY - 28, `Magasin : ${payload.magasin || ""}`, "F1", 9);
