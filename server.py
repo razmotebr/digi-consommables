@@ -54,7 +54,15 @@ class MyHandler(SimpleHTTPRequestHandler):
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         # fallback build from public/clients.json
-        data = {"clients": {}, "catalog": {}, "prixByClient": {}, "orders": [], "resetTokens": {"client": {}, "admin": {}}, "adminPassword": ADMIN_PASS}
+        data = {
+            "clients": {},
+            "catalog": {},
+            "prixByClient": {},
+            "orders": [],
+            "resetTokens": {"client": {}, "admin": {}},
+            "adminPassword": ADMIN_PASS,
+            "settings": {},
+        }
         try:
             with open(CLIENTS_FALLBACK, "r", encoding="utf-8") as f:
                 fallback = json.load(f)
@@ -200,6 +208,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             "/admin_orders": "GET, PUT, DELETE, OPTIONS",
             "/admin_users": "GET, OPTIONS",
             "/admin_reset_password": "POST, OPTIONS",
+            "/admin_settings": "GET, PUT, OPTIONS",
             "/client_info": "GET, OPTIONS",
             "/prices": "GET, OPTIONS",
             "/orders": "GET, OPTIONS",
@@ -223,6 +232,8 @@ class MyHandler(SimpleHTTPRequestHandler):
             return self._handle_admin_orders()
         if self.path.startswith("/admin_users"):
             return self._handle_admin_users_get()
+        if self.path == "/admin_settings":
+            return self._handle_admin_settings_get()
         if self.path == "/":
             self.path = "/index.html"
         return super().do_GET()
@@ -257,6 +268,13 @@ class MyHandler(SimpleHTTPRequestHandler):
             return self._handle_admin_users_delete()
         if self.path.startswith("/admin_orders"):
             return self._handle_admin_orders_delete()
+        self.send_response(404)
+        self._add_cors()
+        self.end_headers()
+
+    def do_PUT(self):
+        if self.path == "/admin_settings":
+            return self._handle_admin_settings_put()
         self.send_response(404)
         self._add_cors()
         self.end_headers()
@@ -943,6 +961,31 @@ class MyHandler(SimpleHTTPRequestHandler):
                 del store["users"][uid]
                 self._save_data(store)
             self._send_json(200, {"ok": True})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_admin_settings_get(self):
+        try:
+            if not self._validate_admin():
+                return self._send_json(401, {"error": "Unauthorized"})
+            store = self._load_data()
+            settings = store.get("settings", {})
+            email_compta = settings.get("emailCompta", "")
+            self._send_json(200, {"emailCompta": email_compta})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_admin_settings_put(self):
+        try:
+            if not self._validate_admin():
+                return self._send_json(401, {"error": "Unauthorized"})
+            data = self._parse_json_body()
+            email_compta = str(data.get("emailCompta", "")).strip()
+            store = self._load_data()
+            store.setdefault("settings", {})
+            store["settings"]["emailCompta"] = email_compta
+            self._save_data(store)
+            self._send_json(200, {"ok": True, "emailCompta": email_compta})
         except Exception as e:
             self._send_json(500, {"error": str(e)})
 

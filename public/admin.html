@@ -33,6 +33,50 @@
             display: block;
         }
         header h1 { margin: 0; font-size: 20px; color: var(--digi-dark); }
+        .header-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+        .settings-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #eef2f7;
+            color: #4b5563;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .settings-btn svg { width: 18px; height: 18px; fill: #4b5563; }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.hidden { display: none; }
+        .modal-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            width: min(520px, 92vw);
+            box-shadow: 0 18px 48px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
         nav {
             background: #f5f5f5;
             padding: 12px 24px;
@@ -405,7 +449,14 @@
         <img src="logo_pdf.png" alt="Logo DIGI" class="logo">
         <h1>Admin - Commande Consommables</h1>
         <span class="tag" id="adminUserTag"></span>
-        <button id="btnLogout" style="margin-left:auto;">Déconnexion</button>
+        <div class="header-actions">
+            <button id="btnSettings" class="settings-btn" type="button" aria-label="Paramètres">
+                <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.14 7.14 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.3-.06.62-.06.94s.02.64.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.31.6.22l2.39-.96c.5.39 1.05.7 1.63.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"></path>
+                </svg>
+            </button>
+            <button id="btnLogout">Déconnexion</button>
+        </div>
     </header>
     <nav class="subnav">
         <a href="#enseignes" id="tabEnseignes">Enseignes</a>
@@ -663,7 +714,25 @@
                     <button id="logsNext">Suivant</button>
                 </div>
             </div>
-        </section>    </div>
+        </section>
+    </div>
+
+    <div id="settingsModal" class="modal hidden" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <div class="modal-header">
+                <h3 id="settingsTitle">Paramètres de l'application</h3>
+                <button id="btnSettingsClose" class="secondary" type="button">Fermer</button>
+            </div>
+            <div style="margin-top:10px;">
+                <label for="settingsEmailCompta">Email compta</label>
+                <input id="settingsEmailCompta" type="email" placeholder="exemple@domaine.com">
+                <p class="muted" style="margin-top:6px;">Ces paramètres sont sauvegardés à la fermeture.</p>
+            </div>
+            <div class="modal-actions">
+                <button id="btnSettingsSave" type="button">Enregistrer</button>
+            </div>
+        </div>
+    </div>
 
     <script src="admin.js"></script>
     <script>

@@ -10,6 +10,7 @@ const state = {
   editingClients: {}, // {id: {enseigne,magasin,contact,email}}
   users: [], // [{id, enseigne, magasin, lastLogin}]
   logs: [],
+  settings: { emailCompta: "" },
   sort: {}, // {tableId: {key, dir}}
   pagination: {
     enseignes: 1,
@@ -1478,6 +1479,41 @@ async function loadUsers() {
   renderUsers();
 }
 
+async function loadSettings() {
+  try {
+    const res = await fetch("/admin_settings", { headers: withAuthHeaders() });
+    if (!ensureAuthorized(res)) return;
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    state.settings.emailCompta = data.emailCompta || "";
+    const input = document.getElementById("settingsEmailCompta");
+    if (input) input.value = state.settings.emailCompta;
+  } catch (e) {
+    console.error("loadSettings error", e);
+  }
+}
+
+async function saveSettings() {
+  const input = document.getElementById("settingsEmailCompta");
+  const emailCompta = input ? input.value.trim() : "";
+  if (emailCompta === (state.settings.emailCompta || "")) return true;
+  try {
+    const res = await fetch("/admin_settings", {
+      method: "PUT",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ emailCompta }),
+    });
+    if (!ensureAuthorized(res)) return false;
+    if (!res.ok) throw new Error(await res.text());
+    state.settings.emailCompta = emailCompta;
+    return true;
+  } catch (e) {
+    console.error("saveSettings error", e);
+    alert("Impossible de sauvegarder les parametres.");
+    return false;
+  }
+}
+
 async function loadLogs() {
   try {
     const res = await fetch("/admin_logs", { headers: withAuthHeaders() });
@@ -1610,8 +1646,62 @@ function setupSortHeaders() {
   });
 }
 
+function openSettingsModal() {
+  const modal = document.getElementById("settingsModal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  const input = document.getElementById("settingsEmailCompta");
+  if (input) input.focus();
+}
+
+function closeSettingsModal() {
+  const modal = document.getElementById("settingsModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+}
+
 // --- Events ---
 document.getElementById("adminUserTag").textContent = state.admin;
+const settingsBtn = document.getElementById("btnSettings");
+if (settingsBtn) {
+  settingsBtn.addEventListener("click", async () => {
+    await loadSettings();
+    openSettingsModal();
+  });
+}
+const settingsCloseBtn = document.getElementById("btnSettingsClose");
+if (settingsCloseBtn) {
+  settingsCloseBtn.addEventListener("click", async () => {
+    await saveSettings();
+    closeSettingsModal();
+  });
+}
+const settingsSaveBtn = document.getElementById("btnSettingsSave");
+if (settingsSaveBtn) {
+  settingsSaveBtn.addEventListener("click", async () => {
+    await saveSettings();
+  });
+}
+const settingsModal = document.getElementById("settingsModal");
+if (settingsModal) {
+  settingsModal.addEventListener("click", async (e) => {
+    if (e.target === settingsModal) {
+      await saveSettings();
+      closeSettingsModal();
+    }
+  });
+}
+document.addEventListener("keydown", async (e) => {
+  if (e.key === "Escape") {
+    const modal = document.getElementById("settingsModal");
+    if (modal && !modal.classList.contains("hidden")) {
+      await saveSettings();
+      closeSettingsModal();
+    }
+  }
+});
 document.getElementById("btnLogout").addEventListener("click", () => {
   sessionStorage.removeItem("adminUser");
   sessionStorage.removeItem("adminToken");
@@ -1812,6 +1902,7 @@ document.getElementById("logsNext").addEventListener("click", () => {
 // Init
 setupSortHeaders();
 const allowedTabs = applyRoleAccess(adminRole);
+if (settingsBtn) settingsBtn.style.display = adminRole === "admin" ? "" : "none";
 if (adminRole === "orders") {
   showSection("sectionCommandes");
   setActiveTab("tabCommandes");
@@ -1821,6 +1912,7 @@ if (adminRole === "orders") {
   setActiveTab("tabLogs");
   loadLogs();
 } else {
+  loadSettings();
   loadInitialData();
   showSection("sectionEnseignes");
   setActiveTab("tabEnseignes");

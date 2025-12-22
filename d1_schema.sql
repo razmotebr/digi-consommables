@@ -68,6 +68,12 @@ CREATE TABLE IF NOT EXISTS logs (
   details TEXT
 );
 
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_logs_ts ON logs (ts);
 
 -- Données de test
