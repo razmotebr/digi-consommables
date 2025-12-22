@@ -33,6 +33,20 @@
             display: block;
         }
         header h1 { margin: 0; font-size: 20px; color: var(--digi-dark); }
+        .header-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+        .settings-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: #4b5563;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .settings-btn svg { width: 18px; height: 18px; display: block; }
         nav {
             background: #f5f5f5;
             padding: 12px 24px;
@@ -314,6 +328,46 @@
         .status.preparation { background: #ecfeff; color: #0ea5e9; border: 1px solid #bae6fd; }
         .status.envoye { background: #ecfdf3; color: #16a34a; border: 1px solid #bbf7d0; }
         .status.inconnu { background: #f1f5f9; color: #475569; border: 1px solid #e5e7eb; }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.hidden { display: none; }
+        .modal-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            width: min(460px, 92vw);
+            box-shadow: 0 18px 48px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .modal-body {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+        }
+        .modal-body .field {
+            width: min(320px, 100%);
+            text-align: left;
+        }
+        .modal-body .field input { width: 100%; }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
         /* Ajuster colonnes actions et QR sur tables sans classes */
         #tableAdminOrders th:last-child,
         #tableAdminOrders td:last-child,
@@ -330,7 +384,14 @@
         <img src="logo_pdf.png" alt="Logo DIGI" class="logo">
         <h1>Admin - Commande Consommables</h1>
         <span class="tag" id="adminUserTag"></span>
-        <button id="btnLogout" style="margin-left:auto;">Déconnexion</button>
+        <div class="header-actions">
+            <button id="btnSettings" class="settings-btn" type="button" aria-label="Paramètres">
+                <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+                    <path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96c-.49-.38-1.03-.7-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.6.24-1.14.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.3-.06.62-.06.94s.02.64.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.31.6.22l2.39-.96c.49.38 1.03.7 1.63.94l.36 2.54c.04.24.25.42.5.42h3.84c.25 0 .46-.18.5-.42l.36-2.54c.6-.24 1.14-.56 1.63-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"></path>
+                </svg>
+            </button>
+            <button id="btnLogout">Déconnexion</button>
+        </div>
     </header>
     <nav class="subnav">
         <a href="#enseignes" id="tabEnseignes">Enseignes</a>
@@ -541,6 +602,24 @@
                 </table>
             </div>
         </section>
+    </div>
+
+    <div id="settingsModal" class="modal hidden" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+            <div class="modal-header">
+                <h3 id="settingsTitle">Paramètres de l'application</h3>
+            </div>
+            <div class="modal-body">
+                <div class="field">
+                    <label for="settingsEmailCompta">Email compta</label>
+                    <input id="settingsEmailCompta" type="email" placeholder="exemple@domaine.com">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="btnSettingsCancel" class="secondary" type="button">Annuler</button>
+                <button id="btnSettingsSave" type="button">Enregistrer</button>
+            </div>
+        </div>
     </div>
 
     <script src="admin.js"></script>
