@@ -129,7 +129,7 @@ function renderOrders() {
     if (!orders.length) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
-        td.colSpan = 4;
+        td.colSpan = 5;
         td.className = "muted";
         td.textContent = "Aucune commande trouvée.";
         tr.appendChild(td);
@@ -146,12 +146,30 @@ function renderOrders() {
             const date = o.createdAt || o.date || o.timestamp;
             const total = o.totalTTC || o.total || 0;
 
-            tr.innerHTML = `
-                <td>${o.id || o.reference || "-"}</td>
-                <td>${date ? new Date(date).toLocaleString("fr-FR") : "-"}</td>
-                <td>${formatEuro(total)}</td>
-                <td><span class="status ${statusClass}">${o.status || "Inconnu"}</span></td>
-            `;
+            const tdRef = document.createElement("td");
+            tdRef.textContent = o.id || o.reference || "-";
+
+            const tdDate = document.createElement("td");
+            tdDate.textContent = date ? new Date(date).toLocaleString("fr-FR") : "-";
+
+            const tdTotal = document.createElement("td");
+            tdTotal.textContent = formatEuro(total);
+
+            const tdStatus = document.createElement("td");
+            tdStatus.innerHTML = `<span class="status ${statusClass}">${o.status || "Inconnu"}</span>`;
+
+            const tdPdf = document.createElement("td");
+            const btn = document.createElement("button");
+            btn.className = "secondary action-btn";
+            btn.textContent = "PDF";
+            btn.addEventListener("click", () => openOrderPdf(o.id));
+            tdPdf.appendChild(btn);
+
+            tr.appendChild(tdRef);
+            tr.appendChild(tdDate);
+            tr.appendChild(tdTotal);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdPdf);
             tbody.appendChild(tr);
         });
 }
@@ -168,6 +186,37 @@ async function loadOrders(token, clientId) {
         orders = [];
     }
     renderOrders();
+}
+
+async function openOrderPdf(orderId) {
+    if (!orderId) return;
+    const token = sessionStorage.getItem("token") || "";
+    if (!token) {
+        alert("Session expirée.");
+        return;
+    }
+    const newWin = window.open("", "_blank");
+    if (!newWin) {
+        alert("Autorisez les popups pour afficher le PDF.");
+        return;
+    }
+    try {
+        const res = await fetch(`/order_pdf?orderId=${encodeURIComponent(orderId)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+            const msg = await res.text();
+            throw new Error(msg || `Erreur ${res.status}`);
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        newWin.location = url;
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (e) {
+        console.error("openOrderPdf error", e);
+        newWin.close();
+        alert("Impossible d'ouvrir le PDF.");
+    }
 }
 
 function buildMailto(payload) {

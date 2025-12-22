@@ -600,10 +600,46 @@ function renderAdminOrders() {
         <td><span class="status ${cls}">${o.status || "Inconnu"}</span></td>
       `;
       const actionsTd = document.createElement("td");
+      actionsTd.className = "table-actions col-actions";
+      const pdfBtn = document.createElement("button");
+      pdfBtn.className = "secondary action-btn";
+      pdfBtn.textContent = "PDF";
+      pdfBtn.addEventListener("click", () => openOrderPdf(o.id));
       actionsTd.appendChild(select);
+      actionsTd.appendChild(pdfBtn);
       tr.appendChild(actionsTd);
       tbody.appendChild(tr);
     });
+}
+
+async function openOrderPdf(orderId) {
+  if (!orderId) return;
+  const newWin = window.open("", "_blank");
+  if (!newWin) {
+    alert("Autorisez les popups pour afficher le PDF.");
+    return;
+  }
+  try {
+    const res = await fetch(`/order_pdf?orderId=${encodeURIComponent(orderId)}`, {
+      headers: withAuthHeaders(),
+    });
+    if (!ensureAuthorized(res)) {
+      newWin.close();
+      return;
+    }
+    if (!res.ok) {
+      const msg = await res.text();
+      throw new Error(msg || `Erreur ${res.status}`);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    newWin.location = url;
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) {
+    console.error("openOrderPdf error", e);
+    newWin.close();
+    alert("Impossible d'ouvrir le PDF.");
+  }
 }
 
 function renderUsers() {
