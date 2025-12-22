@@ -98,3 +98,31 @@ export async function onRequestPut(context) {
     return new Response(JSON.stringify({ error: e.toString() }), { status: 500, headers: { "content-type": "application/json" } });
   }
 }
+
+export async function onRequestDelete(context) {
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
+  try {
+    const auth = context.request.headers.get("Authorization") || "";
+    const body = await context.request.json();
+    const { orderId } = body || {};
+    if (!orderId) {
+      return new Response(JSON.stringify({ error: "orderId requis" }), {
+        status: 400,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    const db = context.env.DB;
+    await db.prepare("DELETE FROM commandes WHERE id = ?1").bind(orderId).run();
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "order_delete",
+      target: `commande:${orderId}`,
+    });
+    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.toString() }), { status: 500, headers: { "content-type": "application/json" } });
+  }
+}

@@ -771,15 +771,27 @@ function renderAdminOrders() {
       const pdfBtn = document.createElement("button");
       pdfBtn.className = "secondary action-btn";
       pdfBtn.textContent = "PDF";
-      pdfBtn.addEventListener("click", () => openOrderPdf(o.id));
+      pdfBtn.addEventListener("click", () => openOrderPdf(o.id, false));
+      const regenBtn = document.createElement("button");
+      regenBtn.className = "secondary action-btn";
+      regenBtn.textContent = "Regenerer PDF";
+      regenBtn.addEventListener("click", () => openOrderPdf(o.id, true));
       actionsTd.appendChild(select);
       actionsTd.appendChild(pdfBtn);
+      actionsTd.appendChild(regenBtn);
+      if (adminRole === "admin") {
+        const delBtn = document.createElement("button");
+        delBtn.className = "secondary danger action-btn";
+        delBtn.textContent = "Suppr";
+        delBtn.addEventListener("click", () => deleteOrder(o.id));
+        actionsTd.appendChild(delBtn);
+      }
       tr.appendChild(actionsTd);
       tbody.appendChild(tr);
     });
 }
 
-async function openOrderPdf(orderId) {
+async function openOrderPdf(orderId, regen) {
   if (!orderId) return;
   const newWin = window.open("", "_blank");
   if (!newWin) {
@@ -787,7 +799,8 @@ async function openOrderPdf(orderId) {
     return;
   }
   try {
-    const res = await fetch(`/order_pdf?orderId=${encodeURIComponent(orderId)}`, {
+    const qs = regen ? `&regen=1&ts=${Date.now()}` : "";
+    const res = await fetch(`/order_pdf?orderId=${encodeURIComponent(orderId)}${qs}`, {
       headers: withAuthHeaders(),
     });
     if (!ensureAuthorized(res)) {
@@ -806,6 +819,26 @@ async function openOrderPdf(orderId) {
     console.error("openOrderPdf error", e);
     newWin.close();
     alert("Impossible d'ouvrir le PDF.");
+  }
+}
+
+async function deleteOrder(orderId) {
+  if (!orderId) return;
+  const confirmDel = confirm(`Supprimer la commande ${orderId} ?`);
+  if (!confirmDel) return;
+  try {
+    const res = await fetch("/admin_orders", {
+      method: "DELETE",
+      headers: withAuthHeaders({ "content-type": "application/json" }),
+      body: JSON.stringify({ orderId }),
+    });
+    if (!ensureAuthorized(res)) return;
+    if (!res.ok) throw new Error(await res.text());
+    state.orders = state.orders.filter((o) => o.id !== orderId);
+    renderAdminOrders();
+  } catch (e) {
+    console.error("deleteOrder error", e);
+    alert("Impossible de supprimer la commande.");
   }
 }
 

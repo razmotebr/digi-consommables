@@ -197,7 +197,7 @@ class MyHandler(SimpleHTTPRequestHandler):
             "/admin_login": "POST, OPTIONS",
             "/admin_clients": "POST, DELETE, OPTIONS",
             "/admin_prices": "POST, DELETE, OPTIONS",
-            "/admin_orders": "GET, PUT, OPTIONS",
+            "/admin_orders": "GET, PUT, DELETE, OPTIONS",
             "/admin_users": "GET, OPTIONS",
             "/admin_reset_password": "POST, OPTIONS",
             "/client_info": "GET, OPTIONS",
@@ -255,6 +255,8 @@ class MyHandler(SimpleHTTPRequestHandler):
     def do_DELETE(self):
         if self.path == "/admin_users":
             return self._handle_admin_users_delete()
+        if self.path.startswith("/admin_orders"):
+            return self._handle_admin_orders_delete()
         self.send_response(404)
         self._add_cors()
         self.end_headers()
@@ -856,6 +858,21 @@ class MyHandler(SimpleHTTPRequestHandler):
             self._add_cors()
             self.end_headers()
             self.wfile.write(json.dumps({"error": str(e)}).encode())
+
+    def _handle_admin_orders_delete(self):
+        try:
+            if not self._validate_admin():
+                return self._send_json(401, {"error": "Unauthorized"})
+            data = self._parse_json_body()
+            order_id = str(data.get("orderId", "")).strip()
+            if not order_id:
+                return self._send_json(400, {"error": "orderId requis"})
+            store = self._load_data()
+            store["orders"] = [o for o in store.get("orders", []) if str(o.get("id")) != order_id]
+            self._save_data(store)
+            self._send_json(200, {"ok": True})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
 
     def _handle_admin_users_get(self):
         try:
