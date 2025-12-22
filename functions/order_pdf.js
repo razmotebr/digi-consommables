@@ -47,7 +47,9 @@ function base64ToBytes(b64) {
 const LOGO_JPG_BYTES = base64ToBytes(LOGO_JPG_BASE64);
 
 function num(value) {
-  return Number(value || 0).toFixed(2);
+  return Number(value || 0)
+    .toFixed(2)
+    .replace(".", ",");
 }
 
 function formatEuro(value) {
@@ -209,122 +211,71 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   const pageH = 842;
   const margin = 40;
 
-  const headerTop = pageH - 50;
+  const headerTop = pageH - 60;
   const logoX = margin;
   const logoW = 120;
   const logoH = Math.round((LOGO_JPG_HEIGHT / LOGO_JPG_WIDTH) * logoW);
-  const logoY = headerTop - logoH + 8;
+  const logoY = headerTop - logoH + 10;
   pdf.image("Im1", logoX, logoY, logoW, logoH);
 
-  const title = "BON DE COMMANDE CONSOMMABLES";
-  pdf.text(margin + 130, headerTop, title, "F2", 14);
-  const tarif = payload.tarifMois || "";
-  if (tarif) {
-    pdf.text(margin + 170, headerTop - 18, `TARIF ${tarif}`, "F1", 10);
-  }
+  const infoX = pageW - margin - 220;
+  const infoY = headerTop - 4;
+  pdf.text(infoX, infoY, `Date : ${row.date ? new Date(row.date).toLocaleDateString("fr-FR") : "-"}`, "F1", 9);
+  pdf.text(infoX, infoY - 14, `Enseigne : ${payload.enseigne || ""}`, "F1", 9);
+  pdf.text(infoX, infoY - 28, `Magasin : ${payload.magasin || ""}`, "F1", 9);
+  pdf.text(infoX, infoY - 42, `Contact : ${payload.contact || ""}`, "F1", 9);
 
-  const headerRightX = pageW - margin - 180;
-  pdf.text(headerRightX, headerTop - 4, `Commande #${row.id}`, "F2", 10);
-  pdf.text(headerRightX, headerTop - 18, `Date : ${row.date ? new Date(row.date).toLocaleDateString("fr-FR") : "-"}`, "F1", 9);
-  pdf.text(headerRightX, headerTop - 32, `Statut : ${row.status || "-"}`, "F1", 9);
-
-  const infoY = headerTop - 70;
-  const leftBoxW = 330;
-  const rightBoxW = pageW - margin * 2 - leftBoxW - 10;
-  const boxH = 70;
-
-  pdf.setLineWidth(0.8);
-  pdf.rect(margin, infoY - boxH, leftBoxW, boxH, false, true);
-  pdf.rect(margin + leftBoxW + 10, infoY - boxH, rightBoxW, boxH, false, true);
-
-  const clientId = row.client_id || "";
-  pdf.text(margin + 8, infoY - 18, `Client : ${clientId}`, "F2", 9);
-  pdf.text(margin + 8, infoY - 32, `Enseigne : ${payload.enseigne || ""}`, "F1", 9);
-  pdf.text(margin + 8, infoY - 46, `Magasin : ${payload.magasin || ""}`, "F1", 9);
-  pdf.text(margin + 8, infoY - 60, `Contact : ${payload.contact || ""}`, "F1", 9);
-
-  const rightX = margin + leftBoxW + 18;
-  pdf.text(rightX, infoY - 18, `Email compta : ${payload.emailCompta || payload.email_compta || ""}`, "F1", 9);
-  pdf.text(rightX, infoY - 32, `Tarif : ${payload.tarifMois || ""}`, "F1", 9);
+  pdf.text(margin, headerTop - 72, "DEVIS / COMMANDE CONSOMMABLES", "F2", 12);
 
   const tableX = margin;
-  const tableTop = infoY - boxH - 25;
-  const headerH = 20;
-  const rowH = 18;
+  const tableTop = headerTop - 95;
+  const headerH = 18;
+  const rowH = 16;
   const cols = [
-    { key: "ref", label: "Reference", w: 55 },
-    { key: "designation", label: "Designation", w: 150 },
-    { key: "mandrin", label: "Mandrin", w: 40 },
-    { key: "etq", label: "Etiq/roul.", w: 55 },
-    { key: "rouleaux", label: "Roul./cart.", w: 55 },
-    { key: "prix", label: "Prix HT", w: 55 },
-    { key: "qty", label: "Qte", w: 40 },
-    { key: "total", label: "Total HT", w: 55 },
+    { key: "qty", label: "Qte", w: 50 },
+    { key: "designation", label: "Designation", w: 300 },
+    { key: "prix", label: "P.U. HT", w: 75 },
+    { key: "total", label: "Total HT", w: 90 },
   ];
   const tableW = cols.reduce((acc, c) => acc + c.w, 0);
   const rows = produits.filter((p) => Number(p.qty || 0) > 0);
   const maxRows = Math.max(0, Math.floor((tableTop - 170) / rowH));
   const rowsToShow = rows.slice(0, maxRows);
-  const tableH = headerH + rowsToShow.length * rowH;
-  const tableY = tableTop - tableH;
 
   pdf.setLineWidth(0.8);
   pdf.setStrokeColor(0, 0, 0);
-  pdf.setFillColor(0.9, 0.9, 0.9);
-  pdf.rect(tableX, tableTop - headerH, tableW, headerH, true, true);
-  pdf.setFillColor(0, 0, 0);
+  pdf.rect(tableX, tableTop - headerH, tableW, headerH, false, true);
   let cursorX = tableX;
   cols.forEach((col) => {
-    pdf.text(cursorX + 2, tableTop - 14, col.label, "F2", 8);
+    pdf.text(cursorX + 2, tableTop - 12, col.label, "F2", 8);
     cursorX += col.w;
   });
 
   pdf.setLineWidth(0.5);
-  pdf.rect(tableX, tableY, tableW, tableH, false, true);
-  cursorX = tableX;
-  cols.forEach((col) => {
-    pdf.line(cursorX, tableY, cursorX, tableTop);
-    cursorX += col.w;
-  });
-  pdf.line(tableX + tableW, tableY, tableX + tableW, tableTop);
-  for (let i = 0; i <= rowsToShow.length; i += 1) {
-    const y = tableTop - headerH - i * rowH;
-    pdf.line(tableX, y, tableX + tableW, y);
-  }
+  pdf.line(tableX, tableTop - headerH, tableX + tableW, tableTop - headerH);
+  pdf.line(tableX, tableTop, tableX + tableW, tableTop);
 
   rowsToShow.forEach((p, idx) => {
-    const y = tableTop - headerH - rowH * idx - 13;
+    const y = tableTop - headerH - rowH * idx - 12;
     const pid = Number(p.id || 0);
     const cat = catalogById[pid] || {};
     const designation = cat.designation || cat.nom || p.nom || "";
-    const ref = cat.reference || "";
-    const mandrin = cat.mandrin || "";
-    const etq = cat.etiquettes_par_rouleau != null ? String(cat.etiquettes_par_rouleau) : "";
-    const rouleaux = cat.rouleaux_par_carton != null ? String(cat.rouleaux_par_carton) : "";
     const prix = Number(p.prix || 0);
     const qty = Number(p.qty || 0);
     const total = prix * qty;
 
     let x = tableX + 2;
-    pdf.text(x, y, clampText(ref, 10), "F1", 8);
-    x += cols[0].w;
-    pdf.text(x, y, clampText(designation, 26), "F1", 8);
-    x += cols[1].w;
-    pdf.text(x, y, clampText(mandrin, 6), "F1", 8);
-    x += cols[2].w;
-    pdf.text(x, y, clampText(etq, 8), "F1", 8);
-    x += cols[3].w;
-    pdf.text(x, y, clampText(rouleaux, 8), "F1", 8);
-    x += cols[4].w;
-    pdf.text(x, y, num(prix), "F1", 8);
-    x += cols[5].w;
     pdf.text(x, y, String(qty), "F1", 8);
-    x += cols[6].w;
+    x += cols[0].w;
+    pdf.text(x, y, clampText(designation, 48), "F1", 8);
+    x += cols[1].w;
+    pdf.text(x, y, num(prix), "F1", 8);
+    x += cols[2].w;
     pdf.text(x, y, num(total), "F1", 8);
   });
 
   if (rows.length > rowsToShow.length) {
-    pdf.text(tableX, tableY - 10, `... ${rows.length - rowsToShow.length} ligne(s) non affichee(s)`, "F1", 8);
+    pdf.text(tableX, tableTop - headerH - rowH * rowsToShow.length - 10, `... ${rows.length - rowsToShow.length} ligne(s) non affichee(s)`, "F1", 8);
   }
 
   const sousTotal = rows.reduce((acc, p) => acc + Number(p.prix || 0) * Number(p.qty || 0), 0);
@@ -332,20 +283,18 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   const fraisPort = payload.fraisPort ?? payload.frais_port ?? Math.max(0, totalHt - sousTotal);
   const tvaRate = Number(row.tva != null ? row.tva : payload.tva ?? 0.2);
   const totalTtc = Number(row.total_ttc != null ? row.total_ttc : totalHt + totalHt * tvaRate);
+  const tvaPct = `${(tvaRate * 100).toFixed(1).replace(".", ",")}%`;
 
-  const totalsBoxW = 185;
-  const totalsBoxH = 70;
-  const totalsX = pageW - margin - totalsBoxW;
-  const totalsY = 150;
-  pdf.setLineWidth(0.8);
-  pdf.rect(totalsX, totalsY, totalsBoxW, totalsBoxH, false, true);
-  pdf.text(totalsX + 8, totalsY + 48, `Sous-total HT : ${formatEuro(sousTotal)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY + 34, `Frais de port : ${formatEuro(fraisPort)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY + 20, `Total HT : ${formatEuro(totalHt)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY + 6, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);
+  const totalsX = pageW - margin - 200;
+  const totalsY = 240;
+  pdf.text(totalsX, totalsY + 48, `Sous-total HT : ${formatEuro(sousTotal)}`, "F1", 8);
+  pdf.text(totalsX, totalsY + 34, `Frais de port : ${formatEuro(fraisPort)}`, "F1", 8);
+  pdf.text(totalsX, totalsY + 20, `Total HT : ${formatEuro(totalHt)}`, "F1", 8);
+  pdf.text(totalsX, totalsY + 6, `TVA ${tvaPct} : ${formatEuro(totalHt * tvaRate)}`, "F1", 8);
+  pdf.text(totalsX, totalsY - 8, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);
 
-  pdf.text(margin, 120, "Merci de nous retourner le bon de commande complete, tamponne et signe.", "F2", 8);
-  pdf.text(margin, 108, "Contact : adv@fr.digi-group.com", "F1", 8);
+  pdf.setLineWidth(0.5);
+  pdf.line(margin, 80, pageW - margin, 80);
 
   return buildPdfDocument(pdf.build(), {
     bytes: LOGO_JPG_BYTES,
