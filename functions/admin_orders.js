@@ -4,6 +4,17 @@ function unauthorized() {
   return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "content-type": "application/json" } });
 }
 
+function statusRank(status = "") {
+  const normalized = status
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+  if (normalized.includes("trait")) return 0;
+  if (normalized.includes("prep")) return 1;
+  if (normalized.includes("envoy")) return 2;
+  return -1;
+}
+
 export async function onRequestGet(context) {
   const auth = context.request.headers.get("Authorization") || "";
   if (!auth.startsWith("Bearer ADMIN:")) return unauthorized();
@@ -55,6 +66,22 @@ export async function onRequestPut(context) {
       });
     }
     const db = context.env.DB;
+    const currentRes = await db.prepare("SELECT status FROM commandes WHERE id = ?1 LIMIT 1").bind(orderId).all();
+    const currentStatus = currentRes?.results?.[0]?.status || "";
+    if (!currentRes?.results?.length) {
+      return new Response(JSON.stringify({ error: "Commande introuvable" }), {
+        status: 404,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    const fromRank = statusRank(currentStatus);
+    const toRank = statusRank(status);
+    if (fromRank >= 0 && toRank >= 0 && toRank < fromRank) {
+      return new Response(JSON.stringify({ error: "Retour en arriere interdit" }), {
+        status: 409,
+        headers: { "content-type": "application/json" },
+      });
+    }
     await db.prepare(`UPDATE commandes SET status = ?1 WHERE id = ?2`).bind(status, orderId).run();
     const actor = parseAuthActor(auth);
     await logEvent(db, {

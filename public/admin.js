@@ -669,6 +669,17 @@ function statusClass(status = "") {
   return "inconnu";
 }
 
+function statusRank(status = "") {
+  const normalized = status
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+  if (normalized.includes("trait")) return 0;
+  if (normalized.includes("prep")) return 1;
+  if (normalized.includes("envoy")) return 2;
+  return -1;
+}
+
 function renderAdminOrders() {
   const tbody = document.querySelector("#tableAdminOrders tbody");
   if (!tbody) return;
@@ -697,14 +708,26 @@ function renderAdminOrders() {
       const tr = document.createElement("tr");
       const cls = statusClass(o.status);
       const select = document.createElement("select");
+      const currentRank = statusRank(o.status || "");
       ["en traitement", "en préparation", "envoyé"].forEach((s) => {
         const opt = document.createElement("option");
         opt.value = s;
         opt.textContent = s;
         if ((o.status || "").toLowerCase() === s.toLowerCase()) opt.selected = true;
+        if (currentRank >= 0 && statusRank(s) < currentRank) {
+          opt.disabled = true;
+        }
         select.appendChild(opt);
       });
-      select.addEventListener("change", () => updateOrderStatus(o.id, select.value));
+      select.addEventListener("change", () => {
+        const nextRank = statusRank(select.value);
+        if (currentRank >= 0 && nextRank < currentRank) {
+          alert("Retour en arriere interdit.");
+          select.value = o.status || "en traitement";
+          return;
+        }
+        updateOrderStatus(o.id, select.value);
+      });
 
       tr.innerHTML = `
         <td>${o.id || o.reference || "-"}</td>
