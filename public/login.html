@@ -158,9 +158,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         sessionStorage.clear();
 
         // Si l'utilisateur est admin => redirection admin, sinon vers le bon de commande
-        if (role === 'admin' || token.startsWith('ADMIN:')) {
+        if (role && role !== 'client' || token.startsWith('ADMIN:')) {
             sessionStorage.setItem('adminToken', token);
             sessionStorage.setItem('adminUser', data.id || clientId);
+            sessionStorage.setItem('adminRole', role || 'admin');
             window.location.href = '/admin.html';
         } else {
             sessionStorage.setItem('token', token);

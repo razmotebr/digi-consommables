@@ -1,4 +1,5 @@
 import { parseAuthActor, logEvent } from "./_log.js";
+import { requireRole } from "./_auth.js";
 
 const encoder = new TextEncoder();
 
@@ -7,15 +8,6 @@ function json(payload, status = 200) {
     status,
     headers: { "content-type": "application/json" },
   });
-}
-
-function unauthorized() {
-  return json({ error: "Unauthorized" }, 401);
-}
-
-function isAdmin(request) {
-  const auth = request.headers.get("Authorization") || "";
-  return auth.startsWith("Bearer ADMIN:");
 }
 
 async function sha256Hex(input) {
@@ -47,7 +39,8 @@ async function ensureLastLoginColumn(db) {
 }
 
 export async function onRequestGet(context) {
-  if (!isAdmin(context.request)) return unauthorized();
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
   try {
     const db = context.env.DB;
     await ensureLastLoginColumn(db);
@@ -66,7 +59,8 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPost(context) {
-  if (!isAdmin(context.request)) return unauthorized();
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
   try {
     const auth = context.request.headers.get("Authorization") || "";
     const body = await context.request.json();
@@ -75,7 +69,8 @@ export async function onRequestPost(context) {
 
     const db = context.env.DB;
     await ensureLastLoginColumn(db);
-    const roleSafe = (role || "client").toLowerCase() === "admin" ? "admin" : "client";
+    const roleRaw = (role || "client").toLowerCase();
+    const roleSafe = ["admin", "orders", "logs", "client"].includes(roleRaw) ? roleRaw : "client";
 
     const existing = await db.prepare("SELECT id FROM users WHERE id = ?1 LIMIT 1").bind(id).all();
     const userExists = existing?.results?.length > 0;
@@ -115,7 +110,8 @@ export async function onRequestPost(context) {
 }
 
 export async function onRequestDelete(context) {
-  if (!isAdmin(context.request)) return unauthorized();
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
   try {
     const auth = context.request.headers.get("Authorization") || "";
     const body = await context.request.json();

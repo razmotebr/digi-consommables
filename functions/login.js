@@ -81,11 +81,11 @@ export async function onRequestPost(context) {
       const ok = await passwordMatches(password, user.password_hash);
       if (!ok) return json({ error: "invalid credentials" }, 401);
       const role = (user.role || "client").toLowerCase();
-      const token = buildToken(role, user.id);
-      const payload =
-        role === "admin"
-          ? { token, role: "admin", id: user.id }
-          : { token, role: "client", clientId: user.id, id: user.id };
+      const isBackoffice = role !== "client";
+      const token = buildToken(isBackoffice ? "admin" : "client", user.id);
+      const payload = isBackoffice
+        ? { token, role, id: user.id }
+        : { token, role: "client", clientId: user.id, id: user.id };
       await touchLastLogin(db, user.id, role, user.password_hash);
       return json(payload, 200);
     }

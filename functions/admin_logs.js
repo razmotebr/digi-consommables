@@ -1,4 +1,4 @@
-import { parseAuthActor } from "./_log.js";
+import { requireRole } from "./_auth.js";
 
 function unauthorized() {
   return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -8,9 +8,8 @@ function unauthorized() {
 }
 
 export async function onRequestGet(context) {
-  const auth = context.request.headers.get("Authorization") || "";
-  const actor = parseAuthActor(auth);
-  if (actor.actorType !== "admin") return unauthorized();
+  const gate = await requireRole(context, ["logs"]);
+  if (!gate.ok) return gate.response;
   try {
     const url = new URL(context.request.url);
     const limitRaw = Number(url.searchParams.get("limit") || 500);

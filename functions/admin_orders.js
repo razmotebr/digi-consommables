@@ -1,4 +1,5 @@
 import { parseAuthActor, logEvent } from "./_log.js";
+import { requireRole } from "./_auth.js";
 
 function unauthorized() {
   return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "content-type": "application/json" } });
@@ -16,8 +17,8 @@ function statusRank(status = "") {
 }
 
 export async function onRequestGet(context) {
-  const auth = context.request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ADMIN:")) return unauthorized();
+  const gate = await requireRole(context, ["orders"]);
+  if (!gate.ok) return gate.response;
   try {
     const url = new URL(context.request.url);
     const enseigne = url.searchParams.get("enseigne") || "";
@@ -54,8 +55,8 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPut(context) {
-  const auth = context.request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ADMIN:")) return unauthorized();
+  const gate = await requireRole(context, ["orders"]);
+  if (!gate.ok) return gate.response;
   try {
     const body = await context.request.json();
     const { orderId, status } = body || {};
@@ -83,6 +84,7 @@ export async function onRequestPut(context) {
       });
     }
     await db.prepare(`UPDATE commandes SET status = ?1 WHERE id = ?2`).bind(status, orderId).run();
+    const auth = context.request.headers.get("Authorization") || "";
     const actor = parseAuthActor(auth);
     await logEvent(db, {
       actorType: actor.actorType,

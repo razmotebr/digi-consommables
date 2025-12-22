@@ -1,4 +1,5 @@
 import { parseAuthActor, logEvent } from "./_log.js";
+import { requireRole } from "./_auth.js";
 
 const encoder = new TextEncoder();
 
@@ -7,15 +8,6 @@ function json(payload, status = 200) {
     status,
     headers: { "content-type": "application/json" },
   });
-}
-
-function unauthorized() {
-  return json({ error: "Unauthorized" }, 401);
-}
-
-function isAdmin(request) {
-  const auth = request.headers.get("Authorization") || "";
-  return auth.startsWith("Bearer ADMIN:");
 }
 
 function randomPassword(length = 12) {
@@ -33,7 +25,8 @@ async function sha256Hex(input) {
 }
 
 export async function onRequestPost(context) {
-  if (!isAdmin(context.request)) return unauthorized();
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
   try {
     const auth = context.request.headers.get("Authorization") || "";
     const body = await context.request.json();

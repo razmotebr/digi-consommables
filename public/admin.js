@@ -22,6 +22,7 @@ const state = {
 };
 
 const adminToken = sessionStorage.getItem("adminToken");
+const adminRole = sessionStorage.getItem("adminRole") || "admin";
 if (!adminToken) {
   window.location.href = "/login.html"; // login unique pour admin et clients
 }
@@ -38,6 +39,34 @@ function ensureAuthorized(res) {
     return false;
   }
   return true;
+}
+
+const ROLE_TABS = {
+  admin: ["tabEnseignes", "tabClients", "tabPrix", "tabCatalogue", "tabCommandes", "tabUsers", "tabLogs"],
+  orders: ["tabCommandes"],
+  logs: ["tabLogs"],
+};
+
+const TAB_TO_SECTION = {
+  tabEnseignes: "sectionEnseignes",
+  tabClients: "sectionClients",
+  tabPrix: "sectionPrix",
+  tabCatalogue: "sectionCatalogue",
+  tabCommandes: "sectionCommandes",
+  tabUsers: "sectionUsers",
+  tabLogs: "sectionLogs",
+};
+
+function applyRoleAccess(role) {
+  const allowed = ROLE_TABS[role] || ROLE_TABS.admin;
+  Object.entries(TAB_TO_SECTION).forEach(([tabId, sectionId]) => {
+    const tab = document.getElementById(tabId);
+    const section = document.getElementById(sectionId);
+    const show = allowed.includes(tabId);
+    if (tab) tab.style.display = show ? "" : "none";
+    if (section) section.classList.toggle("hidden", !show);
+  });
+  return allowed;
 }
 
 function showSection(id) {
@@ -1754,5 +1783,17 @@ document.getElementById("logsNext").addEventListener("click", () => {
 
 // Init
 setupSortHeaders();
-loadInitialData();
-setActiveTab("tabEnseignes");
+const allowedTabs = applyRoleAccess(adminRole);
+if (adminRole === "orders") {
+  showSection("sectionCommandes");
+  setActiveTab("tabCommandes");
+  loadOrdersByEnseigne(document.getElementById("ordersEnseigneSelect")?.value || "");
+} else if (adminRole === "logs") {
+  showSection("sectionLogs");
+  setActiveTab("tabLogs");
+  loadLogs();
+} else {
+  loadInitialData();
+  showSection("sectionEnseignes");
+  setActiveTab("tabEnseignes");
+}

@@ -1,4 +1,8 @@
+import { requireRole } from "./_auth.js";
+
 export async function onRequestGet(context) {
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
   try {
     const db = context.env.DB;
 

@@ -1,6 +1,9 @@
 import { parseAuthActor, logEvent } from "./_log.js";
+import { requireRole } from "./_auth.js";
 
 export async function onRequestPost(context) {
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
   try {
     const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
@@ -33,6 +36,8 @@ export async function onRequestPost(context) {
 }
 
 export async function onRequestDelete(context) {
+  const gate = await requireRole(context, ["admin"]);
+  if (!gate.ok) return gate.response;
   try {
     const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
