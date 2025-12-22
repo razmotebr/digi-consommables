@@ -67,6 +67,8 @@ async function init() {
         setText("magasin", cl.magasin || "");
         setText("contact", cl.contact || "");
         if (cl.email_compta) setText("emailCompta", cl.email_compta);
+        if (cl.frais_port != null) config.fraisPort = Number(cl.frais_port);
+        if (cl.tva != null) config.tva = Number(cl.tva);
         updateEnseigneLogo(cl.enseigne || "");
         const magasinName = cl.magasin ? `magasin ${cl.magasin}` : "magasin";
         const enseigneName = cl.enseigne || "enseigne";
@@ -307,7 +309,9 @@ document.getElementById("btnSend").addEventListener("click", () => {
             nom: p.nom,
             prix: p.prix,
             qty: Number(document.querySelector(`input[data-id="${p.id}"]`).value)
-        }))
+        })),
+        fraisPort: config.fraisPort,
+        tva: config.tva,
     };
 
     const mailtoUrl = buildMailto(payload);
