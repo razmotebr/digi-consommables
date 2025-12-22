@@ -1,3 +1,5 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 const encoder = new TextEncoder();
 
 function json(payload, status = 200) {
@@ -66,6 +68,7 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   if (!isAdmin(context.request)) return unauthorized();
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const body = await context.request.json();
     const { id, role = "client", password } = body || {};
     if (!id) return json({ error: "id requis" }, 400);
@@ -93,8 +96,17 @@ export async function onRequestPost(context) {
       await db
         .prepare("INSERT INTO users (id, password_hash, role) VALUES (?1, ?2, ?3)")
         .bind(id, passwordHash, roleSafe)
-        .run();
+      .run();
     }
+
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "user_upsert",
+      target: `user:${id}`,
+      details: { role: roleSafe, created: !userExists },
+    });
 
     return json({ ok: true });
   } catch (e) {
@@ -105,10 +117,19 @@ export async function onRequestPost(context) {
 export async function onRequestDelete(context) {
   if (!isAdmin(context.request)) return unauthorized();
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const body = await context.request.json();
     const { id } = body || {};
     if (!id) return json({ error: "id requis" }, 400);
-    await context.env.DB.prepare("DELETE FROM users WHERE id = ?1").bind(id).run();
+    const db = context.env.DB;
+    await db.prepare("DELETE FROM users WHERE id = ?1").bind(id).run();
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "user_delete",
+      target: `user:${id}`,
+    });
     return json({ ok: true });
   } catch (e) {
     return json({ error: e.toString() }, 500);

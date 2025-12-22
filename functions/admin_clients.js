@@ -1,5 +1,8 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 export async function onRequestPost(context) {
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
     const data = await context.request.json();
     const { id, enseigne, magasin, contact, email, fraisPort = 12.0, tva = 0.2 } = data;
@@ -15,6 +18,14 @@ export async function onRequestPost(context) {
       )
       .bind(id, enseigne || "", magasin || "", contact || "", email || "", fraisPort, tva)
       .run();
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "client_upsert",
+      target: `client:${id}`,
+      details: { enseigne, magasin, contact, email },
+    });
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.toString() }), { status: 500, headers: { "content-type": "application/json" } });
@@ -23,6 +34,7 @@ export async function onRequestPost(context) {
 
 export async function onRequestDelete(context) {
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
     const data = await context.request.json();
     const { id } = data || {};
@@ -31,6 +43,13 @@ export async function onRequestDelete(context) {
     await db.prepare("DELETE FROM commandes WHERE client_id = ?").bind(id).run();
     await db.prepare("DELETE FROM prix_par_client WHERE client_id = ?").bind(id).run();
     await db.prepare("DELETE FROM clients WHERE id = ?").bind(id).run();
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "client_delete",
+      target: `client:${id}`,
+    });
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.toString() }), { status: 500, headers: { "content-type": "application/json" } });

@@ -1,3 +1,5 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 function unauthorized() {
   return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "content-type": "application/json" } });
 }
@@ -54,6 +56,14 @@ export async function onRequestPut(context) {
     }
     const db = context.env.DB;
     await db.prepare(`UPDATE commandes SET status = ?1 WHERE id = ?2`).bind(status, orderId).run();
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "order_status_update",
+      target: `commande:${orderId}`,
+      details: { status },
+    });
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.toString() }), { status: 500, headers: { "content-type": "application/json" } });

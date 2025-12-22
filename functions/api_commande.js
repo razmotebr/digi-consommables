@@ -1,3 +1,5 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 export async function onRequestPost(context) {
   try {
     const auth = context.request.headers.get("Authorization") || "";
@@ -37,6 +39,14 @@ export async function onRequestPost(context) {
       .bind(body.clientId, now, totalHT, tva, totalTTC, "en traitement", JSON.stringify({ ...body, produits }))
       .run();
     const orderId = insert.meta.last_row_id;
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId || body.clientId,
+      action: "order_create",
+      target: `commande:${orderId}`,
+      details: { clientId: body.clientId, totalTTC },
+    });
 
     return new Response(
       JSON.stringify({ message: "Commande enregistrée", id: orderId, totalTTC, status: "en traitement" }),

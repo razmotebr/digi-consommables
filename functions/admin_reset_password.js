@@ -1,3 +1,5 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 const encoder = new TextEncoder();
 
 function json(payload, status = 200) {
@@ -33,6 +35,7 @@ async function sha256Hex(input) {
 export async function onRequestPost(context) {
   if (!isAdmin(context.request)) return unauthorized();
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const body = await context.request.json();
     const { userId } = body || {};
     if (!userId) return json({ error: "userId requis" }, 400);
@@ -52,6 +55,14 @@ export async function onRequestPost(context) {
       )
       .bind(userId, hashed, existingRole || "client")
       .run();
+
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "user_reset_password",
+      target: `user:${userId}`,
+    });
 
     return json({ ok: true, password: plain, userId });
   } catch (e) {

@@ -3,6 +3,7 @@
 DROP TABLE IF EXISTS prix_par_client;
 DROP TABLE IF EXISTS catalog_produits;
 DROP TABLE IF EXISTS commandes;
+DROP TABLE IF EXISTS logs;
 DROP TABLE IF EXISTS clients;
 DROP TABLE IF EXISTS users;
 
@@ -56,6 +57,18 @@ CREATE TABLE IF NOT EXISTS commandes (
   status TEXT,
   payload JSON
 );
+
+CREATE TABLE IF NOT EXISTS logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts TEXT NOT NULL,
+  actor_type TEXT,
+  actor_id TEXT,
+  action TEXT NOT NULL,
+  target TEXT,
+  details TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_logs_ts ON logs (ts);
 
 -- Données de test
 INSERT OR IGNORE INTO clients (id, enseigne, magasin, contact, email_compta) VALUES

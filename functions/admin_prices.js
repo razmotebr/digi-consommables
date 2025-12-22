@@ -1,5 +1,8 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 export async function onRequestPost(context) {
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
     const data = await context.request.json();
     const { clientId, produitId, nom, prix, reference, designation, mandrin, etiquettesParRouleau, rouleauxParCarton } = data;
@@ -42,6 +45,15 @@ export async function onRequestPost(context) {
       .bind(clientId, produitId, prix)
       .run();
 
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "price_upsert",
+      target: `price:${clientId}:${produitId}`,
+      details: { prix },
+    });
+
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.toString() }), { status: 500, headers: { "content-type": "application/json" } });
@@ -50,6 +62,7 @@ export async function onRequestPost(context) {
 
 export async function onRequestDelete(context) {
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
     const data = await context.request.json();
     const { clientId, produitId } = data || {};
@@ -60,6 +73,13 @@ export async function onRequestDelete(context) {
       });
     }
     await db.prepare("DELETE FROM prix_par_client WHERE client_id = ? AND produit_id = ?").bind(clientId, produitId).run();
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "price_delete",
+      target: `price:${clientId}:${produitId}`,
+    });
     return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: e.toString() }), { status: 500, headers: { "content-type": "application/json" } });

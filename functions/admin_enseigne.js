@@ -1,5 +1,8 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 export async function onRequestDelete(context) {
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
     const data = await context.request.json();
     const enseigne = (data && data.enseigne || "").trim();
@@ -24,6 +27,15 @@ export async function onRequestDelete(context) {
       db.prepare("DELETE FROM clients WHERE enseigne = ?").bind(enseigne),
     ]);
     await Promise.all(tx);
+
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "enseigne_delete",
+      target: `enseigne:${enseigne}`,
+      details: { clientsSupprimes: clientIds.length },
+    });
 
     return new Response(JSON.stringify({ ok: true, clientsSupprimes: clientIds.length }), {
       status: 200,

@@ -9,12 +9,14 @@ const state = {
   editingEnseignes: {}, // {code: true}
   editingClients: {}, // {id: {enseigne,magasin,contact,email}}
   users: [], // [{id, enseigne, magasin, lastLogin}]
+  logs: [],
   sort: {}, // {tableId: {key, dir}}
   pagination: {
     enseignes: 1,
     clients: 1,
     catalogue: 1,
     prix: 1,
+    logs: 1,
     pageSize: 20,
   },
 };
@@ -804,8 +806,70 @@ function renderUsers() {
       actions.appendChild(resetBtn);
       actions.appendChild(delBtn);
       tr.appendChild(actions);
-      tbody.appendChild(tr);
-    });
+    tbody.appendChild(tr);
+  });
+}
+
+function renderLogs() {
+  const tbody = document.querySelector("#tableLogs tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  if (!state.logs.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.className = "muted";
+    td.textContent = "Aucun log pour le moment.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  const sortedLogs = sortRows(state.logs, "tableLogs", "timestamp", "desc", {
+    timestamp: { get: (l) => l.ts || "", type: "date" },
+    actor: { get: (l) => `${l.actor_type || ""}:${l.actor_id || ""}`, type: "string" },
+    action: { get: (l) => l.action || "", type: "string" },
+  });
+
+  const pageSize = state.pagination.pageSize;
+  const currentPage = state.pagination.logs;
+  const totalPages = Math.max(1, Math.ceil(sortedLogs.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageEntries = sortedLogs.slice(start, start + pageSize);
+
+  pageEntries.forEach((l) => {
+    const tr = document.createElement("tr");
+    const ts = l.ts ? new Date(l.ts).toLocaleString("fr-FR") : "-";
+    const actor = l.actor_type ? `${l.actor_type}:${l.actor_id || "-"}` : "unknown";
+    let detailsText = "";
+    if (l.details) {
+      try {
+        const obj = JSON.parse(l.details);
+        detailsText = Object.entries(obj)
+          .map(([k, v]) => `${k}=${v}`)
+          .join(", ");
+      } catch (_) {
+        detailsText = String(l.details);
+      }
+    }
+    let actionText = l.action || "";
+    if (l.target) actionText += ` | ${l.target}`;
+    if (detailsText) actionText += ` | ${detailsText}`;
+
+    tr.innerHTML = `
+      <td>${ts}</td>
+      <td>${actor}</td>
+      <td>${actionText}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const label = document.getElementById("logsPageLabel");
+  const prev = document.getElementById("logsPrev");
+  const next = document.getElementById("logsNext");
+  if (label) label.textContent = `${currentPage}/${totalPages}`;
+  if (prev) prev.disabled = currentPage <= 1;
+  if (next) next.disabled = currentPage >= totalPages;
 }
 
 // --- HELPERS ---
@@ -1334,6 +1398,20 @@ async function loadUsers() {
   renderUsers();
 }
 
+async function loadLogs() {
+  try {
+    const res = await fetch("/admin_logs", { headers: withAuthHeaders() });
+    if (!ensureAuthorized(res)) return;
+    if (!res.ok) throw new Error(`logs ${res.status}`);
+    const data = await res.json();
+    state.logs = data.logs || [];
+  } catch (e) {
+    console.error("loadLogs error", e);
+    state.logs = [];
+  }
+  renderLogs();
+}
+
 async function saveUser(payload) {
   try {
     const res = await fetch("/admin_users", {
@@ -1432,6 +1510,10 @@ function setupSortHeaders() {
     },
     tableAdminOrders: () => renderAdminOrders(),
     tableUsers: () => renderUsers(),
+    tableLogs: () => {
+      state.pagination.logs = 1;
+      renderLogs();
+    },
   };
 
   Object.entries(renderers).forEach(([tableId, render]) => {
@@ -1487,6 +1569,12 @@ document.getElementById("tabUsers").addEventListener("click", async (e) => {
   showSection("sectionUsers");
   setActiveTab("tabUsers");
   await loadUsers();
+});
+document.getElementById("tabLogs").addEventListener("click", async (e) => {
+  e.preventDefault();
+  showSection("sectionLogs");
+  setActiveTab("tabLogs");
+  await loadLogs();
 });
 
 document.getElementById("btnSaveUser").addEventListener("click", async (e) => {
@@ -1628,6 +1716,17 @@ document.getElementById("prixPrev").addEventListener("click", () => {
 document.getElementById("prixNext").addEventListener("click", () => {
   state.pagination.prix += 1;
   renderPrix();
+});
+
+document.getElementById("logsPrev").addEventListener("click", () => {
+  if (state.pagination.logs > 1) {
+    state.pagination.logs -= 1;
+    renderLogs();
+  }
+});
+document.getElementById("logsNext").addEventListener("click", () => {
+  state.pagination.logs += 1;
+  renderLogs();
 });
 
 // Init

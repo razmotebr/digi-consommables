@@ -414,6 +414,7 @@
         <a href="#catalogue" id="tabCatalogue">Catalogue</a>
         <a href="#commandes" id="tabCommandes">Commandes</a>
         <a href="#users" id="tabUsers">Utilisateurs</a>
+        <a href="#logs" id="tabLogs">Logs</a>
     </nav>
 
     <div class="container">
@@ -639,7 +640,28 @@
                 </table>
             </div>
         </section>
-    </div>
+        <section id="sectionLogs" class="card hidden">
+            <h2>Logs</h2>
+            <div class="panel">
+                <table id="tableLogs" class="editable-table">
+                    <thead>
+                        <tr>
+                            <th data-sort-key="timestamp">Horodatage</th>
+                            <th data-sort-key="actor">Acteur</th>
+                            <th data-sort-key="action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" class="muted">Chargement...</td></tr>
+                    </tbody>
+                </table>
+                <div class="pager">
+                    <button id="logsPrev">Précédent</button>
+                    <span id="logsPageLabel"></span>
+                    <button id="logsNext">Suivant</button>
+                </div>
+            </div>
+        </section>    </div>
 
     <script src="admin.js"></script>
     <script>
@@ -682,6 +704,7 @@
     </script>
 </body>
 </html>
+
 
 
 

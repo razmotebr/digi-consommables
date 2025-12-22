@@ -1,5 +1,8 @@
+import { parseAuthActor, logEvent } from "./_log.js";
+
 export async function onRequestPost(context) {
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
     const data = await context.request.json();
     const {
@@ -40,6 +43,15 @@ export async function onRequestPost(context) {
       )
       .run();
 
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "catalog_upsert",
+      target: `catalog:${id}`,
+      details: { reference, nom },
+    });
+
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { "content-type": "application/json" },
@@ -54,6 +66,7 @@ export async function onRequestPost(context) {
 
 export async function onRequestDelete(context) {
   try {
+    const auth = context.request.headers.get("Authorization") || "";
     const db = context.env.DB;
     const data = await context.request.json();
     const { id } = data || {};
@@ -67,6 +80,14 @@ export async function onRequestDelete(context) {
     // Supprimer les prix associés
     await db.prepare("DELETE FROM prix_par_client WHERE produit_id = ?").bind(id).run();
     await db.prepare("DELETE FROM catalog_produits WHERE id = ?").bind(id).run();
+
+    const actor = parseAuthActor(auth);
+    await logEvent(db, {
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      action: "catalog_delete",
+      target: `catalog:${id}`,
+    });
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
