@@ -771,14 +771,9 @@ function renderAdminOrders() {
       const pdfBtn = document.createElement("button");
       pdfBtn.className = "secondary action-btn";
       pdfBtn.textContent = "PDF";
-      pdfBtn.addEventListener("click", () => openOrderPdf(o.id, false));
-      const regenBtn = document.createElement("button");
-      regenBtn.className = "secondary action-btn";
-      regenBtn.textContent = "Regenerer PDF";
-      regenBtn.addEventListener("click", () => openOrderPdf(o.id, true));
+      pdfBtn.addEventListener("click", () => openOrderPdf(o.id));
       actionsTd.appendChild(select);
       actionsTd.appendChild(pdfBtn);
-      actionsTd.appendChild(regenBtn);
       if (adminRole === "admin") {
         const delBtn = document.createElement("button");
         delBtn.className = "secondary danger action-btn";
@@ -791,7 +786,7 @@ function renderAdminOrders() {
     });
 }
 
-async function openOrderPdf(orderId, regen) {
+async function openOrderPdf(orderId) {
   if (!orderId) return;
   const newWin = window.open("", "_blank");
   if (!newWin) {
@@ -799,7 +794,7 @@ async function openOrderPdf(orderId, regen) {
     return;
   }
   try {
-    const qs = regen ? `&regen=1&ts=${Date.now()}` : "";
+    const qs = `&regen=1&ts=${Date.now()}`;
     const res = await fetch(`/order_pdf?orderId=${encodeURIComponent(orderId)}${qs}`, {
       headers: withAuthHeaders(),
     });
