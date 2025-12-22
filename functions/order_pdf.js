@@ -263,7 +263,7 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   pdf.text(infoX, infoY - 28, `Magasin : ${payload.magasin || ""}`, "F1", 9);
   pdf.text(infoX, infoY - 42, `Contact : ${payload.contact || ""}`, "F1", 9);
 
-  pdf.text(margin, headerTop - 72, "DEVIS / COMMANDE CONSOMMABLES", "F2", 12);
+  pdf.text(margin, headerTop - 72, "BON DE COMMANDE CONSOMMABLES", "F2", 12);
 
   const tableX = margin;
   const tableTop = headerTop - 95;
@@ -323,16 +323,36 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   const totalTtc = Number(row.total_ttc != null ? row.total_ttc : totalHt + totalHt * tvaRate);
   const tvaPct = `${(tvaRate * 100).toFixed(1).replace(".", ",")}%`;
 
-  const totalsX = pageW - margin - 200;
-  const totalsY = 240;
-  pdf.text(totalsX, totalsY + 48, `Sous-total HT : ${formatEuro(sousTotal)}`, "F1", 8);
-  pdf.text(totalsX, totalsY + 34, `Frais de port : ${formatEuro(fraisPort)}`, "F1", 8);
-  pdf.text(totalsX, totalsY + 20, `Total HT : ${formatEuro(totalHt)}`, "F1", 8);
-  pdf.text(totalsX, totalsY + 6, `TVA ${tvaPct} : ${formatEuro(totalHt * tvaRate)}`, "F1", 8);
-  pdf.text(totalsX, totalsY - 8, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);
+  const tableBottom = tableTop - headerH - rowH * rowsToShow.length;
+  const totalsBoxW = 210;
+  const totalsBoxH = 68;
+  const totalsX = pageW - margin - totalsBoxW;
+  const totalsY = tableBottom - totalsBoxH - 12;
+
+  pdf.setLineWidth(0.6);
+  pdf.rect(totalsX, totalsY, totalsBoxW, totalsBoxH, false, true);
+  pdf.text(totalsX + 8, totalsY + 50, `Sous-total HT : ${formatEuro(sousTotal)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 36, `Frais de port : ${formatEuro(fraisPort)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 22, `Total HT : ${formatEuro(totalHt)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 8, `TVA ${tvaPct} : ${formatEuro(totalHt * tvaRate)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY - 6, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);
 
   pdf.setLineWidth(0.5);
   pdf.line(margin, 80, pageW - margin, 80);
+  pdf.text(
+    margin,
+    66,
+    "Societe Anonyme au capital de 1 141 000 EUR - R.C.S. 404165631 Bobigny - APE 4669 B",
+    "F1",
+    7
+  );
+  pdf.text(
+    margin,
+    54,
+    "SIRET: 404165631 00049 - N TVA FR09404165631 | TVA acquittee sur les debits",
+    "F1",
+    7
+  );
 
   return buildPdfDocument(pdf.build(), {
     bytes: getLogoBytes(),
