@@ -369,17 +369,17 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
 
   const tableBottom = tableTop - headerH - rowH * rowsToShow.length;
   const totalsBoxW = 210;
-  const totalsBoxH = 68;
+  const totalsBoxH = 78;
   const totalsX = pageW - margin - totalsBoxW;
   const totalsY = tableBottom - totalsBoxH - 12;
 
   pdf.setLineWidth(0.6);
   pdf.rect(totalsX, totalsY, totalsBoxW, totalsBoxH, false, true);
-  pdf.text(totalsX + 8, totalsY + 50, `Sous-total HT : ${formatEuro(sousTotal)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY + 36, `Frais de port : ${formatEuro(fraisPort)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY + 22, `Total HT : ${formatEuro(totalHt)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY + 8, `TVA ${tvaPct} : ${formatEuro(totalHt * tvaRate)}`, "F1", 8);
-  pdf.text(totalsX + 8, totalsY - 6, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);
+  pdf.text(totalsX + 8, totalsY + 60, `Sous-total HT : ${formatEuro(sousTotal)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 46, `Frais de port : ${formatEuro(fraisPort)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 32, `Total HT : ${formatEuro(totalHt)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 18, `TVA ${tvaPct} : ${formatEuro(totalHt * tvaRate)}`, "F1", 8);
+  pdf.text(totalsX + 8, totalsY + 4, `Total TTC : ${formatEuro(totalTtc)}`, "F2", 8);
 
   pdf.setLineWidth(0.5);
   pdf.line(margin, 80, pageW - margin, 80);
