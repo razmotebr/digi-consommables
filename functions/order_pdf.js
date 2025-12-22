@@ -44,7 +44,45 @@ function base64ToBytes(b64) {
   return bytes;
 }
 
-const LOGO_JPG_BYTES = base64ToBytes(LOGO_JPG_BASE64);
+function decodeBase64(base64) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const lookup = new Uint8Array(256);
+  for (let i = 0; i < lookup.length; i += 1) lookup[i] = 255;
+  for (let i = 0; i < chars.length; i += 1) lookup[chars.charCodeAt(i)] = i;
+
+  const clean = base64.replace(/[^A-Za-z0-9+/=]/g, "");
+  const len = clean.length;
+  const buffer = new Uint8Array(((len * 3) / 4) | 0);
+  let out = 0;
+  let i = 0;
+  while (i < len) {
+    const c1 = lookup[clean.charCodeAt(i++)];
+    const c2 = lookup[clean.charCodeAt(i++)];
+    const c3 = lookup[clean.charCodeAt(i++)];
+    const c4 = lookup[clean.charCodeAt(i++)];
+    if (c2 === 255) break;
+    const b1 = (c1 << 2) | (c2 >> 4);
+    buffer[out++] = b1;
+    if (c3 === 64 || c3 === 255) break;
+    const b2 = ((c2 & 15) << 4) | (c3 >> 2);
+    buffer[out++] = b2;
+    if (c4 === 64 || c4 === 255) break;
+    const b3 = ((c3 & 3) << 6) | c4;
+    buffer[out++] = b3;
+  }
+  return buffer.slice(0, out);
+}
+
+let logoBytesCache = null;
+function getLogoBytes() {
+  if (logoBytesCache) return logoBytesCache;
+  try {
+    logoBytesCache = base64ToBytes(LOGO_JPG_BASE64);
+  } catch (_) {
+    logoBytesCache = decodeBase64(LOGO_JPG_BASE64);
+  }
+  return logoBytesCache;
+}
 
 function num(value) {
   return Number(value || 0)
@@ -297,7 +335,7 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
   pdf.line(margin, 80, pageW - margin, 80);
 
   return buildPdfDocument(pdf.build(), {
-    bytes: LOGO_JPG_BYTES,
+    bytes: getLogoBytes(),
     width: LOGO_JPG_WIDTH,
     height: LOGO_JPG_HEIGHT,
   });
