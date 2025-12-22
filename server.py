@@ -8,6 +8,7 @@ import smtplib
 from email.message import EmailMessage
 import secrets
 import string
+import unicodedata
 from typing import Dict, Any, Tuple
 
 # Load environment variables from .env if present
@@ -85,6 +86,13 @@ class MyHandler(SimpleHTTPRequestHandler):
         self._add_cors()
         self.end_headers()
         self.wfile.write(json.dumps(payload).encode())
+
+    def _normalize_text(self, value: str) -> str:
+        if not value:
+            return ""
+        norm = unicodedata.normalize("NFD", value)
+        norm = "".join(ch for ch in norm if unicodedata.category(ch) != "Mn")
+        return norm.lower()
 
     def _make_client_token(self, client_id: str):
         return f"TOKEN:{client_id}:{datetime.datetime.utcnow().isoformat()}"
@@ -394,6 +402,17 @@ class MyHandler(SimpleHTTPRequestHandler):
 
                 # En-tete
                 logo_path = "logo_pdf.png"  # cwd = public
+                enseigne = self._normalize_text(str(data.get("enseigne", "")))
+                logo_map = {
+                    "intermarche": "logo_intermarche.png",
+                    "carrefour": "logo_carrefour.png",
+                    "auchan": "logo_auchan.png",
+                    "biocoop": "logo_biocoop.png",
+                }
+                for key, path in logo_map.items():
+                    if key in enseigne:
+                        logo_path = path
+                        break
                 if os.path.exists(logo_path):
                     c.drawImage(ImageReader(logo_path), margin, y - 32, width=100, height=30, preserveAspectRatio=True, mask="auto")
                 c.setFont("Helvetica-Bold", 26)
