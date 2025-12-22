@@ -443,6 +443,22 @@
             width: calc((var(--ens-btn-width, 64px) * 2) + 8px);
             min-width: calc((var(--ens-btn-width, 64px) * 2) + 8px);
         }
+        #tablePrix .table-actions {
+            display: inline-flex;
+            gap: 8px;
+            justify-content: flex-start;
+        }
+        #tablePrix .table-actions .action-btn {
+            width: auto;
+            min-width: var(--prix-btn-width, 64px);
+        }
+        #tablePrix .add-row .col-actions button {
+            width: calc((var(--prix-btn-width, 64px) * 2) + 8px);
+        }
+        #tablePrix .col-actions {
+            width: calc((var(--prix-btn-width, 64px) * 2) + 8px);
+            min-width: calc((var(--prix-btn-width, 64px) * 2) + 8px);
+        }
         .col-resize-handle {
             position: absolute;
             top: 0;
