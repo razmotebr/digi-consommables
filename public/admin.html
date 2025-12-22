@@ -434,10 +434,10 @@
         }
         #tableEnseignes .table-actions .action-btn {
             width: auto;
-            min-width: 0;
+            min-width: var(--ens-btn-width, 64px);
         }
         #tableEnseignes .add-row .col-actions button {
-            width: 100%;
+            width: calc((var(--ens-btn-width, 64px) * 2) + 8px);
         }
         .col-resize-handle {
             position: absolute;
