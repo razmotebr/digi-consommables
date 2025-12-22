@@ -280,6 +280,10 @@ function clampText(text, max) {
   return `${safe.slice(0, Math.max(0, max - 3))}...`;
 }
 
+function textWidth(text, size) {
+  return toPdfText(text || "").length * size * 0.5;
+}
+
 function buildOrderPdf({ row, payload, produits, catalogById }) {
   const pdf = new PdfBuilder();
   const pageW = 595;
@@ -383,20 +387,15 @@ function buildOrderPdf({ row, payload, produits, catalogById }) {
 
   pdf.setLineWidth(0.5);
   pdf.line(margin, 80, pageW - margin, 80);
-  pdf.text(
-    margin,
-    66,
-    "Societe Anonyme au capital de 1 141 000 EUR - R.C.S. 404165631 Bobigny - APE 4669 B",
-    "F1",
-    7
-  );
-  pdf.text(
-    margin,
-    54,
-    "SIRET: 404165631 00049 - N TVA FR09404165631 | TVA acquittee sur les debits",
-    "F1",
-    7
-  );
+  const footerLine1 =
+    "Societe Anonyme au capital de 1 141 000 EUR - R.C.S. 404165631 Bobigny - APE 4669 B";
+  const footerLine2 =
+    "SIRET: 404165631 00049 - N TVA FR09404165631 | TVA acquittee sur les debits";
+  const footerSize = 7;
+  const footerX1 = (pageW - textWidth(footerLine1, footerSize)) / 2;
+  const footerX2 = (pageW - textWidth(footerLine2, footerSize)) / 2;
+  pdf.text(footerX1, 66, footerLine1, "F1", footerSize);
+  pdf.text(footerX2, 54, footerLine2, "F1", footerSize);
 
   return buildPdfDocument(pdf.build(), [
     { name: "ImDigi", obj: 7, bytes: getLogoBytes(), width: LOGO_JPG_WIDTH, height: LOGO_JPG_HEIGHT },
