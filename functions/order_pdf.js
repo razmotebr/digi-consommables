@@ -282,7 +282,27 @@ function clampText(text, max) {
 }
 
 function textWidth(text, size) {
-  return toPdfText(text || "").length * size * 0.5;
+  const safe = toPdfText(text || "");
+  let units = 0;
+  for (let i = 0; i < safe.length; i += 1) {
+    const ch = safe[i];
+    if (ch === " ") {
+      units += 0.25;
+    } else if ("ilI.,:;!'|".includes(ch)) {
+      units += 0.28;
+    } else if ("fjt()[]".includes(ch)) {
+      units += 0.35;
+    } else if ("mwMW".includes(ch)) {
+      units += 0.78;
+    } else if (/[A-Z]/.test(ch)) {
+      units += 0.6;
+    } else if (/[0-9]/.test(ch)) {
+      units += 0.55;
+    } else {
+      units += 0.5;
+    }
+  }
+  return units * size;
 }
 
 function buildOrderPdf({ row, payload, produits, catalogById }) {
