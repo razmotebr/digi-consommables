@@ -1024,7 +1024,7 @@ async function deletePrice(enseigne, produitId) {
 
 async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau, rouleauxParCarton, prixCartonHt }) {
   try {
-    await fetch("/admin_catalogue", {
+    const res = await fetch("/admin_catalogue", {
       method: "POST",
       headers: withAuthHeaders({ "content-type": "application/json" }),
       body: JSON.stringify({
@@ -1037,8 +1037,23 @@ async function saveCatalogue({ id, nom, reference, mandrin, etiquettesParRouleau
         prixCartonHt,
       }),
     });
+    if (!ensureAuthorized(res)) return;
+    const raw = await res.text();
+    let data = {};
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.warn("saveCatalogue parse error", e, raw);
+      data = {};
+    }
+    if (!res.ok) {
+      const msg = data?.error || raw || `Erreur ${res.status}`;
+      throw new Error(msg);
+    }
   } catch (e) {
     console.error("saveCatalogue backend error", e);
+    const msg = e && e.message ? e.message : "Erreur sauvegarde catalogue";
+    alert(msg);
   }
 
   const prod = state.catalog[id] || {};

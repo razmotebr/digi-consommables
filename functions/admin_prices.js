@@ -15,23 +15,23 @@ export async function onRequestPost(context) {
         `INSERT INTO catalog_produits (id, reference, nom, designation, mandrin, etiquettes_par_rouleau, rouleaux_par_carton, prix_carton_ht)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(id) DO UPDATE SET
-           reference=excluded.reference,
-           nom=excluded.nom,
-           designation=excluded.designation,
-           mandrin=excluded.mandrin,
-           etiquettes_par_rouleau=excluded.etiquettes_par_rouleau,
-           rouleaux_par_carton=excluded.rouleaux_par_carton,
-           prix_carton_ht=excluded.prix_carton_ht`
+           reference=COALESCE(excluded.reference, catalog_produits.reference),
+           nom=COALESCE(excluded.nom, catalog_produits.nom),
+           designation=COALESCE(excluded.designation, catalog_produits.designation),
+           mandrin=COALESCE(excluded.mandrin, catalog_produits.mandrin),
+           etiquettes_par_rouleau=COALESCE(excluded.etiquettes_par_rouleau, catalog_produits.etiquettes_par_rouleau),
+           rouleaux_par_carton=COALESCE(excluded.rouleaux_par_carton, catalog_produits.rouleaux_par_carton),
+           prix_carton_ht=COALESCE(excluded.prix_carton_ht, catalog_produits.prix_carton_ht)`
       )
       .bind(
         produitId,
-        reference || null,
-        nom || null,
-        designation || nom || null,
-        mandrin || null,
-        etiquettesParRouleau || null,
-        rouleauxParCarton || null,
-        prixCartonHt || null
+        reference ?? null,
+        nom ?? null,
+        designation ?? nom ?? null,
+        mandrin ?? null,
+        etiquettesParRouleau ?? null,
+        rouleauxParCarton ?? null,
+        prixCartonHt ?? null
       )
       .run();
 
