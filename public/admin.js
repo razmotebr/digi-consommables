@@ -9,6 +9,7 @@ const state = {
   editingEnseignes: {}, // {code: true}
   editingClients: {}, // {id: {enseigne,magasin,contact,email}}
   users: [], // [{id, enseigne, magasin, lastLogin}]
+  sort: {}, // {tableId: {key, dir}}
   pagination: {
     enseignes: 1,
     clients: 1,
@@ -74,6 +75,56 @@ function fillEnseigneOptions(selectEl, selected = "") {
   }
 }
 
+function getSortConfig(tableId, defaultKey, defaultDir = "asc") {
+  const existing = state.sort[tableId];
+  if (existing && existing.key) return existing;
+  return { key: defaultKey, dir: defaultDir };
+}
+
+function setSortConfig(tableId, key) {
+  const current = state.sort[tableId];
+  const nextDir = current && current.key === key && current.dir === "asc" ? "desc" : "asc";
+  state.sort[tableId] = { key, dir: nextDir };
+  return state.sort[tableId];
+}
+
+function normalizeSortValue(value, type) {
+  if (value === undefined || value === null || value === "") return null;
+  if (type === "number") {
+    const num = Number(value);
+    return Number.isNaN(num) ? null : num;
+  }
+  if (type === "date") {
+    const ts = new Date(value).getTime();
+    return Number.isNaN(ts) ? null : ts;
+  }
+  return String(value).toLowerCase();
+}
+
+function compareValues(a, b, dir, type) {
+  const va = normalizeSortValue(a, type);
+  const vb = normalizeSortValue(b, type);
+  if (va === null && vb === null) return 0;
+  if (va === null) return 1;
+  if (vb === null) return -1;
+  let cmp = 0;
+  if (type === "number" || type === "date") {
+    cmp = va - vb;
+  } else {
+    cmp = va.localeCompare(vb);
+  }
+  return dir === "desc" ? -cmp : cmp;
+}
+
+function sortRows(items, tableId, defaultKey, defaultDir, getters) {
+  const sortCfg = getSortConfig(tableId, defaultKey, defaultDir);
+  const meta = getters[sortCfg.key];
+  if (!meta) return items;
+  const getValue = typeof meta === "function" ? meta : meta.get;
+  const type = (meta && meta.type) || "string";
+  return items.slice().sort((a, b) => compareValues(getValue(a), getValue(b), sortCfg.dir, type));
+}
+
 // --- RENDER ---
 function renderEnseignes() {
   const tbody = document.querySelector("#tableEnseignes tbody");
@@ -81,14 +132,24 @@ function renderEnseignes() {
   tbody.innerHTML = "";
   if (addRow) tbody.appendChild(addRow);
 
-  const entries = Object.entries(state.enseignes).sort(([a], [b]) => a.localeCompare(b));
+  const entries = Object.entries(state.enseignes).map(([code, e]) => ({
+    code,
+    nom: e.nom || "",
+    emailCompta: e.emailCompta || "",
+  }));
+  const sortedEntries = sortRows(entries, "tableEnseignes", "code", "asc", {
+    code: { get: (e) => e.code, type: "string" },
+    nom: { get: (e) => e.nom, type: "string" },
+    email: { get: (e) => e.emailCompta, type: "string" },
+  });
   const pageSize = state.pagination.pageSize;
   const currentPage = state.pagination.enseignes;
-  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const start = (currentPage - 1) * pageSize;
-  const pageEntries = entries.slice(start, start + pageSize);
+  const pageEntries = sortedEntries.slice(start, start + pageSize);
 
-  pageEntries.forEach(([code, e]) => {
+  pageEntries.forEach((e) => {
+    const code = e.code;
     const tr = document.createElement("tr");
     const isEditing = !!state.editingEnseignes[code];
     if (isEditing) tr.classList.add("editing");
@@ -182,14 +243,30 @@ function renderClients() {
   const filterEns = document.getElementById("clientsEnseigneFilter")?.value || "";
   const entries = Object.entries(state.clients)
     .filter(([, c]) => !filterEns || (c.enseigne || "") === filterEns)
-    .sort(([a], [b]) => a.localeCompare(b));
+    .map(([id, c]) => ({
+      id,
+      enseigne: c.enseigne || "",
+      magasin: c.magasin || "",
+      contact: c.contact || "",
+      email: c.email || "",
+      raw: c,
+    }));
+  const sortedEntries = sortRows(entries, "tableClients", "id", "asc", {
+    id: { get: (c) => c.id, type: "string" },
+    enseigne: { get: (c) => c.enseigne, type: "string" },
+    magasin: { get: (c) => c.magasin, type: "string" },
+    contact: { get: (c) => c.contact, type: "string" },
+    email: { get: (c) => c.email, type: "string" },
+  });
   const pageSize = state.pagination.pageSize;
   const currentPage = state.pagination.clients;
-  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const start = (currentPage - 1) * pageSize;
-  const pageEntries = entries.slice(start, start + pageSize);
+  const pageEntries = sortedEntries.slice(start, start + pageSize);
 
-  pageEntries.forEach(([id, c]) => {
+  pageEntries.forEach((entry) => {
+    const id = entry.id;
+    const c = entry.raw;
     const tr = document.createElement("tr");
     const draft = state.editingClients[id] || null;
     const isEditing = !!draft;
@@ -313,16 +390,34 @@ function renderCatalogue() {
   tbody.innerHTML = "";
   if (addRow) tbody.appendChild(addRow);
 
-  const entries = Object.keys(state.catalog)
-    .map((k) => Number(k))
-    .sort((a, b) => a - b);
+  const entries = Object.keys(state.catalog).map((k) => {
+    const id = Number(k);
+    const prod = state.catalog[id] || {};
+    return {
+      id,
+      reference: prod.reference || "",
+      nom: prod.nom || "",
+      mandrin: prod.mandrin || "",
+      etiquettesParRouleau: prod.etiquettesParRouleau,
+      rouleauxParCarton: prod.rouleauxParCarton,
+    };
+  });
+  const sortedEntries = sortRows(entries, "tableCatalogue", "id", "asc", {
+    id: { get: (p) => p.id, type: "number" },
+    reference: { get: (p) => p.reference, type: "string" },
+    nom: { get: (p) => p.nom, type: "string" },
+    mandrin: { get: (p) => p.mandrin, type: "string" },
+    etiquettes: { get: (p) => p.etiquettesParRouleau, type: "number" },
+    rouleaux: { get: (p) => p.rouleauxParCarton, type: "number" },
+  });
   const pageSize = state.pagination.pageSize;
   const currentPage = state.pagination.catalogue;
-  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const start = (currentPage - 1) * pageSize;
-  const pageEntries = entries.slice(start, start + pageSize);
+  const pageEntries = sortedEntries.slice(start, start + pageSize);
 
-  pageEntries.forEach((id) => {
+  pageEntries.forEach((entry) => {
+      const id = entry.id;
       const tr = document.createElement("tr");
       const prod = state.catalog[id] || {};
       if (tr.dataset.editing === "true") tr.classList.add("editing");
@@ -438,18 +533,23 @@ function renderPrix() {
   const filterEns = document.getElementById("prixEnseigneFilter")?.value || "";
   const entries = Object.entries(state.prix || {})
     .flatMap(([ens, list]) => (list || []).map((p) => ({ ...p, enseigne: ens })))
-    .filter((p) => !filterEns || p.enseigne === filterEns)
-    .sort((a, b) => {
-      const cmpEns = (a.enseigne || "").localeCompare(b.enseigne || "");
-      if (cmpEns !== 0) return cmpEns;
-      return (a.id || 0) - (b.id || 0);
-    });
+    .filter((p) => !filterEns || p.enseigne === filterEns);
+  const sortedEntries = sortRows(entries, "tablePrix", "enseigne", "asc", {
+    enseigne: { get: (p) => p.enseigne, type: "string" },
+    id: { get: (p) => p.id, type: "number" },
+    reference: { get: (p) => (state.catalog[p.id] || {}).reference || "", type: "string" },
+    nom: { get: (p) => (state.catalog[p.id] || {}).nom || p.nom || "", type: "string" },
+    mandrin: { get: (p) => (state.catalog[p.id] || {}).mandrin || "", type: "string" },
+    etiquettes: { get: (p) => (state.catalog[p.id] || {}).etiquettesParRouleau, type: "number" },
+    rouleaux: { get: (p) => (state.catalog[p.id] || {}).rouleauxParCarton, type: "number" },
+    prix: { get: (p) => p.prix, type: "number" },
+  });
 
   const pageSize = state.pagination.pageSize;
   const currentPage = state.pagination.prix;
-  const totalPages = Math.max(1, Math.ceil(entries.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const start = (currentPage - 1) * pageSize;
-  const pageEntries = entries.slice(start, start + pageSize);
+  const pageEntries = sortedEntries.slice(start, start + pageSize);
 
   pageEntries.forEach((p) => {
       const tr = document.createElement("tr");
@@ -582,10 +682,16 @@ function renderAdminOrders() {
     return;
   }
 
-  state.orders
-    .slice()
-    .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0))
-    .forEach((o) => {
+  const sortedOrders = sortRows(state.orders, "tableAdminOrders", "date", "desc", {
+    ref: { get: (o) => o.id || o.reference || "", type: "string" },
+    client: { get: (o) => o.clientId || "", type: "string" },
+    magasin: { get: (o) => o.magasin || "", type: "string" },
+    total: { get: (o) => Number(o.totalTTC || o.total || 0), type: "number" },
+    date: { get: (o) => o.createdAt || o.date || "", type: "date" },
+    statut: { get: (o) => o.status || "", type: "string" },
+  });
+
+  sortedOrders.forEach((o) => {
       const tr = document.createElement("tr");
       const cls = statusClass(o.status);
       const select = document.createElement("select");
@@ -664,10 +770,15 @@ function renderUsers() {
     return;
   }
 
-  state.users
-    .slice()
-    .sort((a, b) => (a.id || "").localeCompare(b.id || ""))
-    .forEach((u) => {
+  const sortedUsers = sortRows(state.users, "tableUsers", "user", "asc", {
+    user: { get: (u) => u.id || "", type: "string" },
+    role: { get: (u) => u.role || "", type: "string" },
+    enseigne: { get: (u) => u.enseigne || "", type: "string" },
+    magasin: { get: (u) => u.magasin || "", type: "string" },
+    lastLogin: { get: (u) => u.lastLogin || "", type: "date" },
+  });
+
+  sortedUsers.forEach((u) => {
       const tr = document.createElement("tr");
       const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleString("fr-FR") : "-";
       const role = (u.role || "client").toLowerCase();
@@ -1301,6 +1412,42 @@ async function resetUserPassword(userId) {
     }
 }
 
+function setupSortHeaders() {
+  const renderers = {
+    tableEnseignes: () => {
+      state.pagination.enseignes = 1;
+      renderEnseignes();
+    },
+    tableClients: () => {
+      state.pagination.clients = 1;
+      renderClients();
+    },
+    tablePrix: () => {
+      state.pagination.prix = 1;
+      renderPrix();
+    },
+    tableCatalogue: () => {
+      state.pagination.catalogue = 1;
+      renderCatalogue();
+    },
+    tableAdminOrders: () => renderAdminOrders(),
+    tableUsers: () => renderUsers(),
+  };
+
+  Object.entries(renderers).forEach(([tableId, render]) => {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    table.querySelectorAll("thead th[data-sort-key]").forEach((th) => {
+      th.addEventListener("dblclick", () => {
+        const key = th.dataset.sortKey;
+        if (!key) return;
+        setSortConfig(tableId, key);
+        render();
+      });
+    });
+  });
+}
+
 // --- Events ---
 document.getElementById("adminUserTag").textContent = state.admin;
 document.getElementById("btnLogout").addEventListener("click", () => {
@@ -1484,5 +1631,6 @@ document.getElementById("prixNext").addEventListener("click", () => {
 });
 
 // Init
+setupSortHeaders();
 loadInitialData();
 setActiveTab("tabEnseignes");

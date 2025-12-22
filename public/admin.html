@@ -422,7 +422,7 @@
             <div class="panel">
                 <table id="tableEnseignes" class="editable-table">
                     <thead>
-                        <tr><th>Code</th><th>Nom</th><th>Email compta</th><th class="col-actions">Actions</th></tr>
+                        <tr><th data-sort-key="code">Code</th><th data-sort-key="nom">Nom</th><th data-sort-key="email">Email compta</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
@@ -454,7 +454,7 @@
                 </div>
                 <table id="tableClients" class="editable-table">
                     <thead>
-                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th class="col-actions">Actions</th></tr>
+                        <tr><th data-sort-key="id">ID</th><th data-sort-key="enseigne">Enseigne</th><th data-sort-key="magasin">Magasin</th><th data-sort-key="contact">Contact</th><th data-sort-key="email">Email</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
@@ -492,14 +492,14 @@
                 <table id="tablePrix" class="editable-table">
                     <thead>
                         <tr>
-                            <th>Enseigne</th>
-                            <th>ID Produit</th>
-                            <th>R&eacute;f&eacute;rence</th>
-                            <th>Nom (catalogue)</th>
-                            <th>Mandrin</th>
-                            <th>&Eacute;tiq./rouleau</th>
-                            <th>Rouleaux/carton</th>
-                            <th>Prix (EUR)</th>
+                            <th data-sort-key="enseigne">Enseigne</th>
+                            <th data-sort-key="id">ID Produit</th>
+                            <th data-sort-key="reference">R&eacute;f&eacute;rence</th>
+                            <th data-sort-key="nom">Nom (catalogue)</th>
+                            <th data-sort-key="mandrin">Mandrin</th>
+                            <th data-sort-key="etiquettes">&Eacute;tiq./rouleau</th>
+                            <th data-sort-key="rouleaux">Rouleaux/carton</th>
+                            <th data-sort-key="prix">Prix (EUR)</th>
                             <th class="col-actions">Actions</th>
                         </tr>
                     </thead>
@@ -537,12 +537,12 @@
                 <table id="tableCatalogue" class="editable-table catalog-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Référence</th>
-                            <th class="wide">Désignation</th>
-                            <th>Mandrin</th>
-                            <th>Étiquettes / rouleau</th>
-                            <th>Rouleaux / carton</th>
+                            <th data-sort-key="id">ID</th>
+                            <th data-sort-key="reference">Référence</th>
+                            <th class="wide" data-sort-key="nom">Désignation</th>
+                            <th data-sort-key="mandrin">Mandrin</th>
+                            <th data-sort-key="etiquettes">Étiquettes / rouleau</th>
+                            <th data-sort-key="rouleaux">Rouleaux / carton</th>
                             <th class="actions-col col-actions">Actions</th>
                         </tr>
                     </thead>
@@ -580,12 +580,12 @@
                 <table id="tableAdminOrders" class="editable-table">
                     <thead>
                         <tr>
-                            <th>R&eacute;f.</th>
-                            <th>Client</th>
-                            <th>Magasin</th>
-                            <th>Total</th>
-                            <th>Date</th>
-                            <th>Statut</th>
+                            <th data-sort-key="ref">R&eacute;f.</th>
+                            <th data-sort-key="client">Client</th>
+                            <th data-sort-key="magasin">Magasin</th>
+                            <th data-sort-key="total">Total</th>
+                            <th data-sort-key="date">Date</th>
+                            <th data-sort-key="statut">Statut</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -625,11 +625,11 @@
                 <table id="tableUsers" class="editable-table">
                     <thead>
                         <tr>
-                            <th>Utilisateur</th>
-                            <th>Rôle</th>
-                            <th>Enseigne</th>
-                            <th>Magasin</th>
-                            <th>Dernier login</th>
+                            <th data-sort-key="user">Utilisateur</th>
+                            <th data-sort-key="role">Rôle</th>
+                            <th data-sort-key="enseigne">Enseigne</th>
+                            <th data-sort-key="magasin">Magasin</th>
+                            <th data-sort-key="lastLogin">Dernier login</th>
                             <th class="col-actions">Action</th>
                         </tr>
                     </thead>
@@ -682,3 +682,7 @@
     </script>
 </body>
 </html>
+
+
+
+
