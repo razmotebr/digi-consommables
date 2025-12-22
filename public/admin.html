@@ -38,8 +38,8 @@
             width: 36px;
             height: 36px;
             border-radius: 8px;
-            border: none;
-            background: transparent;
+            border: 1px solid var(--border);
+            background: #eef2f7;
             color: #4b5563;
             display: inline-flex;
             align-items: center;
@@ -47,6 +47,46 @@
             cursor: pointer;
         }
         .settings-btn svg { width: 18px; height: 18px; display: block; }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.hidden { display: none; }
+        .modal-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            width: min(460px, 92vw);
+            box-shadow: 0 18px 48px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .modal-body {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+        }
+        .modal-body .field {
+            width: min(320px, 100%);
+            text-align: left;
+        }
+        .modal-body .field input { width: 100%; }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
         nav {
             background: #f5f5f5;
             padding: 12px 24px;
@@ -59,7 +99,7 @@
         nav a:hover { color: var(--accent-blue); }
         nav.subnav a { padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; }
         nav.subnav a.active { background: #e0e7ff; color: #1d4ed8; border-color: #bfdbfe; }
-        .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+        .container { width: 100%; max-width: 1400px; margin: 24px auto; padding: 0 16px; }
         .card {
             background: #f8fafc;
             border-radius: 10px;
@@ -69,7 +109,7 @@
             border: 1px solid var(--border);
         }
         .flex { display: flex; gap: 16px; flex-wrap: wrap; }
-        .panel { flex: 1 1 360px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+        .panel { flex: 1 1 360px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 14px; overflow-x: auto; }
         .panel h3 { margin-top: 0; color: var(--digi-dark); }
         label { display: block; font-weight: bold; margin: 8px 0 4px; color: var(--digi-dark); }
         input, select, textarea {
@@ -82,10 +122,10 @@
 .user-form-grid{
             display:grid;
             gap:16px;
-            align-items:center;
+            align-items:end;
 
             /* desktop: 4 colonnes sur 1 ligne */
-            grid-template-columns: minmax(0,1fr) minmax(0,2fr) minmax(0,2fr) minmax(0,1.2fr);
+            grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr);
             grid-template-areas: "user role pass btn";
         }
 
@@ -126,40 +166,12 @@
         .user-form-grid .full{
             grid-column:auto !important;
         }
-.editable-table {
+        .editable-table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
             background: #fff;
             table-layout: auto;
-        }
-        .editable-table input {
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #d1d5db;
-            background: #fff;
-            padding: 8px 10px;
-            height: 36px;
-            border-radius: 8px;
-        }
-        .editable-table input:focus,
-        .editable-table select:focus {
-            outline: none;
-            border: 1px solid #93c5fd;
-            background: #f8fbff;
-        }
-        .editable-table select {
-            height: 36px;
-            border: 1px solid #d1d5db;
-            background: #fff;
-            border-radius: 8px;
-            padding: 6px 8px;
-        }
-        .editable-table button {
-            height: 36px;
-        }
-        .editable-table .wide {
-            min-width: 140px;
+            font-size: 14px;
         }
         .editable-table thead th {
             background: #f1f5f9;
@@ -167,28 +179,75 @@
             font-size: 13px;
             color: #374151;
             letter-spacing: 0.01em;
-            padding: 10px 12px;
-            border-bottom: 1px solid #e5e7eb;
+            position: relative;
         }
         .editable-table td,
         .editable-table th {
             vertical-align: middle;
             padding: 10px 12px;
-        }
-        .editable-table td {
-            border-bottom: 1px solid #e5e7eb;
-            height: 50px;
+            border: 1px solid #e5e7eb;
         }
         .editable-table tbody tr:hover {
             background: #f8fafc;
         }
         .editable-table .add-row td {
-            padding-top: 10px;
-            padding-bottom: 10px;
-            vertical-align: middle;
-        }
-        .editable-table .add-row td {
             background: #f9fafb;
+        }
+        .editable-table input,
+        .editable-table select {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 6px;
+        }
+        .editable-table .add-row input,
+        .editable-table .add-row select {
+            border: none;
+            background: transparent;
+            padding: 0;
+            height: auto;
+            border-radius: 0;
+            color: inherit;
+            box-shadow: none;
+        }
+        .editable-table tbody tr:not(.add-row):not(.editing) input,
+        .editable-table tbody tr:not(.add-row):not(.editing) select {
+            border: none;
+            background: transparent;
+            padding: 0;
+            height: auto;
+            color: inherit;
+            border-radius: 0;
+            pointer-events: none;
+        }
+        .editable-table tbody tr.editing input,
+        .editable-table tbody tr.editing select {
+            border: 1px solid #d1d5db;
+            background: #fff;
+            padding: 6px 8px;
+            height: 32px;
+            border-radius: 6px;
+            pointer-events: auto;
+        }
+        .editable-table tbody tr:not(.add-row):not(.editing) input:focus,
+        .editable-table tbody tr:not(.add-row):not(.editing) select:focus,
+        .editable-table .add-row input:focus,
+        .editable-table .add-row select:focus,
+        .editable-table tbody tr.editing input:focus,
+        .editable-table tbody tr.editing select:focus {
+            outline: none;
+            border: 1px solid #93c5fd;
+            background: #f8fbff;
+        }
+        .editable-table .add-row input:focus,
+        .editable-table .add-row select:focus {
+            border: none;
+            background: transparent;
+        }
+        .editable-table button {
+            height: 36px;
+        }
+        .editable-table .wide {
+            min-width: 140px;
         }
         .pager {
             display: flex;
@@ -328,54 +387,70 @@
         .status.preparation { background: #ecfeff; color: #0ea5e9; border: 1px solid #bae6fd; }
         .status.envoye { background: #ecfdf3; color: #16a34a; border: 1px solid #bbf7d0; }
         .status.inconnu { background: #f1f5f9; color: #475569; border: 1px solid #e5e7eb; }
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .modal.hidden { display: none; }
-        .modal-card {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            width: min(460px, 92vw);
-            box-shadow: 0 18px 48px rgba(0,0,0,0.2);
-        }
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-        }
-        .modal-body {
-            margin-top: 14px;
-            display: flex;
-            justify-content: center;
-        }
-        .modal-body .field {
-            width: min(320px, 100%);
-            text-align: left;
-        }
-        .modal-body .field input { width: 100%; }
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            margin-top: 12px;
-        }
         /* Ajuster colonnes actions et QR sur tables sans classes */
         #tableAdminOrders th:last-child,
         #tableAdminOrders td:last-child,
         #tableUsers th:last-child,
         #tableUsers td:last-child {
-            width: 140px;
-            min-width: 120px;
+            width: 260px;
+            min-width: 240px;
             text-align: center;
+        }
+        /* Laisser le select statut des commandes interactif */
+        #tableAdminOrders select {
+            pointer-events: auto;
+            border: 1px solid #d1d5db;
+            background: #fff;
+            padding: 6px 8px;
+            height: 32px;
+            border-radius: 6px;
+        }
+        .editable-table .add-row .col-actions button,
+        .editable-table .add-row .table-actions button {
+            width: 100%;
+        }
+        .editable-table .add-row select {
+            border: 1px solid #d1d5db;
+            background: #fff;
+            padding: 6px 8px;
+            height: 32px;
+            border-radius: 6px;
+            pointer-events: auto;
+        }
+        .table-actions.user-actions {
+            justify-content: flex-start;
+            gap: 8px;
+        }
+        .table-actions.user-actions .action-btn {
+            flex: 1 1 0;
+            min-width: 100px;
+            width: 100%;
+        }
+        .col-resize-handle {
+            position: absolute;
+            top: 0;
+            right: -4px;
+            width: 8px;
+            height: 100%;
+            cursor: col-resize;
+            user-select: none;
+        }
+        .col-resize-handle:hover {
+            background: rgba(0,0,0,0.04);
+        }
+        @media (max-width: 960px) {
+            body { font-size: 14px; }
+            header, nav { padding: 12px 16px; }
+            .card { padding: 14px; }
+            .editable-table td,
+            .editable-table th { padding: 8px 10px; }
+            .editable-table { font-size: 13px; }
+        }
+        @media (max-width: 640px) {
+            header { flex-wrap: wrap; gap: 8px; }
+            nav { flex-wrap: wrap; }
+            .card { margin: 16px auto; }
+            .panel { padding: 12px; }
         }
     </style>
 </head>
@@ -400,6 +475,7 @@
         <a href="#catalogue" id="tabCatalogue">Catalogue</a>
         <a href="#commandes" id="tabCommandes">Commandes</a>
         <a href="#users" id="tabUsers">Utilisateurs</a>
+        <a href="#logs" id="tabLogs">Logs</a>
     </nav>
 
     <div class="container">
@@ -408,7 +484,7 @@
             <div class="panel">
                 <table id="tableEnseignes" class="editable-table">
                     <thead>
-                        <tr><th>Code</th><th>Nom</th><th>Email compta</th><th class="col-actions">Actions</th></tr>
+                        <tr><th data-sort-key="code">Code</th><th data-sort-key="nom">Nom</th><th data-sort-key="email">Email compta</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
@@ -427,12 +503,20 @@
             </div>
         </section>
 
-                <section id="sectionClients" class="card hidden">
+        <section id="sectionClients" class="card hidden">
             <h2>Parametrage des comptes clients</h2>
             <div class="panel">
+                <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
+                    <div style="flex:1 1 260px;">
+                        <label>Filtrer par enseigne</label>
+                        <select id="clientsEnseigneFilter">
+                            <option value="">Toutes les enseignes</option>
+                        </select>
+                    </div>
+                </div>
                 <table id="tableClients" class="editable-table">
                     <thead>
-                        <tr><th>ID</th><th>Enseigne</th><th>Magasin</th><th>Contact</th><th>Email</th><th class="col-actions">Actions</th></tr>
+                        <tr><th data-sort-key="id">ID</th><th data-sort-key="enseigne">Enseigne</th><th data-sort-key="magasin">Magasin</th><th data-sort-key="contact">Contact</th><th data-sort-key="email">Email</th><th class="col-actions">Actions</th></tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
@@ -461,24 +545,41 @@
             <div class="panel">
                 <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
                     <div style="flex:1 1 260px;">
-                        <label>Enseigne</label>
-                        <select id="prixEnseigneSelect"></select>
-                    </div>
-                    <div style="flex:1 1 260px;">
-                        <label>Produit (catalogue unique)</label>
-                        <select id="prixProduitGlobalSelect">
-                            <option value="">-- Nouveau produit --</option>
+                        <label>Filtrer par enseigne</label>
+                        <select id="prixEnseigneFilter">
+                            <option value="">Toutes les enseignes</option>
                         </select>
                     </div>
                 </div>
                 <table id="tablePrix" class="editable-table">
                     <thead>
-                        <tr><th>ID Produit</th><th>Nom</th><th>Prix (EUR)</th><th class="col-actions">Actions</th></tr>
+                        <tr>
+                            <th data-sort-key="enseigne">Enseigne</th>
+                            <th data-sort-key="id">ID Produit</th>
+                            <th data-sort-key="reference">R&eacute;f&eacute;rence</th>
+                            <th data-sort-key="nom">Nom (catalogue)</th>
+                            <th data-sort-key="mandrin">Mandrin</th>
+                            <th data-sort-key="etiquettes">&Eacute;tiq./rouleau</th>
+                            <th data-sort-key="rouleaux">Rouleaux/carton</th>
+                            <th data-sort-key="prix">Prix (EUR)</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                         <tr class="add-row">
-                            <td><input type="number" id="prixId" placeholder="Ex: 1"></td>
-                            <td><input type="text" id="prixNom" placeholder="Ex: Film alimentaire 450 mm"></td>
+                            <td>
+                                <select id="prixEnseigneAdd"></select>
+                            </td>
+                            <td><input type="number" id="prixId" placeholder="Auto" disabled></td>
+                            <td><span id="prixRefPreview" class="muted">--</span></td>
+                            <td>
+                                <select id="prixProduitSelect">
+                                    <option value="">-- Choisir un produit --</option>
+                                </select>
+                            </td>
+                            <td><span id="prixMandrinPreview" class="muted">--</span></td>
+                            <td><span id="prixEtiquettesPreview" class="muted">--</span></td>
+                            <td><span id="prixRouleauxPreview" class="muted">--</span></td>
                             <td><input type="number" step="0.01" id="prixValeur" placeholder="Ex: 12.50"></td>
                             <td class="col-actions"><button id="btnAddPrix">Ajouter</button></td>
                         </tr>
@@ -498,13 +599,12 @@
                 <table id="tableCatalogue" class="editable-table catalog-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Référence</th>
-                            <th class="wide">Désignation</th>
-                            <th>Mandrin</th>
-                            <th>Étiquettes / rouleau</th>
-                            <th>Rouleaux / carton</th>
-                            <th>Prix carton HT</th>
+                            <th data-sort-key="id">ID</th>
+                            <th data-sort-key="reference">Référence</th>
+                            <th class="wide" data-sort-key="nom">Désignation</th>
+                            <th data-sort-key="mandrin">Mandrin</th>
+                            <th data-sort-key="etiquettes">Étiquettes / rouleau</th>
+                            <th data-sort-key="rouleaux">Rouleaux / carton</th>
                             <th class="actions-col col-actions">Actions</th>
                         </tr>
                     </thead>
@@ -516,7 +616,6 @@
                             <td><input type="text" id="catMandrin" placeholder="Ex: Ø40mm"></td>
                             <td><input type="number" id="catEtiquettes" placeholder="Ex: 800"></td>
                             <td><input type="number" id="catRouleaux" placeholder="Ex: 24"></td>
-                            <td><input type="number" step="0.01" id="catPrix" placeholder="Ex: 72.24"></td>
                             <td class="table-actions col-actions"><button id="btnAddProduitGlobal" class="action-btn">Ajouter</button></td>
                         </tr>
                     </tbody>
@@ -543,12 +642,12 @@
                 <table id="tableAdminOrders" class="editable-table">
                     <thead>
                         <tr>
-                            <th>R&eacute;f.</th>
-                            <th>Client</th>
-                            <th>Magasin</th>
-                            <th>Total</th>
-                            <th>Date</th>
-                            <th>Statut</th>
+                            <th data-sort-key="ref">R&eacute;f.</th>
+                            <th data-sort-key="client">Client</th>
+                            <th data-sort-key="magasin">Magasin</th>
+                            <th data-sort-key="total">Total</th>
+                            <th data-sort-key="date">Date</th>
+                            <th data-sort-key="statut">Statut</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -572,6 +671,8 @@
                         <select id="userRoleSelect">
                             <option value="client">client</option>
                             <option value="admin">admin</option>
+                            <option value="orders">commandes</option>
+                            <option value="logs">logs</option>
                         </select>
                     </div>
                     <div>
@@ -588,11 +689,11 @@
                 <table id="tableUsers" class="editable-table">
                     <thead>
                         <tr>
-                            <th>Utilisateur</th>
-                            <th>Rôle</th>
-                            <th>Enseigne</th>
-                            <th>Magasin</th>
-                            <th>Dernier login</th>
+                            <th data-sort-key="user">Utilisateur</th>
+                            <th data-sort-key="role">Rôle</th>
+                            <th data-sort-key="enseigne">Enseigne</th>
+                            <th data-sort-key="magasin">Magasin</th>
+                            <th data-sort-key="lastLogin">Dernier login</th>
                             <th class="col-actions">Action</th>
                         </tr>
                     </thead>
@@ -600,6 +701,28 @@
                         <tr><td colspan="6" class="muted">Chargement...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </section>
+        <section id="sectionLogs" class="card hidden">
+            <h2>Logs</h2>
+            <div class="panel">
+                <table id="tableLogs" class="editable-table">
+                    <thead>
+                        <tr>
+                            <th data-sort-key="timestamp">Horodatage</th>
+                            <th data-sort-key="actor">Acteur</th>
+                            <th data-sort-key="action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="3" class="muted">Chargement...</td></tr>
+                    </tbody>
+                </table>
+                <div class="pager">
+                    <button id="logsPrev">Pr&eacute;c&eacute;dent</button>
+                    <span id="logsPageLabel"></span>
+                    <button id="logsNext">Suivant</button>
+                </div>
             </div>
         </section>
     </div>
@@ -623,5 +746,43 @@
     </div>
 
     <script src="admin.js"></script>
+    <script>
+        (function enableResizableTables() {
+            function applyResize(table) {
+                if (!table || table.dataset.resizable === "true") return;
+                table.dataset.resizable = "true";
+                const headers = table.querySelectorAll("thead th");
+                headers.forEach((th, index) => {
+                    const handle = document.createElement("span");
+                    handle.className = "col-resize-handle";
+                    th.appendChild(handle);
+                    let startX = 0;
+                    let startWidth = 0;
+                    const onMouseMove = (e) => {
+                        const delta = e.pageX - startX;
+                        const newWidth = Math.max(60, startWidth + delta);
+                        th.style.width = newWidth + "px";
+                        table.querySelectorAll(`tbody tr td:nth-child(${index + 1})`).forEach((td) => {
+                            td.style.width = newWidth + "px";
+                        });
+                    };
+                    const onMouseUp = () => {
+                        document.removeEventListener("mousemove", onMouseMove);
+                        document.removeEventListener("mouseup", onMouseUp);
+                    };
+                    handle.addEventListener("mousedown", (e) => {
+                        e.preventDefault();
+                        startX = e.pageX;
+                        startWidth = th.offsetWidth;
+                        document.addEventListener("mousemove", onMouseMove);
+                        document.addEventListener("mouseup", onMouseUp);
+                    });
+                });
+            }
+            document.addEventListener("DOMContentLoaded", () => {
+                document.querySelectorAll(".editable-table").forEach(applyResize);
+            });
+        })();
+    </script>
 </body>
 </html>
