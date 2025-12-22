@@ -602,7 +602,7 @@ function renderAdminOrders() {
         <td>${o.id || o.reference || "-"}</td>
         <td>${o.clientId || "-"}</td>
         <td>${o.magasin || "-"}</td>
-        <td>${o.totalTTC || o.total || 0} EUR</td>
+        <td>${Number(o.totalTTC || o.total || 0).toFixed(2)} EUR</td>
         <td>${o.createdAt ? new Date(o.createdAt).toLocaleString("fr-FR") : "-"}</td>
         <td><span class="status ${cls}">${o.status || "Inconnu"}</span></td>
       `;
