@@ -35,6 +35,11 @@ header .logo {
     display: block;
 }
 
+.logo-enseigne {
+    height: 40px;
+    width: auto;
+}
+
 header h1 {
     margin: 0;
     font-size: 20px;
@@ -45,6 +50,13 @@ header .muted {
     margin: 0;
     font-size: 13px;
     color: var(--muted);
+}
+
+.header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .container {
@@ -228,7 +240,7 @@ button.danger {
 }
 
 #btnLogout {
-    margin-left: auto;
+    margin-left: 0;
 }
 
 /* Legacy helpers so older pages stay usable */

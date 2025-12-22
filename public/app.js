@@ -13,6 +13,32 @@ const formatEuro = (n) => `${Number(n || 0).toFixed(2)} EUR`;
 
 console.log("app.js charge");
 
+function normalizeEnseigneName(value) {
+    const raw = String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+    return raw.replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+function updateEnseigneLogo(enseigne) {
+    const logoEl = document.getElementById("enseigneLogo");
+    if (!logoEl) return;
+    const slug = normalizeEnseigneName(enseigne);
+    if (!slug) {
+        logoEl.classList.add("hidden");
+        logoEl.removeAttribute("src");
+        return;
+    }
+    const src = `/logo_${slug}.png`;
+    logoEl.onload = () => logoEl.classList.remove("hidden");
+    logoEl.onerror = () => {
+        logoEl.classList.add("hidden");
+        logoEl.removeAttribute("src");
+    };
+    logoEl.src = src;
+}
+
 async function init() {
     const token = sessionStorage.getItem("token");
     let clientId = sessionStorage.getItem("clientId");
@@ -41,6 +67,7 @@ async function init() {
         setText("magasin", cl.magasin || "");
         setText("contact", cl.contact || "");
         if (cl.email_compta) setText("emailCompta", cl.email_compta);
+        updateEnseigneLogo(cl.enseigne || "");
         const magasinName = cl.magasin ? `magasin ${cl.magasin}` : "magasin";
         const enseigneName = cl.enseigne || "enseigne";
         setText("ordersInfo", `Historique des commandes passées pour ${enseigneName} - ${magasinName}`);
