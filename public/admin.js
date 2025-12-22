@@ -1671,10 +1671,9 @@ if (settingsBtn) {
     openSettingsModal();
   });
 }
-const settingsCloseBtn = document.getElementById("btnSettingsClose");
-if (settingsCloseBtn) {
-  settingsCloseBtn.addEventListener("click", async () => {
-    await saveSettings();
+const settingsCancelBtn = document.getElementById("btnSettingsCancel");
+if (settingsCancelBtn) {
+  settingsCancelBtn.addEventListener("click", () => {
     closeSettingsModal();
   });
 }
@@ -1682,13 +1681,13 @@ const settingsSaveBtn = document.getElementById("btnSettingsSave");
 if (settingsSaveBtn) {
   settingsSaveBtn.addEventListener("click", async () => {
     await saveSettings();
+    closeSettingsModal();
   });
 }
 const settingsModal = document.getElementById("settingsModal");
 if (settingsModal) {
   settingsModal.addEventListener("click", async (e) => {
     if (e.target === settingsModal) {
-      await saveSettings();
       closeSettingsModal();
     }
   });
@@ -1697,7 +1696,6 @@ document.addEventListener("keydown", async (e) => {
   if (e.key === "Escape") {
     const modal = document.getElementById("settingsModal");
     if (modal && !modal.classList.contains("hidden")) {
-      await saveSettings();
       closeSettingsModal();
     }
   }
