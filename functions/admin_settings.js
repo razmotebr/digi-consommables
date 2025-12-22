@@ -29,7 +29,8 @@ export async function onRequestGet(context) {
   if (!auth.ok) return auth.response;
   const db = context.env.DB;
   const emailCompta = db ? await readSetting(db, "email_compta") : "";
-  return json({ emailCompta });
+  const fraisPort = db ? await readSetting(db, "frais_port") : "";
+  return json({ emailCompta, fraisPort });
 }
 
 export async function onRequestPut(context) {
@@ -44,6 +45,11 @@ export async function onRequestPut(context) {
     data = {};
   }
   const emailCompta = String(data.emailCompta || "").trim();
+  const fraisPortRaw = data.fraisPort;
+  const fraisPort = fraisPortRaw === "" || fraisPortRaw === null || typeof fraisPortRaw === "undefined"
+    ? ""
+    : String(fraisPortRaw);
   await writeSetting(db, "email_compta", emailCompta);
-  return json({ ok: true, emailCompta });
+  await writeSetting(db, "frais_port", fraisPort);
+  return json({ ok: true, emailCompta, fraisPort });
 }

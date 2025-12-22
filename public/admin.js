@@ -10,7 +10,7 @@ const state = {
   editingClients: {}, // {id: {enseigne,magasin,contact,email}}
   users: [], // [{id, enseigne, magasin, lastLogin}]
   logs: [],
-  settings: { emailCompta: "" },
+  settings: { emailCompta: "", fraisPort: "" },
   sort: {}, // {tableId: {key, dir}}
   pagination: {
     enseignes: 1,
@@ -1486,8 +1486,11 @@ async function loadSettings() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     state.settings.emailCompta = data.emailCompta || "";
+    state.settings.fraisPort = data.fraisPort ?? "";
     const input = document.getElementById("settingsEmailCompta");
     if (input) input.value = state.settings.emailCompta;
+    const fraisInput = document.getElementById("settingsFraisPort");
+    if (fraisInput) fraisInput.value = state.settings.fraisPort;
   } catch (e) {
     console.error("loadSettings error", e);
   }
@@ -1496,16 +1499,25 @@ async function loadSettings() {
 async function saveSettings() {
   const input = document.getElementById("settingsEmailCompta");
   const emailCompta = input ? input.value.trim() : "";
-  if (emailCompta === (state.settings.emailCompta || "")) return true;
+  const fraisInput = document.getElementById("settingsFraisPort");
+  const fraisPortRaw = fraisInput ? fraisInput.value.trim() : "";
+  const fraisPort = fraisPortRaw === "" ? "" : Number(fraisPortRaw);
+  if (
+    emailCompta === (state.settings.emailCompta || "") &&
+    (fraisPort === "" ? "" : String(fraisPort)) === (state.settings.fraisPort === "" ? "" : String(state.settings.fraisPort))
+  ) {
+    return true;
+  }
   try {
     const res = await fetch("/admin_settings", {
       method: "PUT",
       headers: withAuthHeaders({ "content-type": "application/json" }),
-      body: JSON.stringify({ emailCompta }),
+      body: JSON.stringify({ emailCompta, fraisPort }),
     });
     if (!ensureAuthorized(res)) return false;
     if (!res.ok) throw new Error(await res.text());
     state.settings.emailCompta = emailCompta;
+    state.settings.fraisPort = fraisPort;
     return true;
   } catch (e) {
     console.error("saveSettings error", e);
