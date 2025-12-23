@@ -10,7 +10,8 @@ function parseAuth(authHeader) {
 
 function toPdfText(value) {
   const raw = String(value ?? "");
-  const normalized = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const asciiSafe = raw.replace(/Ø/g, "O").replace(/ø/g, "o");
+  const normalized = asciiSafe.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   let out = "";
   for (let i = 0; i < normalized.length; i += 1) {
     const code = normalized.charCodeAt(i);
