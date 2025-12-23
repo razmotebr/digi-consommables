@@ -2037,6 +2037,23 @@ if (logsClearFilter) {
   });
 }
 
+function initLogDatePickers() {
+  if (!window.flatpickr) return;
+  const locale = window.flatpickr.l10ns && window.flatpickr.l10ns.fr ? window.flatpickr.l10ns.fr : undefined;
+  const options = {
+    enableTime: true,
+    time_24hr: true,
+    dateFormat: "Y-m-d\\TH:i",
+    altInput: true,
+    altFormat: "d/m/Y H:i",
+    allowInput: true,
+    locale,
+  };
+  if (logsDateFrom) window.flatpickr(logsDateFrom, options);
+  if (logsDateTo) window.flatpickr(logsDateTo, options);
+}
+initLogDatePickers();
+
 document.getElementById("usersPrev").addEventListener("click", () => {
   if (state.pagination.users > 1) {
     state.pagination.users -= 1;

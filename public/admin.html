@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin - Commande Consommables</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <style>
         :root {
             --accent-blue: #0078d7;
@@ -268,6 +269,32 @@
         .log-date-input {
             max-width: 220px;
             width: 100%;
+            background: #f1f5f9;
+        }
+        .log-date-input.flatpickr-input,
+        .flatpickr-alt-input {
+            background: #f1f5f9;
+        }
+        .flatpickr-calendar {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+        }
+        .flatpickr-day:hover,
+        .flatpickr-day:focus {
+            background: #e2e8f0;
+        }
+        .flatpickr-day.selected,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange,
+        .flatpickr-day.selected:hover,
+        .flatpickr-day.startRange:hover,
+        .flatpickr-day.endRange:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+        .flatpickr-time input {
             background: #f1f5f9;
         }
         .table-actions {
@@ -773,11 +800,11 @@
                 <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
                     <div style="flex:1 1 220px;">
                         <label for="logsDateFrom">Du</label>
-                        <input id="logsDateFrom" class="log-date-input" type="datetime-local">
+                        <input id="logsDateFrom" class="log-date-input" type="text" placeholder="YYYY-MM-DD HH:MM">
                     </div>
                     <div style="flex:1 1 220px;">
                         <label for="logsDateTo">Au</label>
-                        <input id="logsDateTo" class="log-date-input" type="datetime-local">
+                        <input id="logsDateTo" class="log-date-input" type="text" placeholder="YYYY-MM-DD HH:MM">
                     </div>
                     <div>
                         <button id="logsClearFilter" class="secondary" type="button">R&eacute;initialiser</button>
@@ -824,6 +851,8 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/fr.js"></script>
     <script src="admin.js"></script>
     <script>
         (function enableResizableTables() {
