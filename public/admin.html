@@ -265,6 +265,10 @@
             background: #eef2f7;
             color: #1f2937;
         }
+        .log-date-input {
+            max-width: 220px;
+            width: 100%;
+        }
         .table-actions {
             display: flex;
             gap: 8px;
@@ -768,11 +772,11 @@
                 <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
                     <div style="flex:1 1 220px;">
                         <label for="logsDateFrom">Du</label>
-                        <input id="logsDateFrom" type="datetime-local">
+                        <input id="logsDateFrom" class="log-date-input" type="datetime-local">
                     </div>
                     <div style="flex:1 1 220px;">
                         <label for="logsDateTo">Au</label>
-                        <input id="logsDateTo" type="datetime-local">
+                        <input id="logsDateTo" class="log-date-input" type="datetime-local">
                     </div>
                     <div>
                         <button id="logsClearFilter" class="secondary" type="button">R&eacute;initialiser</button>
