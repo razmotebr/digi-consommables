@@ -742,7 +742,7 @@ function renderAdminOrders() {
     statut: { get: (o) => o.status || "", type: "string" },
   });
 
-  const pageSize = state.pagination.pageSize;
+  const pageSize = 10;
   const currentPage = state.pagination.orders;
   const totalPages = Math.max(1, Math.ceil(sortedOrders.length / pageSize));
   const start = (currentPage - 1) * pageSize;
