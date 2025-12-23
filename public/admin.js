@@ -2016,6 +2016,8 @@ document.getElementById("logsNext").addEventListener("click", () => {
 const logsDateFrom = document.getElementById("logsDateFrom");
 const logsDateTo = document.getElementById("logsDateTo");
 const logsClearFilter = document.getElementById("logsClearFilter");
+let logsFromPicker = null;
+let logsToPicker = null;
 const onLogsFilterChange = () => {
   state.pagination.logs = 1;
   renderLogs();
@@ -2030,8 +2032,16 @@ if (logsDateTo) {
 }
 if (logsClearFilter) {
   logsClearFilter.addEventListener("click", () => {
-    if (logsDateFrom) logsDateFrom.value = "";
-    if (logsDateTo) logsDateTo.value = "";
+    if (logsFromPicker) {
+      logsFromPicker.clear();
+    } else if (logsDateFrom) {
+      logsDateFrom.value = "";
+    }
+    if (logsToPicker) {
+      logsToPicker.clear();
+    } else if (logsDateTo) {
+      logsDateTo.value = "";
+    }
     state.pagination.logs = 1;
     renderLogs();
   });
@@ -2049,8 +2059,8 @@ function initLogDatePickers() {
     allowInput: true,
     locale,
   };
-  if (logsDateFrom) window.flatpickr(logsDateFrom, options);
-  if (logsDateTo) window.flatpickr(logsDateTo, options);
+  if (logsDateFrom) logsFromPicker = window.flatpickr(logsDateFrom, options);
+  if (logsDateTo) logsToPicker = window.flatpickr(logsDateTo, options);
 }
 initLogDatePickers();
 
