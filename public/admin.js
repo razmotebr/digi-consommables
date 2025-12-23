@@ -176,7 +176,7 @@ function renderEnseignes() {
     nom: { get: (e) => e.nom, type: "string" },
     email: { get: (e) => e.emailCompta, type: "string" },
   });
-  const pageSize = state.pagination.pageSize;
+  const pageSize = 10;
   const currentPage = state.pagination.enseignes;
   const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const start = (currentPage - 1) * pageSize;
