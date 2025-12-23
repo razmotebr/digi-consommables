@@ -292,7 +292,7 @@ function renderClients() {
     contact: { get: (c) => c.contact, type: "string" },
     email: { get: (c) => c.email, type: "string" },
   });
-  const pageSize = state.pagination.pageSize;
+  const pageSize = 10;
   const currentPage = state.pagination.clients;
   const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const start = (currentPage - 1) * pageSize;
@@ -444,7 +444,7 @@ function renderCatalogue() {
     etiquettes: { get: (p) => p.etiquettesParRouleau, type: "number" },
     rouleaux: { get: (p) => p.rouleauxParCarton, type: "number" },
   });
-  const pageSize = state.pagination.pageSize;
+  const pageSize = 10;
   const currentPage = state.pagination.catalogue;
   const totalPages = Math.max(1, Math.ceil(sortedEntries.length / pageSize));
   const start = (currentPage - 1) * pageSize;
