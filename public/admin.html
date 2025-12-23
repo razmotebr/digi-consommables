@@ -765,6 +765,19 @@
         <section id="sectionLogs" class="card hidden">
             <h2>Logs</h2>
             <div class="panel">
+                <div class="flex" style="align-items: flex-end; gap: 12px; margin-bottom: 10px;">
+                    <div style="flex:1 1 220px;">
+                        <label for="logsDateFrom">Du</label>
+                        <input id="logsDateFrom" type="datetime-local">
+                    </div>
+                    <div style="flex:1 1 220px;">
+                        <label for="logsDateTo">Au</label>
+                        <input id="logsDateTo" type="datetime-local">
+                    </div>
+                    <div>
+                        <button id="logsClearFilter" class="secondary" type="button">R&eacute;initialiser</button>
+                    </div>
+                </div>
                 <table id="tableLogs" class="editable-table">
                     <thead>
                         <tr>

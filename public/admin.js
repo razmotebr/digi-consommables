@@ -888,7 +888,7 @@ function renderUsers() {
     lastLogin: { get: (u) => u.lastLogin || "", type: "date" },
   });
 
-  const pageSize = state.pagination.pageSize;
+  const pageSize = 10;
   const currentPage = state.pagination.users;
   const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize));
   const start = (currentPage - 1) * pageSize;
@@ -935,6 +935,11 @@ function renderLogs() {
   const tbody = document.querySelector("#tableLogs tbody");
   if (!tbody) return;
   tbody.innerHTML = "";
+  const fromInput = document.getElementById("logsDateFrom");
+  const toInput = document.getElementById("logsDateTo");
+  const fromValue = fromInput && fromInput.value ? new Date(fromInput.value).getTime() : null;
+  const toValue = toInput && toInput.value ? new Date(toInput.value).getTime() : null;
+
   if (!state.logs.length) {
     const tr = document.createElement("tr");
     const td = document.createElement("td");
@@ -943,18 +948,51 @@ function renderLogs() {
     td.textContent = "Aucun log pour le moment.";
     tr.appendChild(td);
     tbody.appendChild(tr);
+    const label = document.getElementById("logsPageLabel");
+    const prev = document.getElementById("logsPrev");
+    const next = document.getElementById("logsNext");
+    if (label) label.textContent = "1/1";
+    if (prev) prev.disabled = true;
+    if (next) next.disabled = true;
     return;
   }
 
-  const sortedLogs = sortRows(state.logs, "tableLogs", "timestamp", "desc", {
+  const filteredLogs = state.logs.filter((l) => {
+    if (!l || !l.ts) return false;
+    const ts = new Date(l.ts).getTime();
+    if (!Number.isFinite(ts)) return false;
+    if (fromValue !== null && Number.isFinite(fromValue) && ts < fromValue) return false;
+    if (toValue !== null && Number.isFinite(toValue) && ts > toValue) return false;
+    return true;
+  });
+
+  if (!filteredLogs.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 3;
+    td.className = "muted";
+    td.textContent = "Aucun log pour cette periode.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    const label = document.getElementById("logsPageLabel");
+    const prev = document.getElementById("logsPrev");
+    const next = document.getElementById("logsNext");
+    if (label) label.textContent = "1/1";
+    if (prev) prev.disabled = true;
+    if (next) next.disabled = true;
+    return;
+  }
+
+  const sortedLogs = sortRows(filteredLogs, "tableLogs", "timestamp", "desc", {
     timestamp: { get: (l) => l.ts || "", type: "date" },
     actor: { get: (l) => `${l.actor_type || ""}:${l.actor_id || ""}`, type: "string" },
     action: { get: (l) => l.action || "", type: "string" },
   });
 
   const pageSize = 10;
-  const currentPage = state.pagination.logs;
   const totalPages = Math.max(1, Math.ceil(sortedLogs.length / pageSize));
+  const currentPage = Math.min(state.pagination.logs, totalPages);
+  if (currentPage !== state.pagination.logs) state.pagination.logs = currentPage;
   const start = (currentPage - 1) * pageSize;
   const pageEntries = sortedLogs.slice(start, start + pageSize);
 
@@ -1586,9 +1624,11 @@ async function loadLogs() {
     if (!res.ok) throw new Error(`logs ${res.status}`);
     const data = await res.json();
     state.logs = data.logs || [];
+    state.pagination.logs = 1;
   } catch (e) {
     console.error("loadLogs error", e);
     state.logs = [];
+    state.pagination.logs = 1;
   }
   renderLogs();
 }
@@ -1972,6 +2012,30 @@ document.getElementById("logsNext").addEventListener("click", () => {
   state.pagination.logs += 1;
   renderLogs();
 });
+
+const logsDateFrom = document.getElementById("logsDateFrom");
+const logsDateTo = document.getElementById("logsDateTo");
+const logsClearFilter = document.getElementById("logsClearFilter");
+const onLogsFilterChange = () => {
+  state.pagination.logs = 1;
+  renderLogs();
+};
+if (logsDateFrom) {
+  logsDateFrom.addEventListener("input", onLogsFilterChange);
+  logsDateFrom.addEventListener("change", onLogsFilterChange);
+}
+if (logsDateTo) {
+  logsDateTo.addEventListener("input", onLogsFilterChange);
+  logsDateTo.addEventListener("change", onLogsFilterChange);
+}
+if (logsClearFilter) {
+  logsClearFilter.addEventListener("click", () => {
+    if (logsDateFrom) logsDateFrom.value = "";
+    if (logsDateTo) logsDateTo.value = "";
+    state.pagination.logs = 1;
+    renderLogs();
+  });
+}
 
 document.getElementById("usersPrev").addEventListener("click", () => {
   if (state.pagination.users > 1) {
