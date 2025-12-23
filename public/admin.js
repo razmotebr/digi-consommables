@@ -16,8 +16,10 @@ const state = {
     enseignes: 1,
     clients: 1,
     catalogue: 1,
+    orders: 1,
     prix: 1,
     logs: 1,
+    users: 1,
     pageSize: 20,
   },
 };
@@ -722,6 +724,12 @@ function renderAdminOrders() {
     td.textContent = "Aucune commande pour cette enseigne.";
     tr.appendChild(td);
     tbody.appendChild(tr);
+    const pageLabel = document.getElementById("ordersPageLabel");
+    if (pageLabel) pageLabel.textContent = "1/1";
+    const prevBtn = document.getElementById("ordersPrev");
+    const nextBtn = document.getElementById("ordersNext");
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
     return;
   }
 
@@ -734,7 +742,13 @@ function renderAdminOrders() {
     statut: { get: (o) => o.status || "", type: "string" },
   });
 
-  sortedOrders.forEach((o) => {
+  const pageSize = state.pagination.pageSize;
+  const currentPage = state.pagination.orders;
+  const totalPages = Math.max(1, Math.ceil(sortedOrders.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageEntries = sortedOrders.slice(start, start + pageSize);
+
+  pageEntries.forEach((o) => {
       const tr = document.createElement("tr");
       const cls = statusClass(o.status);
       const select = document.createElement("select");
@@ -785,6 +799,13 @@ function renderAdminOrders() {
       tr.appendChild(actionsTd);
       tbody.appendChild(tr);
     });
+
+  const pageLabel = document.getElementById("ordersPageLabel");
+  if (pageLabel) pageLabel.textContent = `${currentPage}/${totalPages}`;
+  const prevBtn = document.getElementById("ordersPrev");
+  const nextBtn = document.getElementById("ordersNext");
+  if (prevBtn) prevBtn.disabled = currentPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
 }
 
 async function openOrderPdf(orderId) {
@@ -850,6 +871,12 @@ function renderUsers() {
     td.textContent = "Aucun utilisateur.";
     tr.appendChild(td);
     tbody.appendChild(tr);
+    const pageLabel = document.getElementById("usersPageLabel");
+    if (pageLabel) pageLabel.textContent = "1/1";
+    const prevBtn = document.getElementById("usersPrev");
+    const nextBtn = document.getElementById("usersNext");
+    if (prevBtn) prevBtn.disabled = true;
+    if (nextBtn) nextBtn.disabled = true;
     return;
   }
 
@@ -861,7 +888,13 @@ function renderUsers() {
     lastLogin: { get: (u) => u.lastLogin || "", type: "date" },
   });
 
-  sortedUsers.forEach((u) => {
+  const pageSize = state.pagination.pageSize;
+  const currentPage = state.pagination.users;
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageEntries = sortedUsers.slice(start, start + pageSize);
+
+  pageEntries.forEach((u) => {
       const tr = document.createElement("tr");
       const lastLogin = u.lastLogin ? new Date(u.lastLogin).toLocaleString("fr-FR") : "-";
       const role = (u.role || "client").toLowerCase();
@@ -889,6 +922,13 @@ function renderUsers() {
       tr.appendChild(actions);
     tbody.appendChild(tr);
   });
+
+  const pageLabel = document.getElementById("usersPageLabel");
+  if (pageLabel) pageLabel.textContent = `${currentPage}/${totalPages}`;
+  const prevBtn = document.getElementById("usersPrev");
+  const nextBtn = document.getElementById("usersNext");
+  if (prevBtn) prevBtn.disabled = currentPage <= 1;
+  if (nextBtn) nextBtn.disabled = currentPage >= totalPages;
 }
 
 function renderLogs() {
@@ -912,7 +952,7 @@ function renderLogs() {
     action: { get: (l) => l.action || "", type: "string" },
   });
 
-  const pageSize = state.pagination.pageSize;
+  const pageSize = 10;
   const currentPage = state.pagination.logs;
   const totalPages = Math.max(1, Math.ceil(sortedLogs.length / pageSize));
   const start = (currentPage - 1) * pageSize;
@@ -1425,9 +1465,11 @@ async function loadOrdersByEnseigne(enseigne) {
     if (!res.ok) throw new Error(`orders ${res.status}`);
     const data = await res.json();
     state.orders = data.orders || [];
+    state.pagination.orders = 1;
   } catch (e) {
     console.error("loadOrdersByEnseigne error", e);
     state.orders = [];
+    state.pagination.orders = 1;
   }
   renderAdminOrders();
 }
@@ -1468,13 +1510,16 @@ async function loadUsers() {
     if (!res.ok) {
       console.warn("admin_users non disponible", raw ? raw.slice(0, 200) : "");
       state.users = [];
+      state.pagination.users = 1;
       renderUsers();
       return;
     }
     state.users = data.users || [];
+    state.pagination.users = 1;
   } catch (e) {
     console.error("loadUsers error", e);
     state.users = [];
+    state.pagination.users = 1;
   }
   renderUsers();
 }
@@ -1895,6 +1940,17 @@ document.getElementById("catalogueNext").addEventListener("click", () => {
   renderCatalogue();
 });
 
+document.getElementById("ordersPrev").addEventListener("click", () => {
+  if (state.pagination.orders > 1) {
+    state.pagination.orders -= 1;
+    renderAdminOrders();
+  }
+});
+document.getElementById("ordersNext").addEventListener("click", () => {
+  state.pagination.orders += 1;
+  renderAdminOrders();
+});
+
 document.getElementById("prixPrev").addEventListener("click", () => {
   if (state.pagination.prix > 1) {
     state.pagination.prix -= 1;
@@ -1915,6 +1971,17 @@ document.getElementById("logsPrev").addEventListener("click", () => {
 document.getElementById("logsNext").addEventListener("click", () => {
   state.pagination.logs += 1;
   renderLogs();
+});
+
+document.getElementById("usersPrev").addEventListener("click", () => {
+  if (state.pagination.users > 1) {
+    state.pagination.users -= 1;
+    renderUsers();
+  }
+});
+document.getElementById("usersNext").addEventListener("click", () => {
+  state.pagination.users += 1;
+  renderUsers();
 });
 
 // Init
